@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Liquid Emotions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#FAF6F2; --ink-deep:#2E221D; --parchment:#46362F; --parchment-dim:#6F5A4E;
+    --amber:#C98C7A; --amber-bright:#9C5644; --brass:#C98C7A; --line:rgba(164,141,132,0.35);
+    --moss:#FFFFFF; --burgundy:#46362F; --radius:2px; --blush:#E6CFCB; --taupe:#A48D84;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--ink); color:var(--parchment); font-family:'Source Serif 4', serif; font-size:17px; line-height:1.55; overflow-x:hidden;}
+  h1,h2,h3,.display{font-family:'Fraunces', serif; font-weight:600; letter-spacing:-0.01em;}
+  .mono{font-family:'IBM Plex Mono', monospace; letter-spacing:0.02em;}
+  a{color:inherit;}
+  /* ---------- Background: champagne gold + light rose gold (static, minimal) ---------- */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      linear-gradient(115deg, transparent 38%, rgba(255,255,255,0.55) 50%, transparent 62%),
+      radial-gradient(1100px 720px at 0% 0%, rgba(233,212,160,0.42), transparent 62%),
+      radial-gradient(1000px 760px at 100% 100%, rgba(232,184,166,0.36), transparent 62%),
+      linear-gradient(160deg, #FBF8F0 0%, #FAF6F2 50%, #F9EEE9 100%);
+  }
+  img,svg{display:block;max-width:100%;}
+  button, input, select{font-family:inherit;}
+  button{cursor:pointer;}
+  :focus-visible{outline:2px solid var(--amber-bright); outline-offset:3px;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 28px;}
+  header{position:sticky; top:0; z-index:20; background:rgba(250,246,242,0.85); backdrop-filter:blur(6px); border-bottom:1px solid var(--line);}
+  .nav{display:flex; align-items:center; justify-content:space-between; padding:18px 28px;}
+  .wordmark{font-size:1.15rem; display:flex; align-items:baseline; gap:8px; text-decoration:none;}
+  .wordmark .mono{font-size:0.62rem; color:var(--amber-bright); letter-spacing:0.14em;}
+  .progress{display:flex; align-items:center; gap:10px; font-size:0.72rem; color:var(--parchment-dim);}
+  .progress .step{display:flex; align-items:center; gap:8px;}
+  .progress .dot{width:7px; height:7px; border-radius:50%; background:var(--parchment-dim);}
+  .progress .step.done .dot{background:var(--amber-bright);}
+  .progress .step.done{color:var(--parchment);}
+  .progress .step.current .dot{background:var(--amber-bright);}
+  .progress .step.current{color:var(--amber-bright);}
+  .progress .sep{width:20px; height:1px; background:var(--line);}
+  .page-head{padding:52px 28px 30px; border-bottom:1px solid var(--line);}
+  .breadcrumb{font-size:0.7rem; color:var(--parchment-dim); margin-bottom:18px;}
+  .breadcrumb a{text-decoration:none; color:var(--parchment-dim);}
+  .breadcrumb a:hover{color:var(--amber-bright);}
+  .page-head h1{font-size:clamp(1.9rem, 4vw, 2.6rem); margin:0;}
+  main{padding:52px 28px 100px;}
+  .checkout-layout{display:grid; grid-template-columns:1.5fr 1fr; gap:56px; align-items:start;}
+  .form-section{padding-bottom:38px; margin-bottom:38px; border-bottom:1px solid var(--line);}
+  .form-section:last-child{border-bottom:none; margin-bottom:0;}
+  .form-section h2{font-size:1.05rem; display:flex; align-items:center; gap:10px; margin:0 0 22px;}
+  .form-section h2 .num{font-family:'IBM Plex Mono', monospace; font-size:0.7rem; color:var(--amber-bright); border:1px solid var(--brass); width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;}
+  .field-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .field{display:flex; flex-direction:column; gap:7px; margin-bottom:16px;}
+  .field.full{grid-column:1 / -1;}
+  .field label{font-size:0.7rem; color:var(--parchment-dim); text-transform:uppercase; letter-spacing:0.08em;}
+  .field input, .field select, .field textarea{background:var(--moss); border:1px solid var(--line); color:var(--parchment); padding:12px 13px; font-size:0.92rem; border-radius:var(--radius); font-family:inherit;}
+  .field textarea{resize:vertical;}
+  .field input::placeholder, .field textarea::placeholder{color:var(--parchment-dim);}
+  .field input:focus, .field select:focus, .field textarea:focus{border-color:var(--amber);}
+  .summary{background:var(--moss); border:1px solid var(--line); border-radius:var(--radius); padding:26px 24px; position:sticky; top:100px;}
+  .summary h2{font-size:1.05rem; margin:0 0 20px;}
+  .mini-item{display:flex; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line);}
+  .mini-item:first-of-type{padding-top:0;}
+  .mini-vial{width:34px; flex-shrink:0;}
+  .mini-info{flex:1; min-width:0;}
+  .mini-name{font-size:0.88rem; margin:0;}
+  .mini-meta{font-size:0.7rem; color:var(--parchment-dim);}
+  .mini-price{font-family:'IBM Plex Mono', monospace; font-size:0.82rem; white-space:nowrap;}
+  .summary-row{display:flex; justify-content:space-between; font-size:0.86rem; color:var(--parchment-dim); padding:9px 0;}
+  .summary-row .mono{color:var(--parchment);}
+  .summary-row.total{border-top:1px solid var(--line); margin-top:6px; padding-top:16px; color:var(--parchment); font-size:1rem;}
+  .summary-row.total .mono{color:var(--amber-bright); font-size:1.15rem;}
+  .zone-tabs{display:flex; gap:6px; margin:4px 0 14px;}
+  .zone-tab{
+    flex:1;
+    background:transparent;
+    border:1px solid var(--brass);
+    color:var(--parchment-dim);
+    padding:8px 6px;
+    font-size:0.68rem;
+    border-radius:var(--radius);
+    text-align:center;
+  }
+  .zone-tab.active{
+    background:var(--amber);
+    border-color:var(--amber);
+    color:var(--ink-deep);
+    font-weight:600;
+  }
+  .zone-tab:hover:not(.active){border-color:var(--amber-bright); color:var(--parchment);}
+  .btn-primary{display:block; width:100%; text-align:center; background:var(--amber); color:var(--ink-deep); border:1px solid var(--amber); padding:15px 22px; font-size:0.9rem; border-radius:var(--radius); font-weight:600; margin-top:20px;}
+  .btn-primary:hover{background:var(--amber-bright); border-color:var(--amber-bright); color:var(--ink);}
+  .btn-primary:disabled{background:transparent; color:var(--parchment-dim); border-color:var(--line); cursor:not-allowed;}
+  .lock-note{font-size:0.68rem; color:var(--parchment-dim); text-align:center; margin-top:12px; display:flex; align-items:center; justify-content:center; gap:6px;}
+  .empty-note{color:var(--parchment-dim); font-size:0.85rem; text-align:center; padding:20px 0;}
+  .confirm-panel{display:none; text-align:center; padding:80px 28px 100px;}
+  .confirm-panel.show{display:block;}
+  .confirm-panel .seal{width:64px; height:64px; margin:0 auto 26px; border:1px solid var(--amber); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--amber-bright); font-size:1.6rem;}
+  .confirm-panel h1{font-size:2rem; margin:0 0 12px;}
+  .confirm-panel p{color:var(--parchment-dim); max-width:44ch; margin:0 auto 8px;}
+  .confirm-order-id{display:inline-block; margin-top:18px; font-size:0.8rem; color:var(--amber-bright); border:1px solid var(--brass); padding:8px 16px; border-radius:var(--radius);}
+  .confirm-panel .btn-primary{width:auto; display:inline-block; margin-top:36px; padding:14px 28px;}
+  footer{border-top:1px solid var(--line); padding:44px 28px 36px;}
+  .footer-grid{display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px; font-size:0.8rem; color:var(--parchment-dim);}
+  @media (max-width: 880px){ .checkout-layout{grid-template-columns:1fr;} .summary{position:static;} }
+  @media (max-width: 620px){ .field-grid{grid-template-columns:1fr;} .progress{display:none;} }  .wa-float{
+    position:fixed; bottom:24px; right:24px; z-index:50;
+    width:56px; height:56px; border-radius:50%;
+    background:#25D366; color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 14px rgba(70,54,47,0.3);
+    text-decoration:none;
+    transition:transform .15s ease;
+  }
+  .wa-float:hover{transform:scale(1.07);}
+  .wa-float svg{width:28px; height:28px; display:block;}
+  @media (max-width:620px){
+    .wa-float{bottom:18px; right:18px; width:50px; height:50px;}
+    .wa-float svg{width:25px; height:25px;}
+  }
+  @media (max-width:480px){
+    .nav{padding:14px 16px; gap:8px;}
+    .wordmark .mono{display:none;}
+    .wordmark{font-size:1rem;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="wordmark" href="index.html">
+      <span>Liquid Emotions</span>
+      <span class="mono">EST.2025</span>
+    </a>
+    <div class="progress">
+      <span class="step done"><span class="dot"></span>Cart</span>
+      <span class="sep"></span>
+      <span class="step current"><span class="dot"></span>Checkout</span>
+      <span class="sep"></span>
+      <span class="step"><span class="dot"></span>Confirmation</span>
+    </div>
+  </div>
+</header>
+
+<div id="checkoutView">
+  <div class="page-head">
+    <div class="wrap">
+      <div class="breadcrumb"><a href="index.html">Catalogue</a> / <a href="cart.html">Cart</a> / <span>Checkout</span></div>
+      <h1>Checkout</h1>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <div class="checkout-layout">
+      <form id="checkoutForm">
+        <div class="form-section">
+          <h2><span class="num">1</span>Contact</h2>
+          <div class="field-grid">
+            <div class="field full">
+              <label for="email">Email</label>
+              <input type="email" id="email" placeholder="you@email.com" required>
+            </div>
+            <div class="field full">
+              <label for="phone">Phone</label>
+              <input type="tel" id="phone" placeholder="+91 98765 43210" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h2><span class="num">2</span>Shipping address</h2>
+          <div class="field-grid">
+            <div class="field">
+              <label for="fname">First name</label>
+              <input type="text" id="fname" placeholder="First name" required>
+            </div>
+            <div class="field">
+              <label for="lname">Last name</label>
+              <input type="text" id="lname" placeholder="Last name" required>
+            </div>
+            <div class="field full">
+              <label for="addr">Address</label>
+              <input type="text" id="addr" placeholder="House no., street, area" required>
+            </div>
+            <div class="field">
+              <label for="city">City</label>
+              <input type="text" id="city" placeholder="City" required>
+            </div>
+            <div class="field">
+              <label for="state">State</label>
+              <input type="text" id="state" placeholder="State" required>
+            </div>
+            <div class="field">
+              <label for="pin">PIN code</label>
+              <input type="text" id="pin" placeholder="110001" required>
+            </div>
+            <div class="field">
+              <label for="country">Country</label>
+              <select id="country" required>
+                <option>India</option>
+                <option>United States</option>
+                <option>United Kingdom</option>
+                <option>United Arab Emirates</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </form>
+
+      <aside class="summary">
+        <h2>Order summary</h2>
+        <div class="zone-tabs" id="zoneTabs">
+          <button class="zone-tab" data-zone="ncr">Delhi NCR</button>
+          <button class="zone-tab" data-zone="india">Rest of India</button>
+        </div>
+        <div id="miniItems"></div>
+        <div class="summary-row">
+          <span id="miniCountLabel">0 items</span>
+          <span class="mono" id="miniSubtotal">₹0</span>
+        </div>
+        <div class="summary-row">
+          <span>Shipping</span>
+          <span class="mono" id="miniShipping">₹0</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total due</span>
+          <span class="mono" id="miniTotal">₹0</span>
+        </div>
+        <button type="submit" form="checkoutForm" class="btn-primary" id="placeOrderBtn">Place order via WhatsApp</button>
+        <p class="lock-note">Opens WhatsApp with your order details filled in — just hit send</p>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<div class="confirm-panel" id="confirmPanel">
+  <div class="seal">✓</div>
+  <h1>Almost there.</h1>
+  <p>We've opened WhatsApp with your order details filled in — just hit send on that chat and we'll begin decanting your bottles by hand.</p>
+  <div class="confirm-order-id mono" id="orderId"></div>
+  <br>
+  <a class="btn-primary" href="index.html">Back to the catalogue</a>
+</div>
+
+<footer>
+  <div class="wrap footer-grid">
+    <span>© Liquid Emotions Decants.</span>
+  </div>
+</footer>
+
+<script src="store.js"></script>
+<script>
+function miniVial(fragrance){
+  if(fragrance.image){
+    return `<img src="${fragrance.image}" alt="${fragrance.name}" class="mini-vial" style="width:34px;height:64px;object-fit:contain;border-radius:4px;">`;
+  }
+  return `
+  <svg class="mini-vial" viewBox="0 0 100 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M38 10 H62 V38 C62 42 66 44 72 52 C82 64 84 78 84 100 V172 C84 182 76 190 66 190 H34 C24 190 16 182 16 172 V100 C16 78 18 64 28 52 C34 44 38 42 38 38 Z"
+          stroke="#C98C7A" stroke-width="4"/>
+    <rect x="14" y="70" width="72" height="118" fill="${fragrance.color}" opacity="0.9"/>
+  </svg>`;
+}
+
+function currency(n){ return leFormatPrice(n); }
+
+/* Shipping — mirrors the zone the customer picked on the cart page,
+   so the total here matches what they already saw there. */
+const SHIPPING_ZONES = {
+  ncr:   { label: "Delhi NCR", flat: 55 },
+  india: { label: "Rest of India",      flat: 75 }
+};
+const FREE_SHIP_QTY = 4;
+const ZONE_KEY = "le_ship_zone";
+let currentZone = localStorage.getItem(ZONE_KEY) || "ncr";
+if(!SHIPPING_ZONES[currentZone]) currentZone = "ncr";
+
+function renderSummary(){
+  const lines = leCartLines();
+  const miniItems = document.getElementById("miniItems");
+  const placeOrderBtn = document.getElementById("placeOrderBtn");
+
+  if(lines.length === 0){
+    miniItems.innerHTML = `<p class="empty-note">Your cart is empty. <a href="index.html" style="color:var(--amber-bright);">Browse the catalogue</a> first.</p>`;
+    placeOrderBtn.disabled = true;
+  }else{
+    miniItems.innerHTML = lines.map(line => `
+      <div class="mini-item">
+        <div>${miniVial(line.fragrance)}</div>
+        <div class="mini-info">
+          <p class="mini-name">${line.fragrance.name}</p>
+          <div class="mini-meta">${line.size} × ${line.qty}</div>
+        </div>
+        <div class="mini-price mono">${currency(line.lineTotal)}</div>
+      </div>
+    `).join("");
+    placeOrderBtn.disabled = false;
+  }
+
+  const count = leCartCount();
+  const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
+  const zone = SHIPPING_ZONES[currentZone];
+  const qualifiesFreeShip = count >= FREE_SHIP_QTY;
+  const shipping = subtotal === 0 ? 0 : (qualifiesFreeShip ? 0 : zone.flat);
+
+  document.getElementById("miniCountLabel").textContent = count === 1 ? "1 item" : `${count} items`;
+  document.getElementById("miniSubtotal").textContent = currency(subtotal);
+  document.getElementById("miniShipping").textContent = shipping === 0 ? "Free" : currency(shipping);
+  document.getElementById("miniTotal").textContent = currency(subtotal + shipping);
+
+  document.querySelectorAll(".zone-tab").forEach(tab => {
+    tab.classList.toggle("active", tab.dataset.zone === currentZone);
+  });
+}
+
+const WHATSAPP_NUMBER = "917982410620";
+const ORDER_SEQ_KEY = "le_order_seq";
+
+function nextOrderId(){
+  let n = parseInt(localStorage.getItem(ORDER_SEQ_KEY) || "0", 10);
+  n += 1;
+  localStorage.setItem(ORDER_SEQ_KEY, n);
+  return "LE-" + String(n).padStart(6, "0");
+}
+
+function buildWhatsAppMessage(id){
+  const lines = leCartLines();
+  const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
+  const count = leCartCount();
+  const zone = SHIPPING_ZONES[currentZone];
+  const qualifiesFreeShip = count >= FREE_SHIP_QTY;
+  const shipping = subtotal === 0 ? 0 : (qualifiesFreeShip ? 0 : zone.flat);
+
+  const name = `${document.getElementById("fname").value} ${document.getElementById("lname").value}`.trim();
+  const email = document.getElementById("email").value;
+  const phone = document.getElementById("phone").value;
+  const addr = document.getElementById("addr").value;
+  const city = document.getElementById("city").value;
+  const state = document.getElementById("state").value;
+  const pin = document.getElementById("pin").value;
+  const country = document.getElementById("country").value;
+
+  const itemLines = lines.map(l => `• ${l.fragrance.name} (${l.size}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
+
+  const msg =
+`New order: ${id}
+
+*Customer*
+${name}
+${phone}
+${email}
+
+*Shipping to*
+${addr}
+${city}, ${state} ${pin}
+${country}
+
+*Items*
+${itemLines}
+
+Subtotal: ${currency(subtotal)}
+Shipping (${zone.label}): ${shipping === 0 ? "Free" : currency(shipping)}
+Total: ${currency(subtotal + shipping)}`;
+
+  return msg;
+}
+
+/* ---------- Remember last-used shipping details ---------- */
+const ADDRESS_KEY = "le_last_address";
+const ADDRESS_FIELDS = ["email", "phone", "fname", "lname", "addr", "city", "state", "pin", "country"];
+
+function loadSavedAddress(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(ADDRESS_KEY) || "{}");
+    ADDRESS_FIELDS.forEach(id => {
+      if(saved[id]) document.getElementById(id).value = saved[id];
+    });
+  }catch(e){ /* ignore malformed/missing saved data */ }
+}
+
+function saveAddress(){
+  const data = {};
+  ADDRESS_FIELDS.forEach(id => { data[id] = document.getElementById(id).value; });
+  try{ localStorage.setItem(ADDRESS_KEY, JSON.stringify(data)); }catch(e){ /* storage unavailable */ }
+}
+
+loadSavedAddress();
+
+document.getElementById("checkoutForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  if(leCartCount() === 0) return;
+
+  const placeOrderBtn = document.getElementById("placeOrderBtn");
+  placeOrderBtn.disabled = true;
+  placeOrderBtn.textContent = "Placing order...";
+
+  saveAddress();
+
+  const id = nextOrderId();
+  const message = buildWhatsAppMessage(id);
+  const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+
+  window.open(waUrl, "_blank");
+
+  document.getElementById("orderId").textContent = "Order " + id;
+  document.getElementById("checkoutView").style.display = "none";
+  document.getElementById("confirmPanel").classList.add("show");
+  leClearCart();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+document.getElementById("zoneTabs").addEventListener("click", (e) => {
+  const btn = e.target.closest(".zone-tab");
+  if(!btn) return;
+  currentZone = btn.dataset.zone;
+  localStorage.setItem(ZONE_KEY, currentZone);
+  renderSummary();
+});
+
+window.addEventListener("storage", (e) => {
+  if(e.key === ZONE_KEY){
+    currentZone = localStorage.getItem(ZONE_KEY) || "ncr";
+    if(!SHIPPING_ZONES[currentZone]) currentZone = "ncr";
+    renderSummary();
+  }
+});
+
+renderSummary();
+</script>
+
+<a class="wa-float" href="https://wa.me/917982410620?text=Hi!%20I'd%20like%20to%20place%20a%20decant%20order." target="_blank" rel="noopener" aria-label="Order via WhatsApp">
+  <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M16.004 3C9.377 3 4 8.373 4 15c0 2.34.653 4.527 1.786 6.393L4 29l7.8-1.75A11.94 11.94 0 0 0 16.004 27C22.63 27 28 21.627 28 15S22.63 3 16.004 3zm0 21.75a9.7 9.7 0 0 1-4.95-1.354l-.355-.21-4.626 1.038 1.02-4.507-.232-.367A9.72 9.72 0 0 1 5.25 15c0-5.93 4.823-10.75 10.754-10.75S26.75 9.07 26.75 15 21.935 24.75 16.004 24.75zm5.55-7.98c-.304-.152-1.795-.886-2.073-.987-.278-.101-.48-.152-.683.152-.202.303-.783.986-.96 1.19-.176.202-.353.227-.657.076-.304-.152-1.283-.473-2.443-1.51-.903-.805-1.513-1.8-1.69-2.104-.177-.303-.019-.467.133-.618.137-.136.304-.354.456-.53.152-.177.202-.303.304-.505.101-.202.05-.38-.025-.531-.076-.152-.683-1.648-.936-2.257-.246-.593-.497-.513-.683-.522-.177-.008-.38-.01-.582-.01-.202 0-.531.076-.809.38-.278.303-1.06 1.036-1.06 2.527s1.085 2.933 1.236 3.136c.152.202 2.135 3.26 5.174 4.572.723.312 1.287.499 1.727.638.726.231 1.386.198 1.908.12.582-.087 1.795-.734 2.048-1.443.253-.71.253-1.317.177-1.443-.076-.127-.278-.202-.582-.354z"/></svg>
+</a>
+</body>
+</html>

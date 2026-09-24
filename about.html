@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Us — Liquid Emotions</title>
+<meta name="description" content="Learn about Liquid Emotions — authenticated fragrance decants, measured by syringe and sealed by hand. Try before you commit to a full bottle.">
+<meta name="robots" content="index, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#FAF6F2;
+    --ink-deep:#2E221D;
+    --parchment:#46362F;
+    --parchment-dim:#6F5A4E;
+    --amber:#C98C7A;
+    --amber-bright:#9C5644;
+    --brass:#C98C7A;
+    --line:rgba(164,141,132,0.35);
+    --moss:#FFFFFF;
+    --burgundy:#46362F;
+    --radius:2px; --blush:#E6CFCB; --taupe:#A48D84;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--parchment);
+    font-family:'Source Serif 4', serif;
+    font-size:17px;
+    line-height:1.55;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .mono{
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing:0.02em;
+  }
+  a{color:inherit;}
+  /* ---------- Background: champagne gold + light rose gold (static, minimal) ---------- */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      linear-gradient(115deg, transparent 38%, rgba(255,255,255,0.55) 50%, transparent 62%),
+      radial-gradient(1100px 720px at 0% 0%, rgba(233,212,160,0.42), transparent 62%),
+      radial-gradient(1000px 760px at 100% 100%, rgba(232,184,166,0.36), transparent 62%),
+      linear-gradient(160deg, #FBF8F0 0%, #FAF6F2 50%, #F9EEE9 100%);
+  }
+  img,svg{display:block;max-width:100%;}
+  button{font-family:inherit;cursor:pointer;}
+  :focus-visible{
+    outline:2px solid var(--amber-bright);
+    outline-offset:3px;
+  }
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:0 28px;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:20;
+    background:rgba(250,246,242,0.85);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 28px;
+  }
+  .wordmark{
+    font-size:1.15rem;
+    display:flex; align-items:baseline; gap:8px;
+    text-decoration:none;
+  }
+  .wordmark .mono{font-size:0.62rem; color:var(--amber-bright); letter-spacing:0.14em;}
+  nav.links{display:flex; gap:26px; font-size:0.85rem;}
+  nav.links a{
+    text-decoration:none; color:var(--parchment-dim);
+    border-bottom:1px solid transparent;
+    padding-bottom:2px;
+    transition:color .2s, border-color .2s;
+  }
+  nav.links a:hover, nav.links a.active{color:var(--parchment); border-color:var(--amber);}
+  .nav-right{display:flex; align-items:center; gap:14px;}
+  .hamburger-btn{
+    display:none; flex-direction:column; justify-content:center; gap:4px;
+    width:32px; height:32px; background:none; border:none; cursor:pointer; padding:0;
+  }
+  .hamburger-btn span{display:block; width:100%; height:2px; background:var(--parchment); border-radius:2px;}
+  .mobile-menu{
+    display:none; flex-direction:column;
+    border-top:1px solid var(--line);
+    background:var(--ink);
+    padding:6px 28px 14px;
+  }
+  .mobile-menu.open{display:flex;}
+  .mobile-menu a{
+    text-decoration:none; color:var(--parchment-dim);
+    padding:13px 0; border-bottom:1px solid var(--line);
+    font-size:0.9rem;
+  }
+  .mobile-menu a:last-child{border-bottom:none;}
+  .mobile-menu a:hover{color:var(--amber-bright);}
+  .cart-pill{
+    display:flex; align-items:center; gap:8px;
+    font-size:0.78rem;
+    padding:9px 16px;
+    border:1px solid var(--brass);
+    color:var(--amber-bright);
+    border-radius:var(--radius);
+    text-decoration:none;
+    white-space:nowrap;
+  }
+  .cart-pill:hover{background:var(--amber); color:var(--ink-deep); border-color:var(--amber);}
+  .cart-count{
+    background:var(--amber-bright);
+    color:var(--ink);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.66rem;
+    font-weight:600;
+    padding:1px 6px;
+    border-radius:100px;
+  }
+  .cart-pill:hover .cart-count{background:var(--ink-deep); color:var(--amber);}
+
+  /* ---------- Breadcrumb ---------- */
+  .breadcrumb-row{padding:20px 28px 0;}
+  .breadcrumb{font-size:0.7rem; color:var(--parchment-dim);}
+  .breadcrumb a{text-decoration:none; color:var(--parchment-dim);}
+  .breadcrumb a:hover{color:var(--amber-bright);}
+
+  /* ---------- Hero / brand story ---------- */
+  .hero{
+    padding:32px 28px 32px;
+    position:relative;
+    overflow:hidden;
+    border-bottom:1px solid var(--line);
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(600px 300px at 82% 10%, rgba(201,140,122,0.18), transparent 70%);
+    pointer-events:none;
+  }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1.3fr 0.7fr;
+    gap:56px;
+    align-items:center;
+    position:relative;
+  }
+  .stamp{
+    display:inline-flex; align-items:center; gap:10px;
+    font-size:0.7rem; color:var(--amber-bright);
+    border:1px solid var(--brass);
+    padding:6px 12px;
+    border-radius:100px;
+    margin-bottom:14px;
+  }
+  .stamp .dot{width:6px;height:6px;border-radius:50%;background:var(--amber-bright);}
+  .hero h1{
+    font-size:clamp(1.8rem, 3.6vw, 2.7rem);
+    line-height:1.08;
+    margin:0 0 12px;
+    max-width:13ch;
+  }
+  .hero h1 em{
+    font-style:italic;
+    color:var(--amber-bright);
+  }
+  .hero p.lede{
+    font-size:1rem;
+    color:var(--parchment-dim);
+    max-width:46ch;
+    margin:0 0 18px;
+  }
+  .hero-ctas{display:flex; gap:14px; flex-wrap:wrap;}
+  .trust-strip{
+    display:flex; flex-wrap:wrap; gap:28px;
+    margin-top:22px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
+    position:relative;
+  }
+  .trust-item{
+    display:flex; align-items:center; gap:10px;
+    font-size:0.82rem;
+    color:var(--parchment-dim);
+  }
+  .trust-item .trust-icon{font-size:1.3rem; line-height:1;}
+  .trust-item b{display:block; color:var(--parchment); font-family:'Fraunces', serif; font-size:0.92rem; font-weight:600;}
+  .catalogue-stat{
+    font-size:0.72rem; color:var(--amber-bright);
+    letter-spacing:0.04em;
+  }
+  .btn-primary{
+    background:var(--amber);
+    color:var(--ink-deep);
+    border:1px solid var(--amber);
+    padding:13px 22px;
+    font-size:0.88rem;
+    border-radius:var(--radius);
+    text-decoration:none;
+    font-weight:600;
+  }
+  .btn-primary:hover{background:var(--amber-bright); border-color:var(--amber-bright); color:var(--ink);}
+  .btn-ghost{
+    padding:13px 22px;
+    font-size:0.88rem;
+    border-radius:var(--radius);
+    text-decoration:none;
+    border:1px solid var(--line);
+    color:var(--parchment-dim);
+  }
+  .btn-ghost:hover{border-color:var(--taupe); color:var(--parchment);}
+
+  /* hero vial illustration */
+  .hero-vial-wrap{
+    display:flex; justify-content:center;
+  }
+  .hero-vial{width:95px;}
+  .hero-vial .liquid{
+    animation:settle 2.6s ease-in-out infinite alternate;
+    transform-origin:bottom;
+  }
+  @media (prefers-reduced-motion:reduce){
+    .hero-vial .liquid{animation:none;}
+  }
+  @keyframes settle{
+    from{ transform: scaleY(1); }
+    to{ transform: scaleY(0.985); }
+  }
+
+  /* ---------- Section shared ---------- */
+  section{padding:76px 28px;}
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px; margin-bottom:44px;
+    flex-wrap:wrap; gap:10px;
+  }
+  .section-head h2{font-size:1.7rem; margin:0;}
+  .section-head .mono{font-size:0.72rem; color:var(--parchment-dim);}
+
+  /* ---------- Steps (How decanting works) ---------- */
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:36px;
+  }
+  .step .num{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--amber-bright);
+    font-size:0.85rem;
+    display:block; margin-bottom:14px;
+  }
+  .step h3{font-size:1.15rem; margin:0 0 10px;}
+  .step p{color:var(--parchment-dim); font-size:0.94rem; margin:0;}
+  @media (max-width:880px){
+    .steps{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Ledger / sourcing ---------- */
+  .ledger{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:60px;
+    align-items:start;
+  }
+  .ledger p{color:var(--parchment-dim); max-width:52ch;}
+  .ledger dl{
+    margin:0; border-top:1px solid var(--line);
+  }
+  .ledger .entry{
+    display:flex; justify-content:space-between; gap:20px;
+    padding:16px 0;
+    border-bottom:1px solid var(--line);
+    font-size:0.9rem;
+  }
+  .ledger dt{color:var(--parchment);}
+  .ledger dd{margin:0; color:var(--parchment-dim); text-align:right; font-family:'IBM Plex Mono', monospace; font-size:0.8rem;}
+
+  /* ---------- Footer ---------- */
+  footer{
+    border-top:1px solid var(--line);
+    padding:44px 28px 36px;
+  }
+  .footer-cols{
+    display:grid;
+    grid-template-columns:1.4fr 1fr 1.2fr;
+    gap:40px;
+    margin-bottom:32px;
+  }
+  .footer-col h4{
+    font-family:'Fraunces', serif; font-size:0.85rem; color:var(--parchment);
+    margin:0 0 14px;
+  }
+  .footer-col p{color:var(--parchment-dim); font-size:0.85rem; max-width:34ch; margin:0;}
+  .footer-col ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px;}
+  .footer-col li a{color:var(--parchment-dim); text-decoration:none; font-size:0.85rem;}
+  .footer-col li a:hover{color:var(--amber-bright);}
+  .footer-col .ship-line{font-size:0.82rem; color:var(--parchment-dim); display:flex; gap:8px;}
+  .footer-bottom{
+    border-top:1px solid var(--line);
+    padding-top:20px;
+    font-size:0.78rem;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+  @media (max-width:700px){
+    .footer-cols{grid-template-columns:1fr;}
+  }
+
+  /* ---------- WhatsApp float ---------- */
+  .wa-float{
+    position:fixed; bottom:24px; right:24px; z-index:50;
+    width:56px; height:56px; border-radius:50%;
+    background:#25D366; color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 14px rgba(70,54,47,0.3);
+    text-decoration:none;
+    transition:transform .15s ease;
+  }
+  .wa-float:hover{transform:scale(1.07);}
+  .wa-float svg{width:28px; height:28px; display:block;}
+  @media (max-width:620px){
+    .wa-float{bottom:18px; right:18px; width:50px; height:50px;}
+    .wa-float svg{width:25px; height:25px;}
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 880px){
+    .hero-grid{grid-template-columns:1fr;}
+    .hero-vial-wrap{order:-1;}
+    .hero-vial{width:80px;}
+  }
+  @media (max-width: 560px){
+    nav.links{display:none;}
+    .hamburger-btn{display:flex;}
+    .hero{padding-top:44px;}
+  }
+  @media (max-width:480px){
+    .nav{padding:14px 16px; gap:8px;}
+    .wordmark .mono{display:none;}
+    .wordmark{font-size:1rem;}
+    .cart-pill{padding:8px 10px;}
+    .pill-label{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="wordmark" href="index.html">
+      <span>Liquid Emotions</span>
+      <span class="mono">EST.2025</span>
+    </a>
+    <nav class="links">
+      <a href="index.html#register">The catalogue</a>
+      <a href="index.html#about">Sourcing</a>
+    </nav>
+    <div class="nav-right">
+      <a class="cart-pill" href="wishlist.html">
+        <span>♡ <span class="pill-label">Wishlist</span></span>
+        <span class="cart-count mono" data-wishlist-count>0</span>
+      </a>
+      <a class="cart-pill" href="cart.html">
+        <span>🛒 <span class="pill-label">Cart</span></span>
+        <span class="cart-count mono" data-cart-count>0</span>
+      </a>
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu" aria-expanded="false" type="button">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <nav class="mobile-menu" id="mobileMenu">
+    <a href="index.html#register">The catalogue</a>
+    <a href="index.html#about">Sourcing</a>
+  </nav>
+</header>
+
+<div class="breadcrumb-row">
+  <div class="wrap">
+    <div class="breadcrumb"><a href="index.html">Home</a> / <span>About Us</span></div>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="stamp"><span class="dot"></span><span class="mono">DECANTED BY SYRINGE &amp; SEALED BY HAND</span></span>
+      <h1>Full bottles are a <em>commitment.</em><br>Try the decant first.</h1>
+      <p class="lede">Every fragrance in the catalogue is decanted to order from an authenticated bottle, measured by syringe, and sealed in a glass vial — so you can live with a scent before you commit to owning it.</p>
+      <div class="hero-ctas">
+        <a href="index.html#register" class="btn-primary">Browse the catalogue</a>
+        <a href="#how" class="btn-ghost">How decanting works</a>
+      </div>
+      <div class="trust-strip">
+        <div class="trust-item"><span class="trust-icon">🧪</span><span><b>Multiple sizes</b>3ml, 5ml, 10ml, 20ml &amp; 30ml</span></div>
+        <div class="trust-item"><span class="trust-icon">✔️</span><span><b>100% authentic</b>Decanted from genuine bottles</span></div>
+        <div class="trust-item"><span class="trust-icon">📦</span><span><b>Carefully packed</b>Leak-tested &amp; sealed vials</span></div>
+        <div class="trust-item"><span class="trust-icon">📖</span><span><b>Growing catalogue</b><span class="catalogue-stat mono" id="heroStat">— Perfumes across — Brands</span></span></div>
+      </div>
+    </div>
+    <div class="hero-vial-wrap">
+      <div>
+        <svg class="hero-vial" viewBox="0 0 100 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M38 10 H62 V38 C62 42 66 44 72 52 C82 64 84 78 84 100 V172 C84 182 76 190 66 190 H34 C24 190 16 182 16 172 V100 C16 78 18 64 28 52 C34 44 38 42 38 38 Z"
+                stroke="#C98C7A" stroke-width="2.5"/>
+          <clipPath id="vialClipHero">
+            <path d="M38 10 H62 V38 C62 42 66 44 72 52 C82 64 84 78 84 100 V172 C84 182 76 190 66 190 H34 C24 190 16 182 16 172 V100 C16 78 18 64 28 52 C34 44 38 42 38 38 Z"/>
+          </clipPath>
+          <g clip-path="url(#vialClipHero)">
+            <rect class="liquid" x="10" y="95" width="84" height="100" fill="#C98C7A"/>
+          </g>
+          <rect x="34" y="2" width="32" height="10" rx="2" fill="#C98C7A"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>How decanting works</h2>
+      <span class="mono">THREE STEPS</span>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="num mono">01</span>
+        <h3>Select a bottle</h3>
+        <p>Choose from the current catalogue — each entry lists its brand and its notes</p>
+      </div>
+      <div class="step">
+        <span class="num mono">02</span>
+        <h3>Choose a decant size</h3>
+        <p>From a 3ml sample (on select perfumes) up to 30ml to live with it a season.</p>
+      </div>
+      <div class="step">
+        <span class="num mono">03</span>
+        <h3>We decant &amp; seal</h3>
+        <p>Decanted by syringe into an atomizer vial, labeled, and shipped within 48 hours.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sourcing">
+  <div class="wrap ledger">
+    <div>
+      <h2 style="font-size:1.7rem; margin-top:0;">Sourcing &amp; standards</h2>
+      <p>Every bottle in the register is purchased from authorized sellers. We log the purchase, the lot, and the decant date for every vial we pour.</p>
+      <p>Vials are glass with a metal atomizer cap, chosen because cheap plastic is what actually degrades a fragrance in storage — not the fact that it left its original bottle.</p>
+    </div>
+    <dl class="ledger">
+      <div class="entry"><dt>Vial material</dt><dd class="mono">GLASS</dd></div>
+      <div class="entry"><dt>Cap and atomizer material</dt><dd class="mono">METAL</dd></div>
+      <div class="entry"><dt>Dispatch window</dt><dd class="mono">&lt; 48 HRS</dd></div>
+    </dl>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-cols">
+      <div class="footer-col">
+        <h4>Liquid Emotions</h4>
+        <p>Authenticated fragrance decants, measured by syringe and sealed by hand. Try before you commit to a full bottle.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="index.html#register">Shop the catalogue</a></li>
+          <li><a href="wishlist.html">Wishlist</a></li>
+          <li><a href="cart.html">Cart</a></li>
+          <li><a href="#sourcing">Sourcing</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Shipping Info</h4>
+        <div class="ship-line">🚚 <span>Delhi NCR: ₹55</span></div>
+        <div class="ship-line">🚚 <span>Rest of India: ₹75</span></div>
+        <div class="ship-line">✨ <span>Free shipping on 4 or more decants (any size)</span></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© Liquid Emotions Decants.</span>
+      <span>Made with care, for fragrance lovers.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="store.js"></script>
+<script>
+  const hamburgerBtn = document.getElementById("hamburgerBtn");
+  const mobileMenu = document.getElementById("mobileMenu");
+  if(hamburgerBtn && mobileMenu){
+    hamburgerBtn.addEventListener("click", () => {
+      const isOpen = mobileMenu.classList.toggle("open");
+      hamburgerBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    });
+    mobileMenu.querySelectorAll("a").forEach(a => {
+      a.addEventListener("click", () => {
+        mobileMenu.classList.remove("open");
+        hamburgerBtn.setAttribute("aria-expanded", "false");
+      });
+    });
+  }
+
+  const heroStatEl = document.getElementById("heroStat");
+  if(heroStatEl){
+    const totalBrands = new Set(FRAGRANCES.map(f => f.house)).size;
+    heroStatEl.textContent = `${FRAGRANCES.length} Perfumes across ${totalBrands} Brands`;
+  }
+</script>
+
+<a class="wa-float" href="https://wa.me/917982410620?text=Hi!%20I'd%20like%20to%20place%20a%20decant%20order." target="_blank" rel="noopener" aria-label="Order via WhatsApp">
+  <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M16.004 3C9.377 3 4 8.373 4 15c0 2.34.653 4.527 1.786 6.393L4 29l7.8-1.75A11.94 11.94 0 0 0 16.004 27C22.63 27 28 21.627 28 15S22.63 3 16.004 3zm0 21.75a9.7 9.7 0 0 1-4.95-1.354l-.355-.21-4.626 1.038 1.02-4.507-.232-.367A9.72 9.72 0 0 1 5.25 15c0-5.93 4.823-10.75 10.754-10.75S26.75 9.07 26.75 15 21.935 24.75 16.004 24.75zm5.55-7.98c-.304-.152-1.795-.886-2.073-.987-.278-.101-.48-.152-.683.152-.202.303-.783.986-.96 1.19-.176.202-.353.227-.657.076-.304-.152-1.283-.473-2.443-1.51-.903-.805-1.513-1.8-1.69-2.104-.177-.303-.019-.467.133-.618.137-.136.304-.354.456-.53.152-.177.202-.303.304-.505.101-.202.05-.38-.025-.531-.076-.152-.683-1.648-.936-2.257-.246-.593-.497-.513-.683-.522-.177-.008-.38-.01-.582-.01-.202 0-.531.076-.809.38-.278.303-1.06 1.036-1.06 2.527s1.085 2.933 1.236 3.136c.152.202 2.135 3.26 5.174 4.572.723.312 1.287.499 1.727.638.726.231 1.386.198 1.908.12.582-.087 1.795-.734 2.048-1.443.253-.71.253-1.317.177-1.443-.076-.127-.278-.202-.582-.354z"/></svg>
+</a>
+</body>
+</html>
