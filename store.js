@@ -1209,12 +1209,12 @@ const FRAGRANCES = [
     id: "santal-royal",
     name: "Santal Royal",
     house: "Guerlain",
-    notes: { top: "Neroli, Jasmine", heart: "Peach, Rose, Cinnamon", base: "Agarwood (Oud), Sandalwood, Leather, Amber, Musk" },
+    notes: { top: "Rose", heart: "Sandalwood, Oud, Jasmine", base: "Leather" },
     color: "#4A3A2E",
-    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.28246.2x.avif",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.96470.2x.avif",
     gender: "Unisex",
     season: ["Winter","Autumn"],
-    fragranticaUrl: "https://www.fragrantica.com/perfume/Guerlain/Les-Absolus-d-Orient-Santal-Royal-28246.html",
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Guerlain/Santal-Royal-96470.html",
     prices: { "3ml": 325, "5ml": 500, "10ml": 940, "20ml": 1840, "30ml": 2720 }
   },
   {
