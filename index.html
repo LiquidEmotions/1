@@ -711,9 +711,113 @@
   @media (max-width:800px){
     .testimonial-grid{grid-template-columns:1fr;}
   }
+
+  /* ---------- Entry splash: a drop that opens onto the shop ---------- */
+  #leSplash{
+    position:fixed; inset:0; z-index:99999;
+    background:var(--ink); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    --r:0vmax;
+    -webkit-mask-image: radial-gradient(circle var(--r) at 50% 55%, transparent 0, transparent calc(var(--r) - 2px), black var(--r));
+    mask-image: radial-gradient(circle var(--r) at 50% 55%, transparent 0, transparent calc(var(--r) - 2px), black var(--r));
+  }
+  #leSplash::before{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:
+      radial-gradient(900px 600px at 50% 30%, rgba(233,212,160,0.30), transparent 62%),
+      radial-gradient(800px 620px at 50% 80%, rgba(232,184,166,0.24), transparent 62%);
+  }
+  .le-splash-inner{ position:relative; text-align:center; }
+  .le-splash-drop{
+    width:10px; height:10px; border-radius:50% 50% 50% 0; transform:rotate(45deg) translateY(-30px) scale(0.5);
+    background:var(--amber-bright); margin:0 auto 22px; opacity:0;
+    animation: leDropFall 900ms cubic-bezier(.4,0,.2,1) forwards;
+  }
+  .le-splash-word{
+    font-size:2.1rem; margin:0; color:var(--parchment); opacity:0;
+    animation: leFadeUp 700ms ease forwards; animation-delay:420ms;
+  }
+  .le-splash-tag{
+    margin:8px 0 0; color:var(--amber-bright); letter-spacing:0.16em; text-transform:uppercase;
+    font-size:0.72rem; opacity:0; animation: leFadeUp 700ms ease forwards; animation-delay:620ms;
+  }
+  .le-splash-skip{
+    position:absolute; bottom:-70px; left:50%; transform:translateX(-50%);
+    font-size:0.66rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--parchment-dim);
+    opacity:0; animation: leFadeUp 700ms ease forwards, lePulse 1900ms ease-in-out infinite;
+    animation-delay:900ms, 1600ms;
+  }
+  @keyframes leDropFall{
+    0%{opacity:0; transform:rotate(45deg) translateY(-30px) scale(0.5);}
+    55%{opacity:1;}
+    100%{opacity:1; transform:rotate(45deg) translateY(0) scale(1);}
+  }
+  @keyframes leFadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes lePulse{ 0%,100%{opacity:0.45;} 50%{opacity:1;} }
+  body.le-splash-active{ overflow:hidden; height:100vh; }
+  @media (prefers-reduced-motion: reduce){
+    .le-splash-drop, .le-splash-word, .le-splash-tag, .le-splash-skip{ animation:none !important; opacity:1 !important; transform:none !important; }
+  }
 </style>
 </head>
 <body>
+
+<noscript><style>#leSplash{display:none !important;} body{overflow:auto !important;}</style></noscript>
+<div id="leSplash" role="button" tabindex="0" aria-label="Enter Liquid Emotions">
+  <div class="le-splash-inner">
+    <div class="le-splash-drop"></div>
+    <h1 class="le-splash-word">Liquid Emotions</h1>
+    <p class="le-splash-tag mono">Fragrance Decants</p>
+    <p class="le-splash-skip mono">tap to enter</p>
+  </div>
+</div>
+<script>
+(function(){
+  var splash = document.getElementById('leSplash');
+  if(!splash) return;
+  if(sessionStorage.getItem('leSplashSeen')){
+    splash.remove();
+    return;
+  }
+  document.body.classList.add('le-splash-active');
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var revealed = false;
+
+  function finish(){
+    document.body.classList.remove('le-splash-active');
+    if(splash && splash.parentNode) splash.remove();
+  }
+
+  function reveal(){
+    if(revealed) return;
+    revealed = true;
+    sessionStorage.setItem('leSplashSeen', '1');
+    if(reduced){
+      splash.style.transition = 'opacity .25s ease';
+      splash.style.opacity = '0';
+      setTimeout(finish, 260);
+      return;
+    }
+    var start = null;
+    var duration = 900;
+    function step(ts){
+      if(!start) start = ts;
+      var p = Math.min((ts - start) / duration, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      splash.style.setProperty('--r', (eased * 145) + 'vmax');
+      if(p < 1){ requestAnimationFrame(step); }
+      else { finish(); }
+    }
+    requestAnimationFrame(step);
+  }
+
+  splash.addEventListener('click', reveal);
+  splash.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); reveal(); }
+  });
+  setTimeout(reveal, 1700);
+})();
+</script>
 
 <header>
   <div class="nav">
