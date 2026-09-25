@@ -54,7 +54,6 @@ const FRAGRANCES = [
     id: "9pm-nightout",
     name: "9PM Nightout",
     house: "Afnan",
-    inspiredBy: "JPG Le Beau Le Parfum",
     notes: { top: "Dragon fruit, Lavender", heart: "Toffee, Suede", base: "Tonka bean, Akigalawood" },
     color: "#36454F",
     image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.123313.2x.avif",
