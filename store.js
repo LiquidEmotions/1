@@ -678,19 +678,6 @@ const FRAGRANCES = [
     prices: { "5ml": 130, "10ml": 200, "20ml": 360, "30ml": 500 }
   },
   {
-    id: "club-de-nuit-intense-man-edt",
-    name: "Club de Nuit Intense Man EDT",
-    inspiredBy: "Creed Aventus",
-    house: "Armaf",
-    notes: { top: "Lemon, Pineapple, Bergamot, Black Currant, Apple", heart: "Birch, Jasmine, Rose", base: "Musk, Ambergris, Patchouli, Vanilla" },
-    color: "#3B3B3B",
-    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.34696.2x.avif",
-    gender: "Men",
-    season: ["All-Season"],
-    fragranticaUrl: "https://www.fragrantica.com/perfume/Armaf/Club-de-Nuit-Intense-Man-34696.html",
-    prices: { "5ml": 200, "10ml": 340, "20ml": 640, "30ml": 920 }
-  },
-  {
     id: "club-de-nuit-intense-man-pp",
     name: "Club de Nuit Intense Man PP",
     inspiredBy: "Creed Aventus",
@@ -1309,6 +1296,18 @@ const FRAGRANCES = [
     season: ["Summer","Spring"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Sospiro-Perfumes/Vibrato-75930.html",
     prices: { "3ml": 600, "5ml": 980, "10ml": 1800, "20ml": 3480, "30ml": 5180 }
+  },
+  {
+    id: "laverne-fearless",
+    name: "Fearless",
+    house: "Laverne",
+    notes: { top: "Mandarin, Bergamot", heart: "Jasmine, Sandalwood", base: "Amber, Musk" },
+    color: "#B8895E",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/375x500.114181.jpg",
+    gender: "Unisex",
+    season: ["All-Season"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Laverne/Fearless-114181.html",
+    prices: { "5ml": 175, "10ml": 285, "20ml": 530, "30ml": 755 }
   }
 
 

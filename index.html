@@ -728,14 +728,43 @@
       radial-gradient(800px 620px at 50% 80%, rgba(232,184,166,0.24), transparent 62%);
   }
   .le-splash-inner{ position:relative; text-align:center; }
+  .le-splash-particles{ position:absolute; inset:-200px -120px; pointer-events:none; overflow:visible; }
+  .le-splash-particle{
+    position:absolute; bottom:-20px; border-radius:50% 50% 50% 0;
+    background:var(--amber-bright); opacity:0;
+    animation-name: leParticleFloat; animation-timing-function:ease-in; animation-iteration-count:infinite;
+  }
+  @keyframes leParticleFloat{
+    0%{ opacity:0; transform:translateY(0) rotate(45deg) scale(0.6); }
+    12%{ opacity:0.65; }
+    85%{ opacity:0.4; }
+    100%{ opacity:0; transform:translateY(-380px) rotate(45deg) scale(1); }
+  }
   .le-splash-drop{
     width:10px; height:10px; border-radius:50% 50% 50% 0; transform:rotate(45deg) translateY(-30px) scale(0.5);
     background:var(--amber-bright); margin:0 auto 22px; opacity:0;
-    animation: leDropFall 900ms cubic-bezier(.4,0,.2,1) forwards;
+    animation: leDropFall 900ms cubic-bezier(.4,0,.2,1) forwards, leDropGlow 2600ms ease-in-out 900ms infinite;
+  }
+  @keyframes leDropGlow{
+    0%,100%{ filter:drop-shadow(0 0 0 rgba(201,140,122,0)); }
+    50%{ filter:drop-shadow(0 0 10px rgba(201,140,122,0.65)); }
   }
   .le-splash-word{
-    font-size:2.1rem; margin:0; color:var(--parchment); opacity:0;
+    position:relative; font-size:2.1rem; margin:0; color:var(--parchment); opacity:0;
     animation: leFadeUp 700ms ease forwards; animation-delay:420ms;
+  }
+  .le-splash-word::after{
+    content:""; position:absolute; inset:-6px -14px; pointer-events:none;
+    background:linear-gradient(100deg, transparent 42%, rgba(255,255,255,0.55) 50%, transparent 58%);
+    background-size:260% 100%; background-position:130% 0;
+    opacity:0; mix-blend-mode:overlay;
+    animation: leShimmerSweep 2400ms ease-in-out 1500ms infinite;
+  }
+  @keyframes leShimmerSweep{
+    0%{ background-position:150% 0; opacity:0; }
+    8%{ opacity:1; }
+    35%{ opacity:0; }
+    100%{ background-position:-40% 0; opacity:0; }
   }
   .le-splash-tag{
     margin:8px 0 0; color:var(--amber-bright); letter-spacing:0.16em; text-transform:uppercase;
@@ -757,6 +786,7 @@
   body.le-splash-active{ overflow:hidden; height:100vh; }
   @media (prefers-reduced-motion: reduce){
     .le-splash-drop, .le-splash-word, .le-splash-tag, .le-splash-skip{ animation:none !important; opacity:1 !important; transform:none !important; }
+    .le-splash-word::after, .le-splash-particle{ display:none !important; }
   }
 </style>
 </head>
@@ -765,6 +795,7 @@
 <noscript><style>#leSplash{display:none !important;} body{overflow:auto !important;}</style></noscript>
 <div id="leSplash" role="button" tabindex="0" aria-label="Enter Liquid Emotions">
   <div class="le-splash-inner">
+    <div class="le-splash-particles" id="leSplashParticles"></div>
     <div class="le-splash-drop"></div>
     <h1 class="le-splash-word">Liquid Emotions</h1>
     <p class="le-splash-tag mono">Perfume Decants</p>
@@ -782,6 +813,25 @@
   document.body.classList.add('le-splash-active');
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var revealed = false;
+
+  var particleHost = document.getElementById('leSplashParticles');
+  if(particleHost && !reduced){
+    var n = 14;
+    for(var i = 0; i < n; i++){
+      var p = document.createElement('span');
+      p.className = 'le-splash-particle';
+      var size = 4 + Math.random() * 6;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = (Math.random() * 100) + '%';
+      p.style.opacity = '0';
+      var duration = 2600 + Math.random() * 2200;
+      var delay = Math.random() * 3200;
+      p.style.animationDuration = duration + 'ms';
+      p.style.animationDelay = delay + 'ms';
+      particleHost.appendChild(p);
+    }
+  }
 
   function finish(){
     document.body.classList.remove('le-splash-active');
