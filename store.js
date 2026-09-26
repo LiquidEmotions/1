@@ -1066,19 +1066,6 @@ const FRAGRANCES = [
   },
   {
     isNew: true,
-    id: "enigma-of-taif",
-    name: "Enigma of Taif",
-    house: "Swiss Arabian",
-    notes: { top: "Plum, Elemi, Black Pepper, Pink Pepper, Cardamom", heart: "Taif Rose, Saffron, Osmanthus, Olibanum, Violet", base: "Oak Tree, Amber, Molasses, Vetiver, Labdanum" },
-    color: "#8E3B4D",
-    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.117521.2x.avif",
-    gender: "Unisex",
-    season: ["Winter","Autumn"],
-    fragranticaUrl: "https://www.fragrantica.com/perfume/Swiss-Arabian/Enigma-of-Taif-117521.html",
-    prices: { "5ml": 310, "10ml": 560, "20ml": 1080, "30ml": 1580 }
-  },
-  {
-    isNew: true,
     id: "incense-01",
     name: "Incense 01",
     house: "Swiss Arabian",
@@ -1308,6 +1295,28 @@ const FRAGRANCES = [
     season: ["All-Season"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Laverne/Fearless-114181.html",
     prices: { "5ml": 175, "10ml": 285, "20ml": 530, "30ml": 755 }
+  },
+  {
+    id: "rayhaan-cedrus-blanc",
+    name: "Cedrus Blanc",
+    house: "Rayhaan",
+    notes: { top: "Aldehydes, Bergamot", heart: "Orange Blossom, Orange", base: "White Musk, Vanilla, Cedarwood" },
+    color: "#D8CFC2",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/375x500.138575.jpg",
+    gender: "Unisex",
+    season: ["Spring","Summer"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Rayhaan/Cedrus-Blanc-138575.html",
+    prices: { "5ml": 180, "10ml": 300, "20ml": 560, "30ml": 800 }
+  },
+  {
+    id: "amouage-purpose-50",
+    name: "Purpose 50",
+    house: "Amouage",
+    notes: { top: "Frankincense, Bergamot, Pink Pepper, Pimento Berry", heart: "Rose, Sand Vetiver, Sandalwood, Papyrus", base: "Saffron, Suede, Mystikal, Akigalawood, Vanilla" },
+    color: "#6B4A2E",
+    gender: "Unisex",
+    season: ["Winter","Autumn"],
+    prices: { "3ml": 1450, "5ml": 2350, "10ml": 4560, "20ml": 9080, "30ml": 13580 }
   }
 
 
@@ -1339,6 +1348,7 @@ const HOUSE_CATEGORY = {
   "Nusuk": "Middle Eastern",
   "Rasasi": "Middle Eastern",
   "Rayhaan": "Middle Eastern",
+  "Laverne": "Middle Eastern",
   "Scentedelic": "Indian House",
   "Zimaya": "Middle Eastern",
   "Ajmal": "Middle Eastern",
@@ -1374,6 +1384,7 @@ const HOUSE_CATEGORY = {
   "Dyptique": "Niche",
   "Nishane": "Niche",
   "Sospiro": "Niche",
+  "Amouage": "Niche",
 };
 
 function leHouseCategory(house){
