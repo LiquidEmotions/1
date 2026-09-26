@@ -1314,8 +1314,10 @@ const FRAGRANCES = [
     house: "Amouage",
     notes: { top: "Frankincense, Bergamot, Pink Pepper, Pimento Berry", heart: "Rose, Sand Vetiver, Sandalwood, Papyrus", base: "Saffron, Suede, Mystikal, Akigalawood, Vanilla" },
     color: "#6B4A2E",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/375x500.100897.jpg",
     gender: "Unisex",
     season: ["Winter","Autumn"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Amouage/Purpose-50-100897.html",
     prices: { "3ml": 1450, "5ml": 2350, "10ml": 4560, "20ml": 9080, "30ml": 13580 }
   }
 
