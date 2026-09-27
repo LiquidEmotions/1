@@ -2055,7 +2055,7 @@ function leCheckoutGuard(redirectUrl){
        // request failed — fall back to leFallbackOrderNumber()
      }
    ============================================================ */
-const LE_ORDER_COUNTER_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+const LE_ORDER_COUNTER_URL = "https://script.google.com/macros/s/AKfycbx-DJzp1TAsu4U8Ha9bGrP0BB8j_WR3iL2bG1SyuKZQAgt0QH8-5RqGCyfx3RoKZa2N/exec";
 
 async function leGetNextOrderNumber(){
   try {
