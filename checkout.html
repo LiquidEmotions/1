@@ -323,14 +323,6 @@ function renderSummary(){
 }
 
 const WHATSAPP_NUMBER = "917982410620";
-const ORDER_SEQ_KEY = "le_order_seq";
-
-function nextOrderId(){
-  let n = parseInt(localStorage.getItem(ORDER_SEQ_KEY) || "0", 10);
-  n += 1;
-  localStorage.setItem(ORDER_SEQ_KEY, n);
-  return "LE-" + String(n).padStart(6, "0");
-}
 
 function buildWhatsAppMessage(id){
   const lines = leCartLines();
@@ -395,7 +387,7 @@ function saveAddress(){
 
 loadSavedAddress();
 
-document.getElementById("checkoutForm").addEventListener("submit", (e) => {
+document.getElementById("checkoutForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   if(leCartCount() === 0) return;
 
@@ -405,7 +397,7 @@ document.getElementById("checkoutForm").addEventListener("submit", (e) => {
 
   saveAddress();
 
-  const id = nextOrderId();
+  const id = (await leGetNextOrderNumber()) || leFallbackOrderNumber();
   const message = buildWhatsAppMessage(id);
   const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 

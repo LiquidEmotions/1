@@ -19,10 +19,11 @@ const LE_CART_KEY = "le_cart_v1";
    - "fragranticaUrl": a link to the fragrance's real Fragrantica
      page, shown as a small external link in the product modal.
 
-   - "isNew": set to true to show a "New" badge on the card and
-     include it when the New filter is active. You control this
-     manually — flip it off whenever a fragrance isn't recent
-     anymore. */
+   - "newSince": the date (YYYY-MM-DD) you added the fragrance,
+     e.g. "2026-09-27". Just stamp today's date — no need to
+     remove it later. Every fragrance automatically shows a "New"
+     badge and counts toward the New filter for LE_NEW_DAYS days
+     after that date, then stops on its own. See leIsNew() below. */
 const FRAGRANCES = [
   {
     id: "9am-dive",
@@ -231,7 +232,6 @@ const FRAGRANCES = [
     prices: { "5ml": 200, "10ml": 360, "20ml": 680, "30ml": 940 }
   },
   {
-    isNew: true,
     id: "bois-blanc",
     name: "Bois Blanc",
     inspiredBy: "Bois Impérial by Essential Parfums",
@@ -245,7 +245,6 @@ const FRAGRANCES = [
     prices: { "5ml": 225, "10ml": 390, "20ml": 720, "30ml": 1050 }
   },
   {
-    isNew: true,
     id: "revolt-uncaged",
     name: "Revolt Uncaged",
     inspiredBy: "Nishane Tero",
@@ -259,7 +258,6 @@ const FRAGRANCES = [
     prices: { "5ml": 210, "10ml": 360, "20ml": 680, "30ml": 980 }
   },
   {
-    isNew: true,
     id: "revolt-uprising",
     name: "Revolt Uprising",
     inspiredBy: "Nishane Ani X",
@@ -437,7 +435,6 @@ const FRAGRANCES = [
     prices: { "5ml": 470, "10ml": 860, "20ml": 1680, "30ml": 2500 }
   },
   {
-    isNew: true,
     id: "infinity",
     name: "Infinity",
     inspiredBy: "YSL L'Homme Ultime",
@@ -520,7 +517,6 @@ const FRAGRANCES = [
     prices: { "5ml": 185, "10ml": 310, "20ml": 580, "30ml": 730 }
   },
   {
-    isNew: true,
     id: "toscano-leather",
     name: "Toscano Leather",
     inspiredBy: "Tom Ford Tuscan Leather",
@@ -611,7 +607,6 @@ const FRAGRANCES = [
     prices: { "3ml": 275, "5ml": 410, "10ml": 760, "20ml": 1480, "30ml": 2180 }
   },
   {
-    isNew: true,
     id: "acqua-di-gio",
     name: "Acqua Di Gio Parfum",
     house: "Giorgio Armani",
@@ -624,7 +619,6 @@ const FRAGRANCES = [
     prices: { "3ml": 285, "5ml": 440, "10ml": 810, "20ml": 1580, "30ml": 2330 }
   }  ,
   {
-    isNew: true,
     id: "kaaf-noir",
     name: "Kaaf Noir",
     house: "Ahmed Al Maghribi",
@@ -637,7 +631,6 @@ const FRAGRANCES = [
     prices: { "5ml": 205, "10ml": 350, "20ml": 660, "30ml": 950 }
   },
   {
-    isNew: true,
     id: "kohl-opulence",
     name: "Kohl Opulence",
     inspiredBy: "Ex Nihilo Blue Talisman",
@@ -651,7 +644,6 @@ const FRAGRANCES = [
     prices: { "5ml": 190, "10ml": 320, "20ml": 600, "30ml": 860 }
   },
   {
-    isNew: true,
     id: "ramad-oriental",
     name: "Ramad Oriental",
     inspiredBy: "Amouage Outlands",
@@ -691,7 +683,6 @@ const FRAGRANCES = [
     prices: { "5ml": 200, "10ml": 340, "20ml": 640, "30ml": 920 }
   },
   {
-    isNew: true,
     id: "club-de-nuit-intense-overdose",
     name: "Club de Nuit Intense Overdose",
     house: "Armaf",
@@ -705,7 +696,6 @@ const FRAGRANCES = [
     prices: { "5ml": 245, "10ml": 430, "20ml": 820, "30ml": 1190 }
   },
   {
-    isNew: true,
     id: "odyssey-mandarin-sky-elixir",
     name: "Odyssey Mandarin Sky Elixir",
     inspiredBy: "YSL Scandal Le Parfum",
@@ -719,7 +709,6 @@ const FRAGRANCES = [
     prices: { "5ml": 170, "10ml": 270, "20ml": 500, "30ml": 710 }
   },
   {
-    isNew: true,
     id: "spartacus",
     name: "Spartacus",
     house: "Armaf",
@@ -733,7 +722,6 @@ const FRAGRANCES = [
     prices: { "5ml": 200, "10ml": 340, "20ml": 640, "30ml": 820 }
   },
   {
-    isNew: true,
     id: "sunkissed",
     name: "Sunkissed",
     house: "Aromatix",
@@ -746,7 +734,6 @@ const FRAGRANCES = [
     prices: { "5ml": 260, "10ml": 460, "20ml": 880, "30ml": 1280 }
   },
   {
-    isNew: true,
     id: "atlantis",
     name: "Atlantis",
     house: "French Avenue",
@@ -797,7 +784,6 @@ const FRAGRANCES = [
     prices: { "5ml": 245, "10ml": 430, "20ml": 810, "30ml": 1190 }
   },
   {
-    isNew: true,
     id: "zenith-blue",
     name: "Zenith Blue",
     inspiredBy: "Dior Sauvage",
@@ -849,7 +835,6 @@ const FRAGRANCES = [
     prices: { "5ml": 230, "10ml": 380, "20ml": 720, "30ml": 1040 }
   },
   {
-    isNew: true,
     id: "island-dreams",
     name: "Island Dreams",
     house: "Khadlaj",
@@ -862,7 +847,6 @@ const FRAGRANCES = [
     prices: { "5ml": 160, "10ml": 260, "20ml": 480, "30ml": 680 }
   },
   {
-    isNew: true,
     id: "shiyaaka-sky",
     name: "Shiyaaka Sky",
     house: "Khadlaj",
@@ -875,7 +859,6 @@ const FRAGRANCES = [
     prices: { "5ml": 185, "10ml": 310, "20ml": 580, "30ml": 830 }
   },
   {
-    isNew: true,
     id: "fahad",
     name: "Fahad",
     house: "Lattafa",
@@ -888,7 +871,6 @@ const FRAGRANCES = [
     prices: { "5ml": 240, "10ml": 420, "20ml": 800, "30ml": 1150 }
   },
   {
-    isNew: true,
     id: "teriaq-intense",
     name: "Teriaq Intense",
     house: "Lattafa",
@@ -999,7 +981,6 @@ const FRAGRANCES = [
     prices: { "5ml": 190, "10ml": 320, "20ml": 600, "30ml": 860 }
   },
   {
-    isNew: true,
     id: "aquatica",
     name: "Aquatica",
     inspiredBy: "Creed Virgin Island Water",
@@ -1013,7 +994,6 @@ const FRAGRANCES = [
     prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 740 }
   },
   {
-    isNew: true,
     id: "nocturno-elixir",
     name: "Nocturno Elixir",
     inspiredBy: "Bleu de Chanel L'Exclusif",
@@ -1039,7 +1019,6 @@ const FRAGRANCES = [
     prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 740 }
   },
   {
-    isNew: true,
     id: "freeze",
     name: "Freeze",
     house: "Riffs",
@@ -1065,7 +1044,6 @@ const FRAGRANCES = [
     prices: { "5ml": 210, "10ml": 350, "20ml": 660, "30ml": 950 }
   },
   {
-    isNew: true,
     id: "incense-01",
     name: "Incense 01",
     house: "Swiss Arabian",
@@ -1078,7 +1056,6 @@ const FRAGRANCES = [
     prices: { "5ml": 480, "10ml": 900, "20ml": 1760, "30ml": 2600 }
   },
   {
-    isNew: true,
     id: "soul-of-bali",
     name: "Soul of Bali",
     house: "Swiss Arabian",
@@ -1103,7 +1080,6 @@ const FRAGRANCES = [
     prices: { "5ml": 160, "10ml": 260, "20ml": 480, "30ml": 680 }
   },
   {
-    isNew: true,
     id: "mazaaj-rhythm",
     name: "Mazaaj Rhythm",
     inspiredBy: "Louis Vuitton Symphonie",
@@ -1142,6 +1118,7 @@ const FRAGRANCES = [
   },
   {
     id: "gentleman-reserve-privee",
+    newSince: "2026-09-27",
     name: "Gentleman Reserve Privee",
     house: "Givenchy",
     notes: { top: "Whisky Absolute, Bergamot", heart: "Iris, Chestnut, Benzoin", base: "Cedarwood, Vetiver" },
@@ -1154,6 +1131,7 @@ const FRAGRANCES = [
   },
   {
     id: "habit-rouge-edp",
+    newSince: "2026-09-27",
     name: "Habit Rouge EDP",
     house: "Guerlain",
     notes: { top: "Bergamot, Lemon, Basil", heart: "Rose, Jasmine, Sandalwood, Patchouli", base: "Amber, Vanilla, Leather, Labdanum" },
@@ -1166,6 +1144,7 @@ const FRAGRANCES = [
   },
   {
     id: "lhomme-ideal-edp",
+    newSince: "2026-09-27",
     name: "L'Homme Ideal EDP",
     house: "Guerlain",
     notes: { top: "Bitter Almond, Lemon", heart: "Sambac Jasmine", base: "Tonka Bean, Vetiver" },
@@ -1178,6 +1157,7 @@ const FRAGRANCES = [
   },
   {
     id: "vetiver-parfum",
+    newSince: "2026-09-27",
     name: "Vetiver Parfum",
     house: "Guerlain",
     notes: { top: "Bergamot, Lemon, Neroli", heart: "Vetiver, Nutmeg, Tobacco", base: "Leather, Tonka Bean" },
@@ -1190,6 +1170,7 @@ const FRAGRANCES = [
   },
   {
     id: "santal-royal",
+    newSince: "2026-09-27",
     name: "Santal Royal",
     house: "Guerlain",
     notes: { top: "Rose", heart: "Sandalwood, Oud, Jasmine", base: "Leather" },
@@ -1202,6 +1183,7 @@ const FRAGRANCES = [
   },
   {
     id: "hugo-man-edt",
+    newSince: "2026-09-27",
     name: "Hugo Man EDT",
     house: "Hugo",
     notes: { top: "Green Apple, Green Leaves", heart: "Geranium Leaf, Clary Sage", base: "Cedar, Oakmoss, Tobacco" },
@@ -1214,6 +1196,7 @@ const FRAGRANCES = [
   },
   {
     id: "uomo-born-in-roma-intense",
+    newSince: "2026-09-27",
     name: "Uomo Born In Roma Intense",
     house: "Valentino",
     notes: { top: "Vanilla", heart: "Lavender", base: "Vetiver" },
@@ -1226,6 +1209,7 @@ const FRAGRANCES = [
   },
   {
     id: "libre-edp",
+    newSince: "2026-09-27",
     name: "Libre EDP",
     house: "YSL",
     notes: { top: "Mandarin Zest, Black Currant, Lavender", heart: "Lavender, Orange Blossom, Jasmine Sambac", base: "Musk, Cedarwood, Vanilla, Ambergris" },
@@ -1238,6 +1222,7 @@ const FRAGRANCES = [
   },
   {
     id: "aventus",
+    newSince: "2026-09-27",
     name: "Aventus",
     house: "Creed",
     notes: { top: "Lemon, Pink Pepper, Apple, Italian bergamot,Blackcurrant", heart: "Pineapple, Patchouli, Moroccan Jasmine, Birch, Juniper Berries", base: "Oakmoss, Vanilla, Musk" },
@@ -1250,6 +1235,7 @@ const FRAGRANCES = [
   },
   {
     id: "tam-dao",
+    newSince: "2026-09-27",
     name: "Tam Dao",
     house: "Dyptique",
     notes: { top: "Italian Cypress,Myrtyle,Rose", heart: "Sandalwood,Cedar", base: "Brazillian Rosewood,Spices,Amber,White Musk" },
@@ -1262,6 +1248,7 @@ const FRAGRANCES = [
   },
   {
     id: "ani",
+    newSince: "2026-09-27",
     name: "Ani",
     house: "Nishane",
     notes: { top: "Ginger,Bergamot,Pink Pepper,Green Notes", heart: "Cardamom,Blackcurrant,Turkish Rose", base: "Vanilla,Benzoin,Sandalwood,Cedar,Patchouli, Ambergris,Musk" },
@@ -1274,6 +1261,7 @@ const FRAGRANCES = [
   },
   {
     id: "vibrato",
+    newSince: "2026-09-27",
     name: "Vibrato",
     house: "Sospiro",
     notes: { top: "Grapefruit,Bergamot,Jasmine,Magnolia", heart: "Ginger,Herbal Notes,Powdery Notes", base: "Musk, Cedar, Amber,Patchouli,Orris Root" },
@@ -1286,6 +1274,7 @@ const FRAGRANCES = [
   },
   {
     id: "laverne-fearless",
+    newSince: "2026-09-27",
     name: "Fearless",
     house: "Laverne",
     notes: { top: "Mandarin, Bergamot", heart: "Jasmine, Sandalwood", base: "Amber, Musk" },
@@ -1298,6 +1287,7 @@ const FRAGRANCES = [
   },
   {
     id: "rayhaan-cedrus-blanc",
+    newSince: "2026-09-27",
     name: "Cedrus Blanc",
     house: "Rayhaan",
     notes: { top: "Aldehydes, Bergamot", heart: "Orange Blossom, Orange", base: "White Musk, Vanilla, Cedarwood" },
@@ -1310,6 +1300,7 @@ const FRAGRANCES = [
   },
   {
     id: "amouage-purpose-50",
+    newSince: "2026-09-27",
     name: "Purpose 50",
     house: "Amouage",
     notes: { top: "Frankincense, Bergamot, Pink Pepper, Pimento Berry", heart: "Rose, Sand Vetiver, Sandalwood, Papyrus", base: "Saffron, Suede, Mystikal, Akigalawood, Vanilla" },
@@ -1324,6 +1315,34 @@ const FRAGRANCES = [
 
 
 ];
+
+/* ============================================================
+   "New" badge — auto-expiring
+   To mark a fragrance new, just add newSince: "YYYY-MM-DD" (see
+   the comment above FRAGRANCES) with today's date. It counts as
+   new for LE_NEW_DAYS days from that date, then stops on its own
+   — nothing to remove later. f.isNew is a live computed getter,
+   so any existing code that reads f.isNew keeps working as-is.
+   ============================================================ */
+const LE_NEW_DAYS = 10;
+
+function leComputeIsNew(newSince){
+  if(!newSince) return false;
+  const since = new Date(newSince + "T00:00:00");
+  if(isNaN(since)) return false;
+  const ageDays = (Date.now() - since.getTime()) / (1000 * 60 * 60 * 24);
+  return ageDays >= 0 && ageDays < LE_NEW_DAYS;
+}
+
+FRAGRANCES.forEach(f => {
+  if(f.newSince){
+    Object.defineProperty(f, "isNew", {
+      get(){ return leComputeIsNew(f.newSince); },
+      enumerable: true,
+      configurable: true
+    });
+  }
+});
 
 function leFragranceById(id){
   return FRAGRANCES.find(f => f.id === id);
@@ -2017,6 +2036,47 @@ function leCheckoutGuard(redirectUrl){
     return false;
   }
   return true;
+}
+
+/* ============================================================
+   Order number — LE-00001, LE-00002, ...
+   Backed by a Google Apps Script Web App that atomically
+   increments a counter cell in the shop's Google Sheet, so the
+   number is unique across every customer/device, not just this
+   browser. Paste your deployed Web App URL below.
+
+   Call leGetNextOrderNumber() when an order is placed (e.g. on
+   the checkout page's "Place order" handler):
+
+     const orderNumber = await leGetNextOrderNumber();
+     if(orderNumber){
+       // show it / store it with the order
+     } else {
+       // request failed — fall back to leFallbackOrderNumber()
+     }
+   ============================================================ */
+const LE_ORDER_COUNTER_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+async function leGetNextOrderNumber(){
+  try {
+    const res = await fetch(LE_ORDER_COUNTER_URL, { method: "POST" });
+    if(!res.ok) throw new Error("Bad response: " + res.status);
+    const data = await res.json();
+    return data.orderNumber || null;
+  } catch(err){
+    console.error("leGetNextOrderNumber failed:", err);
+    return null;
+  }
+}
+
+/* Local-only fallback if the network call fails — not globally
+   unique, so only use it as a last resort so checkout doesn't
+   block a customer entirely. */
+function leFallbackOrderNumber(){
+  const key = "le_local_order_seq";
+  const n = (parseInt(localStorage.getItem(key), 10) || 0) + 1;
+  localStorage.setItem(key, n);
+  return "LE-LOCAL-" + String(n).padStart(5, "0");
 }
 
 /* ============================================================
