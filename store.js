@@ -330,7 +330,7 @@ const FRAGRANCES = [
     gender: "Unisex",
     season: ["Spring","Summer"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Mancera/Aoud-Lemon-Mint-39181.html",
-    prices: { "3ml": 265, "5ml": 390, "10ml": 720, "20ml": 1300, "30ml": 2060 }
+    prices: { "3ml": 265, "5ml": 390, "10ml": 720, "20ml": 1400, "30ml": 2060 }
   },
   {
     id: "intense-red-tobacco",
@@ -461,7 +461,7 @@ const FRAGRANCES = [
     gender: "Unisex",
     season: ["Spring","Summer"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Aromatix-X-French-Avenue/Platine-Blanc-106068.html",
-    prices: { "5ml": 250, "10ml": 450, "20ml": 850, "30ml": 1280 }
+    prices: { "5ml": 260, "10ml": 460, "20ml": 880, "30ml": 1280 }
   },
   
   
@@ -582,7 +582,7 @@ const FRAGRANCES = [
     gender: "Men",
     season: ["Winter","Autumn","Spring"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Rayhaan/Lion-105031.html",
-    prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 710 }
+    prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 740 }
   },
   {
     id: "obsidian",
@@ -595,7 +595,7 @@ const FRAGRANCES = [
     gender: "Men",
     season: ["Winter","Autumn","Spring"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Rayhaan/Obsidian-121721.html",
-    prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 710 }
+    prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 740 }
   },
   
   {
@@ -743,7 +743,7 @@ const FRAGRANCES = [
     gender: "Unisex",
     season: ["Summer","Spring"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Aromatix-X-French-Avenue/Sun-Kissed-117530.html",
-    prices: { "5ml": 250, "10ml": 450, "20ml": 850, "30ml": 1280 }
+    prices: { "5ml": 260, "10ml": 460, "20ml": 880, "30ml": 1280 }
   },
   {
     isNew: true,
@@ -808,7 +808,7 @@ const FRAGRANCES = [
     gender: "Men",
     season: ["All-Season"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/French-Avenue/Zenith-Blue-106865.html",
-    prices: { "5ml": 210, "10ml": 360, "20ml": 680, "30ml": 980 }
+    prices: { "5ml": 210, "10ml": 370, "20ml": 700, "30ml": 1010 }
   },
   {
     id: "black-diamond-incense",
@@ -872,7 +872,7 @@ const FRAGRANCES = [
     gender: "Men",
     season: ["Summer","Spring"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Khadlaj-Perfumes/Shiyaaka-Sky-137096.html",
-    prices: { "5ml": 205, "10ml": 350, "20ml": 660, "30ml": 950 }
+    prices: { "5ml": 185, "10ml": 310, "20ml": 580, "30ml": 830 }
   },
   {
     isNew: true,
@@ -1010,7 +1010,7 @@ const FRAGRANCES = [
     gender: "Men",
     season: ["Summer","Spring"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Rayhaan/Aquatica-120605.html",
-    prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 750 }
+    prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 740 }
   },
   {
     isNew: true,
@@ -1036,7 +1036,7 @@ const FRAGRANCES = [
     gender: "Men",
     season: ["Winter","Autumn"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Riiffs-Perfumes/Fareed-127888.html",
-    prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 710 }
+    prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 740 }
   },
   {
     isNew: true,
