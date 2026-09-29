@@ -577,6 +577,10 @@
   }
   .ledger dt{color:var(--parchment);}
   .ledger dd{margin:0; color:var(--parchment-dim); text-align:right; font-family:'IBM Plex Mono', monospace; font-size:0.8rem;}
+  /* The <dl> also carries the .ledger class; keep it a plain list, not a second grid */
+  dl.ledger{display:block; grid-template-columns:none; gap:0; min-width:0;}
+  .ledger > *{min-width:0;}
+  .ledger dt{overflow-wrap:anywhere;}
 
   /* ---------- Footer ---------- */
   footer{
@@ -589,7 +593,7 @@
   }
   .footer-cols{
     display:grid;
-    grid-template-columns:1.4fr 1fr 1.2fr;
+    grid-template-columns:1.4fr 1fr 1.2fr 1.2fr;
     gap:40px;
     margin-bottom:32px;
   }
@@ -615,11 +619,13 @@
 
   /* ---------- Responsive ---------- */
   @media (max-width: 880px){
+    .footer-cols{grid-template-columns:1fr 1fr;}
     .steps{grid-template-columns:1fr;}
-    .ledger{grid-template-columns:1fr;}
+    .ledger{grid-template-columns:1fr; gap:28px;}
   }
   @media (max-width: 700px){
     .hero-compact-inner{flex-direction:column; align-items:flex-start;}
+    .footer-cols{grid-template-columns:1fr;}
   }
   @media (max-width: 560px){
     nav.links{display:none;}
@@ -878,6 +884,8 @@
     <nav class="links">
       <a href="#register">The catalogue</a>
       <a href="#about">Sourcing</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="gallery.html#reviews">Reviews</a>
     </nav>
     <div class="nav-right">
       <a class="cart-pill" href="wishlist.html">
@@ -896,6 +904,8 @@
   <nav class="mobile-menu" id="mobileMenu">
     <a href="#register">The catalogue</a>
     <a href="#about">Sourcing</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="gallery.html#reviews">Reviews</a>
   </nav>
 </header>
 
@@ -1014,6 +1024,8 @@
           <li><a href="#register">Shop the catalogue</a></li>
           <li><a href="wishlist.html">Wishlist</a></li>
           <li><a href="cart.html">Cart</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="gallery.html#reviews">Reviews</a></li>
           <li><a href="#about">Sourcing</a></li>
           <li><a href="about.html#how">How decanting works</a></li>
           <li><a href="about.html">About Us</a></li>
@@ -1024,6 +1036,12 @@
         <div class="ship-line">🚚 <span>Delhi NCR: ₹55</span></div>
         <div class="ship-line">🚚 <span>Rest of India: ₹75</span></div>
         <div class="ship-line">✨ <span>Free shipping on 4 or more decants (any size)</span></div>
+      </div>
+      <div class="footer-col">
+        <h4>Contact Us</h4>
+        <div class="ship-line">📞 <a href="tel:+917982410620" style="text-decoration:none;">+91 79824 10620</a></div>
+        <div class="ship-line">✉️ <a href="mailto:liquidemotions1@gmail.com" style="text-decoration:none;">liquidemotions1@gmail.com</a></div>
+        <div class="ship-line">💬 <a href="https://wa.me/917982410620" target="_blank" rel="noopener" style="text-decoration:none;">WhatsApp us</a></div>
       </div>
     </div>
     <div class="footer-bottom">

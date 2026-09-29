@@ -289,6 +289,10 @@
   }
   .ledger dt{color:var(--parchment);}
   .ledger dd{margin:0; color:var(--parchment-dim); text-align:right; font-family:'IBM Plex Mono', monospace; font-size:0.8rem;}
+  /* The <dl> also carries the .ledger class; keep it a plain list, not a second grid */
+  dl.ledger{display:block; grid-template-columns:none; gap:0; min-width:0;}
+  .ledger > *{min-width:0;}
+  .ledger dt{overflow-wrap:anywhere;}
 
   /* ---------- Footer ---------- */
   footer{
@@ -339,6 +343,7 @@
 
   /* ---------- Responsive ---------- */
   @media (max-width: 880px){
+    .ledger{grid-template-columns:1fr; gap:28px;}
     .hero-grid{grid-template-columns:1fr;}
     .hero-vial-wrap{order:-1;}
     .hero-vial{width:80px;}
@@ -368,6 +373,8 @@
     <nav class="links">
       <a href="index.html#register">The catalogue</a>
       <a href="index.html#about">Sourcing</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="gallery.html#reviews">Reviews</a>
     </nav>
     <div class="nav-right">
       <a class="cart-pill" href="wishlist.html">
@@ -386,6 +393,8 @@
   <nav class="mobile-menu" id="mobileMenu">
     <a href="index.html#register">The catalogue</a>
     <a href="index.html#about">Sourcing</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="gallery.html#reviews">Reviews</a>
   </nav>
 </header>
 
@@ -484,6 +493,8 @@
           <li><a href="index.html#register">Shop the catalogue</a></li>
           <li><a href="wishlist.html">Wishlist</a></li>
           <li><a href="cart.html">Cart</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="gallery.html#reviews">Reviews</a></li>
           <li><a href="#sourcing">Sourcing</a></li>
         </ul>
       </div>
