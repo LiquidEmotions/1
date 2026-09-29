@@ -682,18 +682,20 @@ const FRAGRANCES = [
     fragranticaUrl: "https://www.fragrantica.com/perfume/Armaf/Club-de-Nuit-Intense-Man-Parfum-72842.html",
     prices: { "5ml": 200, "10ml": 340, "20ml": 640, "30ml": 920 }
   },
+  
   {
-    id: "club-de-nuit-intense-overdose",
-    name: "Club de Nuit Intense Overdose",
+    id: "club-de-nuit-intense-man-limited-edition",
+    name: "Club de Nuit Intense Man Limited Edition",
     house: "Armaf",
-    inspiredBy: "Creed Aventus Absolu",
-    notes: { top: "Bergamot, Tangerine, Pineapple, Blue Crystal Accord", heart: "Oakmoss, Vanilla Flower, Plum", base: "Patchouli, White Powder, Amber, Tonka Bean" },
+    newSince: "2026-09-29",
+    inspiredBy: "Creed Aventus",
+    notes: { top: "Lemon, Pineapple, Lime,Black pepper,Bergamot,Pink Pepper", heart: "Jasmine,Rose,Lily of the valley,Freesia", base: "White Musk,Ambroxan, Ambergris, Cedar,Leather,Patchouli" },
     color: "#1F2A44",
-    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.136770.2x.avif",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.77861.2x.avif",
     gender: "Men",
-    season: ["Winter","Autumn"],
-    fragranticaUrl: "https://www.fragrantica.com/perfume/Armaf/Club-De-Nuit-Intense-Overdose-136770.html",
-    prices: { "5ml": 245, "10ml": 430, "20ml": 820, "30ml": 1190 }
+    season: ["All Season"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Armaf/Club-de-Nuit-Intense-Man-Limited-Edition-Parfum-77861.html",
+    prices: { "5ml": 350, "10ml": 635, "20ml": 1230, "30ml": 1800 }
   },
   {
     id: "odyssey-mandarin-sky-elixir",
@@ -880,7 +882,7 @@ const FRAGRANCES = [
     gender: "Unisex",
     season: ["Winter","Autumn"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Lattafa-Perfumes/Teriaq-Intense-99586.html",
-    prices: { "5ml": 215, "10ml": 370, "20ml": 700, "30ml": 1010 }
+    prices: { "5ml": 220, "10ml": 380, "20ml": 720, "30ml": 1040 }
   },
   {
     id: "mawj-appletini",
@@ -1299,6 +1301,19 @@ const FRAGRANCES = [
     prices: { "5ml": 180, "10ml": 300, "20ml": 560, "30ml": 800 }
   },
   {
+    id: "dior-homme-parfum",
+    newSince: "2026-09-29",
+    name: "Homme Parfum",
+    house: "Dior",
+    notes: { top: "Iris", heart: "Amber", base: "Patchouli, Vetiver" },
+    color: "#D8CFC2",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/375x500.101016.jpg",
+    gender: hMen",
+    season: ["Winter","Autumn"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Dior/Dior-Homme-Parfum-2025-101016.html",
+    prices: { "5ml": 180, "10ml": 300, "20ml": 560, "30ml": 800 }
+  },
+  {
     id: "amouage-purpose-50",
     newSince: "2026-09-27",
     name: "Purpose 50",
@@ -1399,7 +1414,7 @@ const HOUSE_CATEGORY = {
   "Hugo": "Designer",
   "Montale": "Designer",
   "Valentino": "Designer",
-
+  "Dior":"Designer",
 
   "Creed": "Niche",
   "Dyptique": "Niche",
