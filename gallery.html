@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gallery &amp; Reviews — Liquid Emotions</title>
+<meta name="description" content="Photos of our authenticated fragrance decants and what customers say about them.">
+<meta name="robots" content="index, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#FAF6F2;
+    --ink-deep:#2E221D;
+    --parchment:#46362F;
+    --parchment-dim:#6F5A4E;
+    --amber:#C98C7A;
+    --amber-bright:#9C5644;
+    --brass:#C98C7A;
+    --line:rgba(164,141,132,0.35);
+    --moss:#FFFFFF;
+    --burgundy:#46362F;
+    --radius:2px; --blush:#E6CFCB; --taupe:#A48D84;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--parchment);
+    font-family:'Source Serif 4', serif;
+    font-size:17px;
+    line-height:1.55;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace; letter-spacing:0.02em;}
+  a{color:inherit;}
+  body::before{
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      linear-gradient(115deg, transparent 38%, rgba(255,255,255,0.55) 50%, transparent 62%),
+      radial-gradient(1100px 720px at 0% 0%, rgba(233,212,160,0.42), transparent 62%),
+      radial-gradient(1000px 760px at 100% 100%, rgba(232,184,166,0.36), transparent 62%),
+      linear-gradient(160deg, #FBF8F0 0%, #FAF6F2 50%, #F9EEE9 100%);
+  }
+  img,svg{display:block;max-width:100%;}
+  button,input,textarea{font-family:inherit;}
+  button{cursor:pointer;}
+  :focus-visible{outline:2px solid var(--amber-bright); outline-offset:3px;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 28px;}
+
+  /* ---------- Header (same as other pages) ---------- */
+  header{
+    position:sticky; top:0; z-index:20;
+    background:rgba(250,246,242,0.85);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{display:flex; align-items:center; justify-content:space-between; padding:18px 28px;}
+  .wordmark{font-size:1.15rem; display:flex; align-items:baseline; gap:8px; text-decoration:none;}
+  .wordmark .mono{font-size:0.62rem; color:var(--amber-bright); letter-spacing:0.14em;}
+  nav.links{display:flex; gap:26px; font-size:0.85rem;}
+  nav.links a{
+    text-decoration:none; color:var(--parchment-dim);
+    border-bottom:1px solid transparent; padding-bottom:2px;
+    transition:color .2s, border-color .2s;
+  }
+  nav.links a:hover, nav.links a.active{color:var(--parchment); border-color:var(--amber);}
+  .nav-right{display:flex; align-items:center; gap:14px;}
+  .hamburger-btn{
+    display:none; flex-direction:column; justify-content:center; gap:4px;
+    width:32px; height:32px; background:none; border:none; padding:0;
+  }
+  .hamburger-btn span{display:block; width:100%; height:2px; background:var(--parchment); border-radius:2px;}
+  .mobile-menu{
+    display:none; flex-direction:column;
+    border-top:1px solid var(--line);
+    background:var(--ink);
+    padding:6px 28px 14px;
+  }
+  .mobile-menu.open{display:flex;}
+  .mobile-menu a{
+    text-decoration:none; color:var(--parchment-dim);
+    padding:13px 0; border-bottom:1px solid var(--line); font-size:0.9rem;
+  }
+  .mobile-menu a:last-child{border-bottom:none;}
+  .mobile-menu a:hover{color:var(--amber-bright);}
+  .cart-pill{
+    display:flex; align-items:center; gap:8px;
+    font-size:0.78rem; padding:9px 16px;
+    border:1px solid var(--brass); color:var(--amber-bright);
+    border-radius:var(--radius); text-decoration:none; white-space:nowrap;
+  }
+  .cart-pill:hover{background:var(--amber); color:var(--ink-deep); border-color:var(--amber);}
+  .cart-count{
+    background:var(--amber-bright); color:var(--ink);
+    font-family:'IBM Plex Mono', monospace; font-size:0.66rem; font-weight:600;
+    padding:1px 6px; border-radius:100px;
+  }
+  .cart-pill:hover .cart-count{background:var(--ink-deep); color:var(--amber);}
+
+  /* ---------- Page intro ---------- */
+  .intro{padding:44px 28px 28px;}
+  .intro h1{font-size:clamp(1.9rem, 4vw, 2.9rem); line-height:1.08; margin:0 0 12px; max-width:16ch;}
+  .intro p{margin:0; color:var(--parchment-dim); max-width:52ch;}
+  .jump{display:flex; gap:12px; margin-top:22px; flex-wrap:wrap;}
+  .jump a{
+    font-size:0.8rem; text-decoration:none; padding:8px 16px;
+    border:1px solid var(--brass); color:var(--amber-bright); border-radius:100px;
+  }
+  .jump a:hover{background:var(--amber); color:var(--ink-deep);}
+
+  section.block{padding:36px 28px 44px; border-top:1px solid var(--line);}
+  .block-head{display:flex; align-items:end; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:22px;}
+  .block-head h2{font-size:clamp(1.4rem, 2.6vw, 1.9rem); margin:0;}
+
+  /* ---------- Photo and screenshot walls ---------- */
+  .grid{column-count:3; column-gap:16px;}
+  .tile{
+    break-inside:avoid; margin:0 0 16px; padding:0; width:100%;
+    display:block; overflow:hidden;
+    border:1px solid var(--line); border-radius:var(--radius);
+    background:var(--blush);
+  }
+  .tile img{width:100%; height:auto;}
+  .tile:hover{border-color:var(--amber-bright);}
+  .empty{
+    padding:34px 20px; text-align:center; color:var(--parchment-dim);
+    border:1px dashed var(--line); border-radius:var(--radius);
+  }
+  .hint{margin:-8px 0 22px; color:var(--parchment-dim); font-size:0.92rem; max-width:56ch;}
+
+  /* ---------- Lightbox ---------- */
+  dialog.lb{
+    border:none; padding:0; background:transparent; color:#fff;
+    max-width:min(94vw, 900px); width:100%; max-height:92vh; overflow:visible;
+  }
+  dialog.lb::backdrop{background:rgba(46,34,29,0.88);}
+  .lb-stage{display:flex; flex-direction:column; align-items:center; gap:12px;}
+  .lb-media{width:100%; max-height:80vh; display:flex; align-items:center; justify-content:center;}
+  .lb-media img{max-height:80vh; width:auto; max-width:100%; object-fit:contain; border-radius:var(--radius);}
+  .lb-count{font-size:0.7rem; opacity:0.75;}
+  .lb-btn{
+    position:fixed; top:50%; transform:translateY(-50%);
+    width:44px; height:44px; border-radius:50%;
+    background:rgba(250,246,242,0.16); color:#fff; border:1px solid rgba(255,255,255,0.4);
+    font-size:1.3rem; line-height:1;
+  }
+  .lb-btn:hover{background:rgba(250,246,242,0.3);}
+  .lb-prev{left:16px;} .lb-next{right:16px;}
+  .lb-close{
+    position:fixed; top:16px; right:16px; width:40px; height:40px; border-radius:50%;
+    background:rgba(250,246,242,0.16); color:#fff; border:1px solid rgba(255,255,255,0.4); font-size:1.2rem;
+  }
+  .lb-close:hover{background:rgba(250,246,242,0.3);}
+
+  /* ---------- Review form ---------- */
+  .write{margin-top:40px; padding-top:28px; border-top:1px solid var(--line); max-width:640px;}
+  .write h3{margin:0 0 4px; font-size:1.25rem;}
+  .write > p{margin:0 0 18px; color:var(--parchment-dim); font-size:0.9rem; max-width:52ch;}
+  .field{display:flex; flex-direction:column; gap:6px; margin-bottom:14px;}
+  .field label, .field .lbl{font-size:0.8rem; color:var(--parchment-dim);}
+  .field input, .field textarea{
+    font-size:0.95rem; padding:11px 12px; color:var(--parchment);
+    background:rgba(255,255,255,0.8); border:1px solid var(--line); border-radius:var(--radius);
+  }
+  .field textarea{min-height:110px; resize:vertical;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .star-input{display:flex; gap:2px;}
+  .star-input button{
+    background:none; border:none; padding:2px 3px; font-size:1.7rem; line-height:1;
+    color:rgba(164,141,132,0.55);
+  }
+  .star-input button.on{color:var(--amber-bright);}
+  .btn{
+    font-size:0.9rem; padding:12px 22px; border-radius:var(--radius);
+    background:var(--amber-bright); color:var(--ink); border:1px solid var(--amber-bright);
+  }
+  .btn:hover{background:var(--ink-deep); border-color:var(--ink-deep);}
+  .form-note{font-size:0.78rem; color:var(--parchment-dim); margin:10px 0 0;}
+  .form-err{font-size:0.82rem; color:#9B2C2C; min-height:1.2em; margin:0 0 10px;}
+
+  
+/* ---------- Footer ---------- */
+  footer{border-top:1px solid var(--line); padding:44px 28px 36px;}
+  .footer-cols{display:grid; grid-template-columns:1.4fr 1fr 1.2fr 1.2fr; gap:40px; margin-bottom:32px;}
+  .footer-col h4{font-family:'Fraunces', serif; font-size:0.85rem; color:var(--parchment); margin:0 0 14px;}
+  .footer-col p{color:var(--parchment-dim); font-size:0.85rem; max-width:34ch; margin:0;}
+  .footer-col ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px;}
+  .footer-col li a{color:var(--parchment-dim); text-decoration:none; font-size:0.85rem;}
+  .footer-col li a:hover{color:var(--amber-bright);}
+  .footer-col .ship-line{font-size:0.82rem; color:var(--parchment-dim); display:flex; gap:8px;}
+  .footer-bottom{
+    border-top:1px solid var(--line); padding-top:20px; font-size:0.78rem;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+
+  /* ---------- WhatsApp float ---------- */
+  .wa-float{
+    position:fixed; bottom:24px; right:24px; z-index:50;
+    width:56px; height:56px; border-radius:50%;
+    background:#25D366; color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 14px rgba(70,54,47,0.3); text-decoration:none;
+    transition:transform .15s ease;
+  }
+  .wa-float:hover{transform:scale(1.07);}
+  .wa-float svg{width:28px; height:28px;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:900px){
+    .grid{column-count:2;}
+    .footer-cols{grid-template-columns:1fr 1fr;}
+  }
+  @media (max-width:560px){
+    nav.links{display:none;}
+    .hamburger-btn{display:flex;}
+    .intro{padding-top:32px;}
+    .row2{grid-template-columns:1fr;}
+    .footer-cols{grid-template-columns:1fr;}
+    .lb-prev{left:6px;} .lb-next{right:6px;}
+    .lb-btn{width:38px; height:38px;}
+    .wa-float{bottom:18px; right:18px; width:50px; height:50px;}
+    .wa-float svg{width:25px; height:25px;}
+  }
+  @media (max-width:480px){
+    .nav{padding:14px 16px; gap:8px;}
+    .wordmark .mono{display:none;}
+    .wordmark{font-size:1rem;}
+    .cart-pill{padding:8px 10px;}
+    .pill-label{display:none;}
+    .grid{column-gap:10px;}
+    .tile{margin-bottom:10px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;}
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="wordmark" href="index.html">
+      <span>Liquid Emotions</span>
+      <span class="mono">EST.2025</span>
+    </a>
+    <nav class="links">
+      <a href="index.html#register">The catalogue</a>
+      <a href="index.html#about">Sourcing</a>
+      <a href="gallery.html" class="active">Gallery</a>
+      <a href="gallery.html#reviews">Reviews</a>
+    </nav>
+    <div class="nav-right">
+      <a class="cart-pill" href="wishlist.html">
+        <span>♡ <span class="pill-label">Wishlist</span></span>
+        <span class="cart-count mono" data-wishlist-count>0</span>
+      </a>
+      <a class="cart-pill" href="cart.html">
+        <span>🛒 <span class="pill-label">Cart</span></span>
+        <span class="cart-count mono" data-cart-count>0</span>
+      </a>
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu" aria-expanded="false" type="button">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <nav class="mobile-menu" id="mobileMenu">
+    <a href="index.html#register">The catalogue</a>
+    <a href="index.html#about">Sourcing</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="gallery.html#reviews">Reviews</a>
+  </nav>
+</header>
+
+<main>
+  <div class="wrap intro">
+    <h1>Gallery and reviews</h1>
+    <p>See recent orders packed and ready to ship, and read what customers say about their decants.</p>
+    <div class="jump">
+      <a href="#photos">Photos</a>
+      <a href="#reviews">Reviews</a>
+    </div>
+  </div>
+
+  <!-- ================= PHOTOS ================= -->
+  <section class="block" id="photos">
+    <div class="wrap">
+      <div class="block-head"><h2>Photos</h2></div>
+      <p class="hint">Recent orders, packed and ready to ship.</p>
+      <div class="grid" id="galleryGrid" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ================= REVIEWS ================= -->
+  <section class="block" id="reviews">
+    <div class="wrap">
+      <div class="block-head"><h2>Customer reviews</h2></div>
+      <p class="hint">Messages our customers sent us about their decants.</p>
+      <div class="grid" id="reviewGrid" aria-live="polite"></div>
+
+      <div class="write" id="writeReview">
+        <h3>Write a review</h3>
+        <p>Tried one of our decants? Tell us about it. Your review opens in WhatsApp.</p>
+        <div class="form-err" id="formErr" role="alert"></div>
+        <div class="row2">
+          <div class="field">
+            <label for="rvName">Your name</label>
+            <input id="rvName" type="text" maxlength="40" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="rvCity">City (optional)</label>
+            <input id="rvCity" type="text" maxlength="40" autocomplete="address-level2">
+          </div>
+        </div>
+        <div class="field">
+          <label for="rvPerfume">Perfume you tried</label>
+          <input id="rvPerfume" type="text" maxlength="60" list="perfumeList" placeholder="Start typing a name">
+          <datalist id="perfumeList"></datalist>
+        </div>
+        <div class="field">
+          <span class="lbl" id="starLbl">Your rating</span>
+          <div class="star-input" id="starInput" role="group" aria-labelledby="starLbl"></div>
+        </div>
+        <div class="field">
+          <label for="rvText">Your review</label>
+          <textarea id="rvText" maxlength="600"></textarea>
+        </div>
+        <button class="btn" id="sendReview" type="button">Send review on WhatsApp</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Lightbox -->
+<dialog class="lb" id="lightbox" aria-label="Photo viewer">
+  <div class="lb-stage">
+    <div class="lb-media" id="lbMedia"></div>
+    <div class="lb-count mono" id="lbCount"></div>
+  </div>
+  <button class="lb-btn lb-prev" id="lbPrev" type="button" aria-label="Previous photo">‹</button>
+  <button class="lb-btn lb-next" id="lbNext" type="button" aria-label="Next photo">›</button>
+  <button class="lb-close" id="lbClose" type="button" aria-label="Close">✕</button>
+</dialog>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-cols">
+      <div class="footer-col">
+        <h4>Liquid Emotions</h4>
+        <p>Authenticated fragrance decants, measured by syringe and sealed by hand. Try before you commit to a full bottle.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="index.html#register">Shop the catalogue</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="gallery.html#reviews">Reviews</a></li>
+          <li><a href="wishlist.html">Wishlist</a></li>
+          <li><a href="cart.html">Cart</a></li>
+          <li><a href="about.html">About Us</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Shipping Info</h4>
+        <div class="ship-line">🚚 <span>Delhi NCR: ₹55</span></div>
+        <div class="ship-line">🚚 <span>Rest of India: ₹75</span></div>
+        <div class="ship-line">✨ <span>Free shipping on 4 or more decants (any size)</span></div>
+      </div>
+      <div class="footer-col">
+        <h4>Contact Us</h4>
+        <div class="ship-line">📞 <a href="tel:+917982410620" style="text-decoration:none;">+91 79824 10620</a></div>
+        <div class="ship-line">✉️ <a href="mailto:liquidemotions1@gmail.com" style="text-decoration:none;">liquidemotions1@gmail.com</a></div>
+        <div class="ship-line">💬 <a href="https://wa.me/917982410620" target="_blank" rel="noopener" style="text-decoration:none;">WhatsApp us</a></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© Liquid Emotions Decants.</span>
+      <span>Made with care, for fragrance lovers.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="store.js"></script>
+<script>
+/* =====================================================================
+   HOW THIS PAGE FINDS YOUR PICTURES (no code editing needed)
+
+   Photos:   put order photos in the folder  image/
+   Reviews:  put review screenshots in the folder  reviews/
+
+   Name the files 1, 2, 3 ... with a lowercase extension, for example
+   image/1.jpg, image/2.png, reviews/1.jpg, reviews/2.jpg
+   Allowed: .jpg  .jpeg  .png  .webp
+   Photos show in number order. Reviews show newest first (highest number on top).
+   ===================================================================== */
+const PHOTO_FOLDER  = "image";
+const REVIEW_FOLDER = "reviews";
+const WHATSAPP_NUMBER = "917982410620";
+const EXTS = ["jpg", "jpeg", "png", "webp"];
+
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ----- Mobile menu ----- */
+(function(){
+  const btn = document.getElementById("hamburgerBtn");
+  const menu = document.getElementById("mobileMenu");
+  if(!btn || !menu) return;
+  btn.addEventListener("click", () => {
+    const open = menu.classList.toggle("open");
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  menu.querySelectorAll("a").forEach(a => a.addEventListener("click", () => {
+    menu.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+  }));
+})();
+
+/* ----- Find images in a folder: folder/1.jpg, folder/2.png, ... ----- */
+function loadImg(src){
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => res(src);
+    im.onerror = () => res(null);
+    im.src = src;
+  });
+}
+async function findImage(folder, n){
+  const hits = await Promise.all(EXTS.map(e => loadImg(`${folder}/${n}.${e}`)));
+  return hits.find(Boolean) || null;
+}
+async function discover(folder){
+  const found = [];
+  const BATCH = 12, MAX = 300;
+  for(let start = 1; start <= MAX; start += BATCH){
+    const nums = Array.from({length: BATCH}, (_, i) => start + i);
+    const res = await Promise.all(nums.map(n => findImage(folder, n)));
+    const hits = res.filter(Boolean);
+    found.push(...hits);
+    if(!hits.length) break;
+  }
+  return found;
+}
+
+/* ----- Lightbox ----- */
+const lb = document.getElementById("lightbox");
+const lbMedia = document.getElementById("lbMedia");
+const lbCount = document.getElementById("lbCount");
+let lbList = [], lbIndex = 0;
+
+function showImage(i){
+  if(!lbList.length) return;
+  lbIndex = (i + lbList.length) % lbList.length;
+  lbMedia.innerHTML = `<img src="${esc(lbList[lbIndex].src)}" alt="${esc(lbList[lbIndex].alt)}">`;
+  lbCount.textContent = `${lbIndex + 1} / ${lbList.length}`;
+  const many = lbList.length > 1;
+  document.getElementById("lbPrev").hidden = !many;
+  document.getElementById("lbNext").hidden = !many;
+}
+function openLightbox(list, i){
+  lbList = list;
+  showImage(i);
+  if(typeof lb.showModal === "function") lb.showModal(); else lb.setAttribute("open", "");
+}
+document.getElementById("lbPrev").addEventListener("click", () => showImage(lbIndex - 1));
+document.getElementById("lbNext").addEventListener("click", () => showImage(lbIndex + 1));
+document.getElementById("lbClose").addEventListener("click", () => lb.close());
+lb.addEventListener("click", (e) => {
+  if(e.target === lb || e.target.classList.contains("lb-stage")) lb.close();
+});
+lb.addEventListener("keydown", (e) => {
+  if(e.key === "ArrowLeft") showImage(lbIndex - 1);
+  if(e.key === "ArrowRight") showImage(lbIndex + 1);
+});
+
+/* ----- Fill a wall (photos or review screenshots) ----- */
+async function fillWall(gridEl, folder, label, emptyText, newestFirst){
+  gridEl.style.columnCount = "1";
+  gridEl.innerHTML = `<div class="empty">Loading ${label}…</div>`;
+  let srcs = await discover(folder);
+  if(newestFirst) srcs = srcs.reverse();
+  if(!srcs.length){
+    gridEl.innerHTML = `<div class="empty">${emptyText}</div>`;
+    return;
+  }
+  gridEl.style.columnCount = "";
+  const list = srcs.map((src, i) => ({ src, alt: `${label} ${i + 1}` }));
+  gridEl.innerHTML = list.map((it, i) => `
+    <button type="button" class="tile" data-i="${i}" aria-label="Open ${esc(it.alt)}">
+      <img src="${esc(it.src)}" alt="${esc(it.alt)}" loading="lazy">
+    </button>`).join("");
+  gridEl.addEventListener("click", (e) => {
+    const t = e.target.closest(".tile");
+    if(t) openLightbox(list, parseInt(t.dataset.i, 10));
+  });
+}
+fillWall(document.getElementById("galleryGrid"), PHOTO_FOLDER, "photo",
+         "Photos are on the way. Check back soon.", false);
+fillWall(document.getElementById("reviewGrid"), REVIEW_FOLDER, "review",
+         "No reviews yet. Be the first to write one below.", true);
+
+/* ----- Review form → WhatsApp ----- */
+let chosenRating = 0;
+const starInput = document.getElementById("starInput");
+starInput.innerHTML = [1,2,3,4,5].map(n =>
+  `<button type="button" data-n="${n}" aria-label="${n} star${n === 1 ? "" : "s"}" aria-pressed="false">★</button>`).join("");
+starInput.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if(!b) return;
+  chosenRating = parseInt(b.dataset.n, 10);
+  starInput.querySelectorAll("button").forEach(x => {
+    const n = parseInt(x.dataset.n, 10);
+    x.classList.toggle("on", n <= chosenRating);
+    x.setAttribute("aria-pressed", n === chosenRating ? "true" : "false");
+  });
+});
+
+if(typeof FRAGRANCES !== "undefined"){
+  document.getElementById("perfumeList").innerHTML =
+    FRAGRANCES.map(f => `<option value="${esc(f.name)}">${esc(f.house)}</option>`).join("");
+}
+
+document.getElementById("sendReview").addEventListener("click", () => {
+  const name = document.getElementById("rvName").value.trim();
+  const city = document.getElementById("rvCity").value.trim();
+  const perfume = document.getElementById("rvPerfume").value.trim();
+  const text = document.getElementById("rvText").value.trim();
+  const err = document.getElementById("formErr");
+  if(!name){ err.textContent = "Add your name."; document.getElementById("rvName").focus(); return; }
+  if(!chosenRating){ err.textContent = "Pick a star rating."; return; }
+  if(!text){ err.textContent = "Write a few words about your experience."; document.getElementById("rvText").focus(); return; }
+  err.textContent = "";
+  const msg =
+`Review for Liquid Emotions
+Name: ${name}${city ? "\nCity: " + city : ""}${perfume ? "\nPerfume: " + perfume : ""}
+Rating: ${chosenRating}/5
+Review: ${text}`;
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
+});
+</script>
+
+<a class="wa-float" href="https://wa.me/917982410620?text=Hi!%20I'd%20like%20to%20place%20a%20decant%20order." target="_blank" rel="noopener" aria-label="Order via WhatsApp">
+  <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M16.004 3C9.377 3 4 8.373 4 15c0 2.34.653 4.527 1.786 6.393L4 29l7.8-1.75A11.94 11.94 0 0 0 16.004 27C22.63 27 28 21.627 28 15S22.63 3 16.004 3zm0 21.75a9.7 9.7 0 0 1-4.95-1.354l-.355-.21-4.626 1.038 1.02-4.507-.232-.367A9.72 9.72 0 0 1 5.25 15c0-5.93 4.823-10.75 10.754-10.75S26.75 9.07 26.75 15 21.935 24.75 16.004 24.75zm5.55-7.98c-.304-.152-1.795-.886-2.073-.987-.278-.101-.48-.152-.683.152-.202.303-.783.986-.96 1.19-.176.202-.353.227-.657.076-.304-.152-1.283-.473-2.443-1.51-.903-.805-1.513-1.8-1.69-2.104-.177-.303-.019-.467.133-.618.137-.136.304-.354.456-.53.152-.177.202-.303.304-.505.101-.202.05-.38-.025-.531-.076-.152-.683-1.648-.936-2.257-.246-.593-.497-.513-.683-.522-.177-.008-.38-.01-.582-.01-.202 0-.531.076-.809.38-.278.303-1.06 1.036-1.06 2.527s1.085 2.933 1.236 3.136c.152.202 2.135 3.26 5.174 4.572.723.312 1.287.499 1.727.638.726.231 1.386.198 1.908.12.582-.087 1.795-.734 2.048-1.443.253-.71.253-1.317.177-1.443-.076-.127-.278-.202-.582-.354z"/></svg>
+</a>
+</body>
+</html>
