@@ -1308,7 +1308,7 @@ const FRAGRANCES = [
     notes: { top: "Iris", heart: "Amber", base: "Patchouli, Vetiver" },
     color: "#D8CFC2",
     image: "https://fimgs.net/mdimg/perfume-thumbs/375x500.101016.jpg",
-    gender: Men",
+    gender: "Men",
     season: ["Winter","Autumn"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Dior/Dior-Homme-Parfum-2025-101016.html",
     prices: { "3ml": 540, "5ml": 860, "10ml": 1660, "20ml": 3280, "30ml": 4880 }
