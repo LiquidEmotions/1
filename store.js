@@ -684,6 +684,19 @@ const FRAGRANCES = [
     prices: { "5ml": 350, "10ml": 635, "20ml": 1230, "30ml": 1800 }
   },
   {
+    id: "club-de-nuit-intense-Overdose",
+    name: "Club de Nuit Intense Overdose",
+    house: "Armaf",
+    inspiredBy: "Creed Aventus Absolu",
+    notes: { top: "Pineapple,Bergamot,Tangarine,blue Crystal", heart: "Oakmoss,Vanilla Flower,Plum", base: "Patchouli,Amber,White Powder,Tonka Bean" },
+    color: "#1F2A44",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.136770.2x.avif",
+    gender: "Men",
+    season: ["All Season"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Armaf/Club-De-Nuit-Intense-Overdose-136770.html",
+    prices: { "5ml": 245, "10ml": 430, "20ml": 820, "30ml": 1180 }
+  },
+  {
     id: "odyssey-mandarin-sky-elixir",
     name: "Odyssey Mandarin Sky Elixir",
     inspiredBy: "YSL Scandal Le Parfum",
