@@ -581,20 +581,6 @@ const FRAGRANCES = [
     prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 740 }
   },
   {
-    id: "obsidian",
-    name: "Obsidian",
-    inspiredBy: "Dior Homme Parfum",
-    house: "Rayhaan",
-    notes: { top: "Iris, Citrus", heart: "Leather", base: "Sandalwood, Ambrette" },
-    color: "#4A8067",
-    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.121721.2x.avif",
-    gender: "Men",
-    season: ["Winter","Autumn","Spring"],
-    fragranticaUrl: "https://www.fragrantica.com/perfume/Rayhaan/Obsidian-121721.html",
-    prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 740 }
-  },
-  
-  {
     id: "spicebomb-extreme",
     name: "Spicebomb Extreme",
     house: "Viktor & Rolf",
