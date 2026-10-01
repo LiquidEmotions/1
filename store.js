@@ -1008,6 +1008,33 @@ const FRAGRANCES = [
     prices: { "5ml": 170, "10ml": 280, "20ml": 520, "30ml": 740 }
   },
   {
+    id: "obsidian",
+    name: "Obsidian",
+    inspiredBy: "Dior Homme Parfum",
+    house: "Rayhaan",
+    notes: { top: "Iris,Citrus", heart: "Leather", base: "Sandalwood,Ambrette,Cedar,Oud" },
+    color: "#1D3A5F",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.121721.2x.avif",
+    gender: "Men",
+    season: ["Winter","Autumn"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Rayhaan/Obsidian-121721.html",
+    prices: { "5ml": 170, "10ml": 280, "20ml": 520, "30ml": 740 }
+  },
+  {
+    id: "momento",
+    newSince: "2026-10-01",
+    name: "Momento",
+    inspiredBy: "Montale Arabians Tonka",
+    house: "Riffs",
+    notes: { top: "Sugar,Saffron,Mandarin", heart: "Tonka Bean,Damask Rose,Agarwood", base: "Caramel,Amberwood,Cedar" },
+    color: "#1D3A5F",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.103346.2x.avif",
+    gender: "Men",
+    season: ["Winter","Autumn"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Riiffs-Perfumes/Momento-103346.html",
+    prices: { "5ml": 200, "10ml": 340, "20ml": 640, "30ml": 920}
+  },
+  {
     id: "fareed",
     name: "Fareed",
     house: "Riffs",
