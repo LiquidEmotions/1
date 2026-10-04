@@ -24,7 +24,7 @@ const LE_CART_KEY = "le_cart_v1";
      remove it later. Every fragrance automatically shows a "New"
      badge and counts toward the New filter for LE_NEW_DAYS days
      after that date, then stops on its own. See leIsNew() below. */
-const FRAGRANCES = [
+const LE_ALL_FRAGRANCES = [
   {
     id: "9am-dive",
     name: "9AM Dive",
@@ -104,6 +104,7 @@ const FRAGRANCES = [
   },
   {
     id: "rare-carbon",
+    hidden: true,
     name: "Rare Carbon",
     inspiredBy: "Tom Ford Ombre Leather",
     house: "Afnan",
@@ -382,6 +383,7 @@ const FRAGRANCES = [
   },
   {
     id: "mahd-al-dahab",
+    hidden: true,
     name: "Mahd Al Dahab",
     inspiredBy: "Borntostandout Drunk Lovers",
     house: "Arabiyat Prestige",
@@ -983,6 +985,7 @@ const FRAGRANCES = [
   },
   {
     id: "aquatica",
+    hidden: true,
     name: "Aquatica",
     inspiredBy: "Creed Virgin Island Water",
     house: "Rayhaan",
@@ -996,6 +999,7 @@ const FRAGRANCES = [
   },
   {
     id: "nocturno-elixir",
+    hidden: true,
     name: "Nocturno Elixir",
     inspiredBy: "Bleu de Chanel L'Exclusif",
     house: "Rayhaan",
@@ -1036,6 +1040,7 @@ const FRAGRANCES = [
   },
   {
     id: "fareed",
+    hidden: true,
     name: "Fareed",
     house: "Riffs",
     notes: { top: "Cardamom, Pepper", heart: "Lavender, Bergamot, Geranium", base: "Tonka, Cedarwood, Vetiver" },
@@ -1048,6 +1053,7 @@ const FRAGRANCES = [
   },
   {
     id: "freeze",
+    hidden: true,
     name: "Freeze",
     house: "Riffs",
     notes: { top: "Spearmint, Lemon Zest, Calabrian Bergamot, Grapefruit, Snow", heart: "Ice, Ginger, Tea, Sage", base: "Ambermax, Peony, Cedar" },
@@ -1356,6 +1362,10 @@ const FRAGRANCES = [
 
 
 ];
+
+/* Add  hidden: true  to any fragrance above to take it off the site
+   without deleting its data. Remove that line to bring it back. */
+const FRAGRANCES = LE_ALL_FRAGRANCES.filter(f => !f.hidden);
 
 /* ============================================================
    "New" badge — auto-expiring
