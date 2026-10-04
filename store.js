@@ -580,7 +580,7 @@ const LE_ALL_FRAGRANCES = [
     gender: "Men",
     season: ["Winter","Autumn","Spring"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Rayhaan/Lion-105031.html",
-    prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 740 }
+    prices: { "5ml": 170, "10ml": 280, "20ml": 520, "30ml": 740 }
   },
   {
     id: "spicebomb-extreme",
@@ -1022,6 +1022,20 @@ const LE_ALL_FRAGRANCES = [
     gender: "Men",
     season: ["Winter","Autumn"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Rayhaan/Obsidian-121721.html",
+    prices: { "5ml": 170, "10ml": 280, "20ml": 520, "30ml": 740 }
+  },
+  {
+    id: "terra",
+    newSince: "2026-10-04",
+    name: "Terra",
+    inspiredBy: "Amouage Outlands",
+    house: "Rayhaan",
+    notes: { top: "Frankincense, Cardamom, Elemi, Bergamot", heart: "Patchouli, Saffron, Orange Blossom, Rose", base: "Vanilla, Benzoin, Amber, Oud" },
+    color: "#8A5A2B",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.118549.2x.avif",
+    gender: "Unisex",
+    season: ["Winter","Autumn"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Rayhaan/Terra-118549.html",
     prices: { "5ml": 170, "10ml": 280, "20ml": 520, "30ml": 740 }
   },
   {
