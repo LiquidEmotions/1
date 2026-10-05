@@ -1371,9 +1371,90 @@ const LE_ALL_FRAGRANCES = [
     season: ["Winter","Autumn"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Amouage/Purpose-50-100897.html",
     prices: { "3ml": 1450, "5ml": 2350, "10ml": 4560, "20ml": 9080, "30ml": 13580 }
+  },
+  {
+    id: "hawas-verde",
+    newSince: "2026-10-05",
+    name: "Hawas Verde",
+    house: "Rasasi",
+    notes: { top: "Lime, Green Apple, Rosemary", heart: "Citrus Accord, Herbal Notes", base: "Patchouli, Amber, Musk" },
+    color: "#5C8A3A",
+    gender: "Men",
+    season: ["Spring","Summer"],
+    prices: { "5ml": 235, "10ml": 410, "20ml": 780, "30ml": 1130 }
+  },
+  {
+    id: "encre-noire-edt",
+    newSince: "2026-10-05",
+    name: "Encre Noire EDT",
+    house: "Lalique",
+    notes: { top: "Cypress", heart: "Vetiver", base: "Cashmere Wood, Musk" },
+    color: "#1F1F24",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.1834.2x.avif",
+    gender: "Men",
+    season: ["Autumn","Winter"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Lalique/Encre-Noire-1834.html",
+    prices: { "5ml": 190, "10ml": 320, "20ml": 600, "30ml": 840 }
+  },
+  {
+    id: "light-blue-eau-intense",
+    newSince: "2026-10-05",
+    name: "Light Blue Eau Intense",
+    house: "D&G",
+    notes: { top: "Lemon, Green Apple, Peach Skin", heart: "Marigold, Jasmine", base: "Amber Woods, Cedar Wood, Musk" },
+    color: "#4FA3D1",
+    gender: "Women",
+    season: ["Spring","Summer"],
+    prices: { "5ml": 510, "10ml": 960, "20ml": 1880, "30ml": 2780 }
+  },
+  {
+    id: "narciso-for-him-edt",
+    newSince: "2026-10-05",
+    name: "Narciso Rodriguez For Him EDT",
+    house: "Narciso Rodriguez",
+    notes: { top: "Violet Leaf", heart: "Musk", base: "Patchouli, Amber" },
+    color: "#3A3F4A",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.1063.2x.avif",
+    gender: "Men",
+    season: ["Spring","Autumn"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Narciso-Rodriguez/Narciso-Rodriguez-for-Him-1063.html",
+    prices: { "5ml": 560, "10ml": 1060, "20ml": 2080, "30ml": 3080 }
+  },
+  {
+    id: "narciso-for-him-edp",
+    newSince: "2026-10-05",
+    name: "Narciso Rodriguez For Him EDP Intense",
+    house: "Narciso Rodriguez",
+    notes: { top: "Iris, Pink Berries", heart: "Musk", base: "Patchouli, Ambergris" },
+    color: "#2A2D36",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.14741.2x.avif",
+    gender: "Men",
+    season: ["Autumn","Winter"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Narciso-Rodriguez/Narciso-Rodriguez-For-Him-Eau-de-Parfum-Intense-14741.html",
+    prices: { "5ml": 610, "10ml": 1160, "20ml": 2280, "30ml": 3380 }
+  },
+  {
+    id: "hawas-venom",
+    newSince: "2026-10-05",
+    name: "Hawas Venom",
+    house: "Rasasi",
+    notes: { top: "Incense, Labdanum", heart: "Leather", base: "Incense, Patchouli, Vanilla" },
+    color: "#2B1B1B",
+    gender: "Men",
+    season: ["Winter","Autumn"],
+    prices: { "5ml": 245, "10ml": 430, "20ml": 800, "30ml": 1160 }
+  },
+  {
+    id: "shuhrah",
+    newSince: "2026-10-05",
+    name: "Shuhrah Pour Homme",
+    house: "Rasasi",
+    notes: { top: "Tomato Leaf, Rose, Freesia", heart: "Rose, Sandalwood, Cedar, Jasmine", base: "Leather, Oud, Musk, Oakmoss, Amber" },
+    color: "#6B4A2E",
+    gender: "Men",
+    season: ["Winter","Autumn"],
+    prices: { "5ml": 220, "10ml": 380, "20ml": 720, "30ml": 1040 }
   }
-
-
 
 ];
 
@@ -1459,6 +1540,7 @@ const HOUSE_CATEGORY = {
   "YSL": "Designer",
   "Chanel": "Designer",
   "D&G": "Designer",
+  "Lalique": "Designer",
   "Givenchy": "Designer",
   "Guerlain": "Designer",
   "Hugo": "Designer",
