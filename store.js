@@ -221,6 +221,7 @@ const LE_ALL_FRAGRANCES = [
   },
   {
     id: "l-aventure-knight",
+    hidden: true,
     name: "L'Aventure Knight",
     inspiredBy: "Creed Green Irish Tweed",
     house: "Al Haramain",
