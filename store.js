@@ -1377,10 +1377,12 @@ const LE_ALL_FRAGRANCES = [
     newSince: "2026-10-05",
     name: "Hawas Verde",
     house: "Rasasi",
-    notes: { top: "Lime, Green Apple, Rosemary", heart: "Citrus Accord, Herbal Notes", base: "Patchouli, Amber, Musk" },
+    notes: { all: "Lime, Rosemary, Green Apple, Patchouli, Amber" },
     color: "#5C8A3A",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.117625.2x.avif",
     gender: "Men",
     season: ["Spring","Summer"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Rasasi/Hawas-Verde-117625.html",
     prices: { "5ml": 235, "10ml": 410, "20ml": 780, "30ml": 1130 }
   },
   {
@@ -1399,12 +1401,14 @@ const LE_ALL_FRAGRANCES = [
   {
     id: "light-blue-eau-intense",
     newSince: "2026-10-05",
-    name: "Light Blue Eau Intense",
+    name: "Light Blue Eau Intense Pour Homme",
     house: "D&G",
-    notes: { top: "Lemon, Green Apple, Peach Skin", heart: "Marigold, Jasmine", base: "Amber Woods, Cedar Wood, Musk" },
+    notes: { top: "Grapefruit, Mandarin Orange", heart: "Sea Water, Juniper", base: "Musk, Amberwood" },
     color: "#4FA3D1",
-    gender: "Women",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.44035.2x.avif",
+    gender: "Men",
     season: ["Spring","Summer"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Dolce-Gabbana/Light-Blue-Eau-Intense-Pour-Homme-44035.html",
     prices: { "5ml": 510, "10ml": 960, "20ml": 1880, "30ml": 2780 }
   },
   {
@@ -1412,7 +1416,7 @@ const LE_ALL_FRAGRANCES = [
     newSince: "2026-10-05",
     name: "Narciso Rodriguez For Him EDT",
     house: "Narciso Rodriguez",
-    notes: { top: "Violet Leaf", heart: "Musk", base: "Patchouli, Amber" },
+    notes: { all: "Violet Leaf, Musk, Patchouli, Amber" },
     color: "#3A3F4A",
     image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.1063.2x.avif",
     gender: "Men",
@@ -1425,7 +1429,7 @@ const LE_ALL_FRAGRANCES = [
     newSince: "2026-10-05",
     name: "Narciso Rodriguez For Him EDP Intense",
     house: "Narciso Rodriguez",
-    notes: { top: "Iris, Pink Berries", heart: "Musk", base: "Patchouli, Ambergris" },
+    notes: { all: "Musk, Iris, Pink Pepper" },
     color: "#2A2D36",
     image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.14741.2x.avif",
     gender: "Men",
@@ -1440,8 +1444,10 @@ const LE_ALL_FRAGRANCES = [
     house: "Rasasi",
     notes: { top: "Incense, Labdanum", heart: "Leather", base: "Incense, Patchouli, Vanilla" },
     color: "#2B1B1B",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.138569.2x.avif",
     gender: "Men",
     season: ["Winter","Autumn"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Rasasi/Hawas-Venom-138569.html",
     prices: { "5ml": 245, "10ml": 430, "20ml": 800, "30ml": 1160 }
   },
   {
@@ -1449,10 +1455,12 @@ const LE_ALL_FRAGRANCES = [
     newSince: "2026-10-05",
     name: "Shuhrah Pour Homme",
     house: "Rasasi",
-    notes: { top: "Tomato Leaf, Rose, Freesia", heart: "Rose, Sandalwood, Cedar, Jasmine", base: "Leather, Oud, Musk, Oakmoss, Amber" },
+    notes: { top: "Tomato Leaf, Rose, Freesia", heart: "Rose, Sandalwood, Cedar, Jasmine", base: "Leather, Agarwood (Oud), Musk, Oakmoss, Amber" },
     color: "#6B4A2E",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.53578.2x.avif",
     gender: "Men",
     season: ["Winter","Autumn"],
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Rasasi/Shuhrah-Pour-Homme-53578.html",
     prices: { "5ml": 220, "10ml": 380, "20ml": 720, "30ml": 1040 }
   }
 
@@ -2113,9 +2121,9 @@ function leOpenProductModal(id){
 
     <div style="margin-top:20px;padding:16px;background:#FAF6F2;border-radius:8px;">
       <div style="font-weight:600;font-size:13px;margin-bottom:12px;">Note Pyramid</div>
-      ${leNoteRow("Top", f.notes.top)}
-      ${leNoteRow("Heart", f.notes.heart)}
-      ${leNoteRow("Base", f.notes.base)}
+      ${f.notes.all
+        ? leNoteRow("Notes", f.notes.all)
+        : leNoteRow("Top", f.notes.top) + leNoteRow("Heart", f.notes.heart) + leNoteRow("Base", f.notes.base)}
     </div>
 
     <div style="margin-top:20px;">
