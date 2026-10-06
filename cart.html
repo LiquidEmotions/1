@@ -354,6 +354,7 @@ if(hamburgerBtn && mobileMenu){
 
 const addOpen = new Set(); // fragrance ids whose 'other sizes' list is expanded
 
+
 function render(){
   const lines = leCartLines();
   const list = document.getElementById("lineList");
@@ -497,6 +498,7 @@ function renderRecentlyViewed(){
 
 render();
 renderRecentlyViewed();
+window.addEventListener("le-data-updated", () => { leValidateCart(); render(); });
 
 document.getElementById("zoneTabs").addEventListener("click", (e) => {
   const btn = e.target.closest(".zone-tab");

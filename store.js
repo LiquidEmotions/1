@@ -2294,41 +2294,6 @@ function leIsSoldOut(f){
 }
 
 /* ============================================================
-   Discovery set — buy any 3 sample-size decants, save 10%
-   "Sample size" = each perfume's smallest size (3ml where it
-   exists, otherwise 5ml). The discount is automatic: every full
-   group of 3 sample-size decants in the cart gets the percentage
-   off (applied to the cheapest ones if there are leftovers).
-   Change the numbers below to change the offer everywhere.
-   ============================================================ */
-const LE_DISCOVERY = { count: 3, discountPct: 10 };
-
-function leSmallestSize(f){
-  const sizes = Object.keys((f && f.prices) || {})
-    .sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-  return sizes[0];
-}
-
-function leDiscoveryInfo(){
-  const units = [];
-  leCartLines().forEach(l => {
-    if(l.size === leSmallestSize(l.fragrance)){
-      for(let i = 0; i < l.qty; i++) units.push(l.unitPrice);
-    }
-  });
-  units.sort((a, b) => a - b);
-  const sets = Math.floor(units.length / LE_DISCOVERY.count);
-  const eligible = units.slice(0, sets * LE_DISCOVERY.count).reduce((a, b) => a + b, 0);
-  return {
-    sets,
-    amount: Math.round(eligible * LE_DISCOVERY.discountPct / 100),
-    sampleUnits: units.length,
-    needed: units.length % LE_DISCOVERY.count === 0 && units.length > 0
-      ? 0 : LE_DISCOVERY.count - (units.length % LE_DISCOVERY.count)
-  };
-}
-
-/* ============================================================
    Google Sheet sync — prices and sold-out status
    Reads the "Decants" tab of the Liquid Emotions Decant List and
    applies it on top of the prices in this file. If the sheet

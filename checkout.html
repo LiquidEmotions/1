@@ -315,24 +315,9 @@ function renderSummary(){
   const shipping = subtotal === 0 ? 0 : (qualifiesFreeShip ? 0 : zone.flat);
 
   document.getElementById("miniCountLabel").textContent = count === 1 ? "1 item" : `${count} items`;
-  const di = leDiscoveryInfo();
   document.getElementById("miniSubtotal").textContent = currency(subtotal);
-  let dRow = document.getElementById("miniDiscountRow");
-  if(!dRow){
-    dRow = document.createElement("div");
-    dRow.id = "miniDiscountRow";
-    const subEl = document.getElementById("miniSubtotal");
-    dRow.className = subEl.parentElement.className;
-    dRow.innerHTML = '<span id="miniDiscountLabel"></span><span class="mono" id="miniDiscountVal"></span>';
-    subEl.parentElement.insertAdjacentElement("afterend", dRow);
-  }
-  dRow.style.display = di.amount > 0 ? "" : "none";
-  if(di.amount > 0){
-    document.getElementById("miniDiscountLabel").textContent = `Discovery set (${LE_DISCOVERY.discountPct}% off${di.sets > 1 ? " × " + di.sets : ""})`;
-    document.getElementById("miniDiscountVal").textContent = "−" + currency(di.amount);
-  }
   document.getElementById("miniShipping").textContent = shipping === 0 ? "Free" : currency(shipping);
-  document.getElementById("miniTotal").textContent = currency(Math.max(subtotal - di.amount + shipping, 0));
+  document.getElementById("miniTotal").textContent = currency(subtotal + shipping);
 
   document.querySelectorAll(".zone-tab").forEach(tab => {
     tab.classList.toggle("active", tab.dataset.zone === currentZone);
@@ -358,7 +343,6 @@ function buildWhatsAppMessage(id){
   const pin = document.getElementById("pin").value;
   const country = document.getElementById("country").value;
 
-  const di = leDiscoveryInfo();
   const itemLines = lines.map(l => `• ${l.fragrance.name} (${l.size}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
 
   const msg =
@@ -377,10 +361,9 @@ ${country}
 *Items*
 ${itemLines}
 
-Subtotal: ${currency(subtotal)}${di.amount > 0 ? `
-Discovery set discount (${LE_DISCOVERY.discountPct}% off): −${currency(di.amount)}` : ""}
+Subtotal: ${currency(subtotal)}
 Shipping (${zone.label}): ${shipping === 0 ? "Free" : currency(shipping)}
-Total: ${currency(Math.max(subtotal - di.amount + shipping, 0))}`;
+Total: ${currency(subtotal + shipping)}`;
 
   return msg;
 }
