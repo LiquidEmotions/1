@@ -1410,7 +1410,7 @@ const LE_ALL_FRAGRANCES = [
     gender: "Men",
     season: ["Spring","Summer"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Dolce-Gabbana/Light-Blue-Eau-Intense-Pour-Homme-44035.html",
-    prices: { "5ml": 510, "10ml": 960, "20ml": 1880, "30ml": 2780 }
+    prices: { "3ml": 330, "5ml": 510, "10ml": 960, "20ml": 1880, "30ml": 2780 }
   },
   {
     id: "narciso-for-him-edt",
@@ -1423,7 +1423,7 @@ const LE_ALL_FRAGRANCES = [
     gender: "Men",
     season: ["Spring","Autumn"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Narciso-Rodriguez/Narciso-Rodriguez-for-Him-1063.html",
-    prices: { "5ml": 560, "10ml": 1060, "20ml": 2080, "30ml": 3080 }
+    prices: { "3ml": 360, "5ml": 560, "10ml": 1060, "20ml": 2080, "30ml": 3080 }
   },
   {
     id: "narciso-for-him-edp",
@@ -1436,7 +1436,7 @@ const LE_ALL_FRAGRANCES = [
     gender: "Men",
     season: ["Autumn","Winter"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Narciso-Rodriguez/Narciso-Rodriguez-For-Him-Eau-de-Parfum-Intense-14741.html",
-    prices: { "5ml": 610, "10ml": 1160, "20ml": 2280, "30ml": 3380 }
+    prices: { "3ml": 390, "5ml": 610, "10ml": 1160, "20ml": 2280, "30ml": 3380 }
   },
   {
     id: "hawas-venom",
