@@ -581,7 +581,7 @@ const LE_ALL_FRAGRANCES = [
     gender: "Men",
     season: ["Winter","Autumn","Spring"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Rayhaan/Lion-105031.html",
-    prices: { "5ml": 170, "10ml": 280, "20ml": 520, "30ml": 740 }
+    prices: { "5ml": 165, "10ml": 280, "20ml": 520, "30ml": 740 }
   },
   {
     id: "spicebomb-extreme",
@@ -697,7 +697,7 @@ const LE_ALL_FRAGRANCES = [
     gender: "Men",
     season: ["All Season"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Armaf/Club-De-Nuit-Intense-Overdose-136770.html",
-    prices: { "5ml": 245, "10ml": 430, "20ml": 820, "30ml": 1180 }
+    prices: { "5ml": 245, "10ml": 430, "20ml": 820, "30ml": 1190 }
   },
   {
     id: "odyssey-mandarin-sky-elixir",
@@ -884,7 +884,7 @@ const LE_ALL_FRAGRANCES = [
     gender: "Unisex",
     season: ["Winter","Autumn"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Lattafa-Perfumes/Teriaq-Intense-99586.html",
-    prices: { "5ml": 220, "10ml": 380, "20ml": 720, "30ml": 1040 }
+    prices: { "5ml": 215, "10ml": 370, "20ml": 700, "30ml": 1010 }
   },
   {
     id: "mawj-appletini",
@@ -1077,7 +1077,7 @@ const LE_ALL_FRAGRANCES = [
     gender: "Unisex",
     season: ["Summer","Spring"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Riiffs-Perfumes/Freeze-118093.html",
-    prices: { "5ml": 200, "10ml": 340, "20ml": 640, "30ml": 820 }
+    prices: { "5ml": 200, "10ml": 340, "20ml": 640, "30ml": 920 }
   },
   {
     id: "reef-33",
@@ -1397,7 +1397,7 @@ const LE_ALL_FRAGRANCES = [
     gender: "Men",
     season: ["Autumn","Winter"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Lalique/Encre-Noire-1834.html",
-    prices: { "5ml": 190, "10ml": 320, "20ml": 600, "30ml": 840 }
+    prices: { "5ml": 190, "10ml": 320, "20ml": 600, "30ml": 860 }
   },
   {
     id: "light-blue-eau-intense",
@@ -1607,6 +1607,10 @@ function leSetCart(cart){
 
 function leAddToCart(id, size, qty){
   qty = qty || 1;
+  if(leIsSizeSoldOut(leFragranceById(id), size)){
+    leShowToast("Sorry — that size is sold out");
+    return;
+  }
   const cart = leGetCart();
   const existing = cart.find(i => i.id === id && i.size === size);
   if(existing){
@@ -1691,6 +1695,9 @@ const LE_QTY_THEMES = {
 function leRenderQtyControl(id, size, theme){
   const t = LE_QTY_THEMES[theme] || LE_QTY_THEMES.dark;
   const qty = leCartQtyFor(id, size);
+  if(qty === 0 && leIsSizeSoldOut(leFragranceById(id), size)){
+    return `<button class="le-qty-soldout" disabled style="background:transparent;border:1px solid #A48D84;color:#6F5A4E;padding:6px 14px;font-size:0.72rem;font-weight:600;border-radius:4px;cursor:not-allowed;white-space:nowrap;opacity:.8;">Sold out</button>`;
+  }
   if(qty === 0){
     return `<button class="le-qty-add" data-id="${id}" data-size="${size}" style="background:${t.addBg};border:1px solid ${t.addBorder};color:${t.addColor};padding:6px 14px;font-size:0.72rem;font-weight:600;border-radius:4px;cursor:pointer;white-space:nowrap;">Add to cart</button>`;
   }
@@ -1745,6 +1752,9 @@ function leUpdateCartBadges(){
   document.querySelectorAll("[data-cart-count]").forEach(el => {
     el.textContent = leCartCount();
   });
+  if(typeof window !== "undefined" && typeof window.leOnCartChanged === "function"){
+    try{ window.leOnCartChanged(); }catch(e){}
+  }
 }
 
 /* ============================================================
@@ -1759,6 +1769,12 @@ function leValidateCart(){
   if(invalid.length){
     const cart = leGetCart().filter(i => leFragranceById(i.id));
     leSetCart(cart);
+  }
+  /* Lines that have since sold out are removed, with a heads-up. */
+  const soldOut = leGetCart().filter(i => leIsSizeSoldOut(leFragranceById(i.id), i.size));
+  if(soldOut.length){
+    leSetCart(leGetCart().filter(i => !soldOut.includes(i)));
+    soldOut.forEach(i => leShowToast(`${leFragranceById(i.id).name} (${i.size}) just sold out and was removed from your cart`, 4200));
   }
   return invalid;
 }
@@ -2254,3 +2270,197 @@ document.addEventListener("DOMContentLoaded", () => {
   leUpdateCartBadges();
   leUpdateWishlistBadges();
 });
+
+/* ============================================================
+   Sold out
+   Mark things sold out in either place (the sheet wins when it
+   has an opinion about a perfume):
+   - In this file: add  soldOut: true  (whole perfume) or
+     soldOutSizes: ["30ml"]  to a fragrance.
+   - In the Google Sheet: type  Sold out  in place of a size's
+     price, or type  Sold out  in the column just after the last
+     size to mark the whole perfume.
+   ============================================================ */
+function leIsSizeSoldOut(f, size){
+  if(!f) return false;
+  if(f.soldOut === true) return true;
+  return Array.isArray(f.soldOutSizes) && f.soldOutSizes.includes(size);
+}
+function leIsSoldOut(f){
+  if(!f) return false;
+  if(f.soldOut === true) return true;
+  const sizes = Object.keys(f.prices || {});
+  return sizes.length > 0 && sizes.every(sz => leIsSizeSoldOut(f, sz));
+}
+
+/* ============================================================
+   Discovery set — buy any 3 sample-size decants, save 10%
+   "Sample size" = each perfume's smallest size (3ml where it
+   exists, otherwise 5ml). The discount is automatic: every full
+   group of 3 sample-size decants in the cart gets the percentage
+   off (applied to the cheapest ones if there are leftovers).
+   Change the numbers below to change the offer everywhere.
+   ============================================================ */
+const LE_DISCOVERY = { count: 3, discountPct: 10 };
+
+function leSmallestSize(f){
+  const sizes = Object.keys((f && f.prices) || {})
+    .sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  return sizes[0];
+}
+
+function leDiscoveryInfo(){
+  const units = [];
+  leCartLines().forEach(l => {
+    if(l.size === leSmallestSize(l.fragrance)){
+      for(let i = 0; i < l.qty; i++) units.push(l.unitPrice);
+    }
+  });
+  units.sort((a, b) => a - b);
+  const sets = Math.floor(units.length / LE_DISCOVERY.count);
+  const eligible = units.slice(0, sets * LE_DISCOVERY.count).reduce((a, b) => a + b, 0);
+  return {
+    sets,
+    amount: Math.round(eligible * LE_DISCOVERY.discountPct / 100),
+    sampleUnits: units.length,
+    needed: units.length % LE_DISCOVERY.count === 0 && units.length > 0
+      ? 0 : LE_DISCOVERY.count - (units.length % LE_DISCOVERY.count)
+  };
+}
+
+/* ============================================================
+   Google Sheet sync — prices and sold-out status
+   Reads the "Decants" tab of the Liquid Emotions Decant List and
+   applies it on top of the prices in this file. If the sheet
+   can't be reached, the prices in this file are used, so the
+   site never breaks. The sheet must be shared as "Anyone with
+   the link can view" (or published to the web).
+   Perfumes are matched by name (and brand); rows that can't be
+   matched are skipped and listed in the browser console.
+   ============================================================ */
+const LE_SHEET_ENABLED = true;
+const LE_SHEET_ID = "1LKLSVdk2K_eEfx6oOOEjDo-51tluUoYThG4gqG4LQ34";
+const LE_SHEET_TAB = "Decants";
+const LE_SHEET_URL = "https://docs.google.com/spreadsheets/d/" + LE_SHEET_ID +
+  "/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent(LE_SHEET_TAB);
+const LE_SHEET_CACHE_KEY = "le_sheet_v1";
+const LE_SHEET_MIN_ROWS = 20;   // ignore the sheet if it parses to fewer rows than this
+
+function leParseCsv(text){
+  const rows = [];
+  let row = [], cell = "", inQ = false;
+  for(let i = 0; i < text.length; i++){
+    const c = text[i];
+    if(inQ){
+      if(c === '"'){
+        if(text[i + 1] === '"'){ cell += '"'; i++; } else inQ = false;
+      }else cell += c;
+    }else if(c === '"') inQ = true;
+    else if(c === ","){ row.push(cell); cell = ""; }
+    else if(c === "\n"){ row.push(cell); rows.push(row); row = []; cell = ""; }
+    else if(c !== "\r") cell += c;
+  }
+  if(cell !== "" || row.length){ row.push(cell); rows.push(row); }
+  return rows;
+}
+
+function leParseSheetRows(csvRows){
+  const out = [];
+  let sizes = null;
+  csvRows.forEach(r => {
+    const a = (r[0] || "").trim(), b = (r[1] || "").trim();
+    if(b.toLowerCase() === "perfume"){
+      sizes = [];
+      for(let c = 2; c < r.length; c++){
+        const m = /^(\d+)\s*ml$/i.exec((r[c] || "").trim());
+        if(m) sizes.push({ col: c, size: m[1] + "ml" });
+        else break;
+      }
+      return;
+    }
+    if(!sizes || !sizes.length || !a || !b) return;
+    const prices = {}, soldOutSizes = [];
+    sizes.forEach(({ col, size }) => {
+      const raw = (r[col] || "").trim();
+      if(/sold/i.test(raw)){ soldOutSizes.push(size); return; }
+      const n = parseFloat(raw.replace(/[₹,\s]/g, ""));
+      if(isFinite(n) && n > 0) prices[size] = n;
+    });
+    const flag = (r[sizes[sizes.length - 1].col + 1] || "").trim();
+    if(!Object.keys(prices).length && !soldOutSizes.length) return;
+    out.push({ brand: a, name: b, prices, soldOutSizes, soldOut: /sold/i.test(flag) });
+  });
+  return { rows: out };
+}
+
+function leNorm(t){ return String(t || "").toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]/g, ""); }
+
+/* Sheet names that differ from the site's names. Format:
+   "Brand — Perfume (as written in the sheet)": "id of the fragrance above". */
+const LE_SHEET_ALIASES = {
+  "ajmal — evoke gold men": "evoke-gold",
+  "jpg — le male elixir": "le-male-elixir",
+  "maison alhambra — tuscano leather": "toscano-leather",
+  "rasasi — hawas": "hawas",
+  "victor rolf — spicebomb extreme": "spicebomb-extreme",
+  "lalique — encre noir edt": "encre-noire-edt",
+  "d&g — light blue eau intense": "light-blue-eau-intense",
+  "narciso rodriguez — for him edp": "narciso-for-him-edp",
+  "rasasi — shuhrah": "shuhrah"
+};
+
+function leSheetMatches(f, row){
+  const alias = LE_SHEET_ALIASES[(row.brand + " — " + row.name).toLowerCase()];
+  if(alias) return f.id === alias;
+  const nf = leNorm(f.name), nr = leNorm(row.name);
+  const nb = leNorm(row.brand), nh = leNorm(f.house);
+  const brandOk = nb === nh || nb.includes(nh) || nh.includes(nb) || nb.slice(0, 5) === nh.slice(0, 5);
+  if(!brandOk) return false;
+  return nf === nr || nf === nb + nr || nf === nh + nr;
+}
+
+function leApplySheetData(data){
+  const unmatched = [];
+  const ORDER = ["3ml", "5ml", "10ml", "20ml", "30ml"];
+  data.rows.forEach(row => {
+    const f = LE_ALL_FRAGRANCES.find(x => leSheetMatches(x, row));
+    if(!f){ unmatched.push(row.brand + " — " + row.name); return; }
+    const merged = Object.assign({}, f.prices);
+    Object.keys(row.prices).forEach(sz => { if(ORDER.includes(sz)) merged[sz] = row.prices[sz]; });
+    const sorted = {};
+    Object.keys(merged).sort((x, y) => parseInt(x, 10) - parseInt(y, 10)).forEach(sz => { sorted[sz] = merged[sz]; });
+    f.prices = sorted;
+    f.soldOutSizes = row.soldOutSizes.slice();
+    f.soldOut = row.soldOut === true;
+  });
+  if(unmatched.length && typeof console !== "undefined"){
+    console.info("[Liquid Emotions] Sheet rows not matched to a perfume on the site:", unmatched);
+  }
+}
+
+function leSyncSheet(){
+  if(!LE_SHEET_ENABLED || typeof fetch !== "function") return;
+  fetch(LE_SHEET_URL, { cache: "no-store" })
+    .then(r => { if(!r.ok) throw new Error("sheet " + r.status); return r.text(); })
+    .then(text => {
+      const data = leParseSheetRows(leParseCsv(text));
+      if(data.rows.length < LE_SHEET_MIN_ROWS) return;
+      const json = JSON.stringify(data);
+      let prev = null;
+      try{ prev = localStorage.getItem(LE_SHEET_CACHE_KEY); }catch(e){}
+      if(json === prev) return;
+      try{ localStorage.setItem(LE_SHEET_CACHE_KEY, json); }catch(e){}
+      leApplySheetData(data);
+      window.dispatchEvent(new Event("le-data-updated"));
+    })
+    .catch(() => { /* offline or sheet not shared — keep built-in prices */ });
+}
+
+(function leInitSheet(){
+  if(!LE_SHEET_ENABLED) return;
+  try{
+    const cached = JSON.parse(localStorage.getItem(LE_SHEET_CACHE_KEY) || "null");
+    if(cached && Array.isArray(cached.rows) && cached.rows.length >= LE_SHEET_MIN_ROWS) leApplySheetData(cached);
+  }catch(e){}
+  leSyncSheet();
+})();

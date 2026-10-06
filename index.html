@@ -10,7 +10,13 @@
 <meta property="og:title" content="Liquid Emotions — Perfume Decants">
 <meta property="og:description" content="Authentic perfume decants in 3ml, 5ml, 10ml, 20ml, and 30ml sizes. Try premium scents before committing to a full bottle.">
 <meta property="og:type" content="website">
-<meta name="twitter:card" content="summary">
+<meta property="og:site_name" content="Liquid Emotions">
+<meta property="og:url" content="https://liquidemotions.vercel.app/">
+<meta property="og:image" content="https://liquidemotions.vercel.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://liquidemotions.vercel.app/og-image.png">
 <meta name="twitter:title" content="Liquid Emotions — Perfume Decants">
 <meta name="twitter:description" content="Authentic perfume decants in 3ml, 5ml, 10ml, 20ml, and 30ml sizes. Try premium scents before committing to a full bottle.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -559,6 +565,70 @@
   .le-card-qty-slot .le-qty-add{padding:13px 24px !important; font-size:1rem !important;}
   .le-card-qty-slot .le-qty-btn{width:38px !important; height:38px !important;}
 
+  /* ---------- Sold out ---------- */
+  .size-chip.sold{opacity:.55; cursor:not-allowed; background:repeating-linear-gradient(135deg, transparent 0 6px, rgba(164,141,132,0.16) 6px 7px);}
+  .size-chip.sold:hover{color:var(--parchment-dim); border-color:var(--line);}
+  .size-chip.sold .chip-price{color:var(--parchment-dim); font-size:0.62rem; text-transform:uppercase; letter-spacing:0.02em;}
+  .card.sold-out .vial-slot{opacity:.6;}
+  .new-badge.sold-badge{background:var(--parchment-dim); color:#fff;}
+
+  /* ---------- Discovery set ---------- */
+  .discovery-banner{
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    margin:0 0 16px; padding:14px 18px;
+    background:linear-gradient(120deg, rgba(201,140,122,0.20), rgba(233,212,160,0.28));
+    border:1px solid var(--taupe); border-radius:var(--radius);
+  }
+  .discovery-banner p{margin:0; font-size:0.95rem; color:var(--parchment);}
+  .discovery-banner b{font-family:'Fraunces', serif;}
+  .disc-btn{
+    background:var(--parchment); color:#fff; border:1px solid var(--parchment); border-radius:4px;
+    padding:10px 18px; font-size:0.9rem; font-weight:600; cursor:pointer; white-space:nowrap;
+  }
+  .disc-btn:disabled{opacity:.45; cursor:not-allowed;}
+  .disc-overlay{position:fixed; inset:0; z-index:90; background:rgba(46,34,29,0.55); display:flex; align-items:center; justify-content:center; padding:16px;}
+  .disc-modal{background:#fff; border:1px solid var(--line); border-radius:6px; width:100%; max-width:520px; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 18px 50px rgba(46,34,29,0.35);}
+  .disc-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px 10px;}
+  .disc-head h3{margin:0 0 2px; font-size:1.15rem;}
+  .disc-head p{margin:0; font-size:0.85rem; color:var(--parchment-dim);}
+  .disc-x{background:none; border:none; font-size:1.4rem; line-height:1; color:var(--parchment-dim); cursor:pointer; padding:2px 6px;}
+  .disc-search{margin:0 18px 8px; padding:10px 12px; border:1px solid var(--line); border-radius:4px; font-size:0.95rem; font-family:inherit; background:#fff; color:var(--parchment);}
+  .disc-list{overflow-y:auto; padding:0 10px; flex:1; min-height:180px;}
+  .disc-row{display:flex; align-items:center; gap:12px; padding:10px 8px; border-bottom:1px solid var(--line); cursor:pointer;}
+  .disc-row input{width:20px; height:20px; accent-color:var(--amber-bright); flex-shrink:0;}
+  .disc-row.disabled{opacity:.45; cursor:not-allowed;}
+  .disc-name{flex:1; min-width:0; font-size:0.95rem; line-height:1.3;}
+  .disc-name small{display:block; font-size:0.72rem; color:var(--parchment-dim); text-transform:uppercase; letter-spacing:0.06em;}
+  .disc-price{font-size:0.85rem; color:var(--amber-bright); white-space:nowrap;}
+  .disc-foot{padding:12px 18px 16px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:10px;}
+  .disc-sum{display:flex; justify-content:space-between; align-items:baseline; font-size:0.9rem; color:var(--parchment-dim);}
+  .disc-sum b{color:var(--parchment); font-size:1.15rem;}
+  .disc-foot .disc-btn{width:100%; padding:13px;}
+  @media (max-width:560px){
+    .disc-overlay{padding:0; align-items:flex-end;}
+    .disc-modal{max-width:none; max-height:92vh; border-radius:12px 12px 0 0;}
+    .discovery-banner{padding:12px 14px;}
+    .discovery-banner .disc-btn{width:100%;}
+  }
+
+  /* ---------- Cart bar ---------- */
+  .cart-bar{
+    position:fixed; left:24px; bottom:22px; z-index:49; max-width:460px;
+    display:flex; align-items:center; gap:12px;
+    background:var(--parchment); color:#FAF6F2; padding:10px 12px 10px 14px;
+    border-radius:8px; box-shadow:0 6px 20px rgba(70,54,47,0.35);
+  }
+  .cart-bar-text{flex:1; min-width:0; font-size:0.85rem; line-height:1.3;}
+  .cart-bar-text b{display:block; font-weight:600;}
+  .cart-bar-track{height:4px; background:rgba(250,246,242,0.25); border-radius:3px; margin-top:6px; overflow:hidden;}
+  .cart-bar-track i{display:block; height:100%; width:0; background:#C98C7A; border-radius:3px; transition:width .25s ease;}
+  .cart-bar.done .cart-bar-track i{background:#7FD99A;}
+  .cart-bar-btn{background:#C98C7A; color:#2E221D; text-decoration:none; font-weight:600; font-size:0.85rem; padding:9px 14px; border-radius:5px; white-space:nowrap;}
+  @media (max-width:620px){
+    .cart-bar{left:12px; right:80px; bottom:18px; max-width:none;}
+    .cart-bar-btn{padding:9px 10px;}
+  }
+
   .card-fragrantica{
     display:inline-block; margin-top:14px;
     font-size:0.9rem; color:var(--parchment-dim);
@@ -997,6 +1067,7 @@
       </div>
     </div>
 
+    <div class="discovery-banner" id="discoveryBanner"></div>
     <div class="brand-accordion" id="brandAccordion"></div>
     <p class="no-results" id="noResults" style="display:none;">No fragrances match your search.</p>
   </div>
@@ -1112,19 +1183,19 @@ function cardHTML(f){
   const sizes = Object.keys(f.prices);
   const wishlisted = leIsWishlisted(f.id);
   return `
-  <div class="card" data-id="${f.id}" data-house="${f.house}">
+  <div class="card${leIsSoldOut(f) ? " sold-out" : ""}" data-id="${f.id}" data-house="${f.house}">
     <div class="card-top">
       <div class="card-info">
         <div class="card-house">${f.house}</div>
         <h3 class="card-name">${f.name}</h3>
         <div class="card-dupe" style="visibility:${f.inspiredBy ? "visible" : "hidden"};">≈ ${f.inspiredBy || "placeholder"}</div>
       </div>
-      ${f.isNew ? `<span class="new-badge">✨ New</span>` : ""}
+      ${leIsSoldOut(f) ? `<span class="new-badge sold-badge">Sold out</span>` : (f.isNew ? `<span class="new-badge">✨ New</span>` : "")}
       <button class="wish-btn${wishlisted ? " active" : ""}" aria-label="Toggle wishlist">${wishlisted ? "♥" : "♡"}</button>
     </div>
     <div class="card-body">
       <div class="vial-slot" role="button" tabindex="0" aria-label="View details for ${f.name}">${f.image
-        ? `<img src="${f.image}" alt="${f.name}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">`
+        ? `<img src="${f.image}" alt="${f.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.parentNode.innerHTML=vialSVG('${f.id}','${f.color}',FILL_LEVEL['10ml'])" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">`
         : vialSVG(f.id, f.color, FILL_LEVEL["10ml"])}</div>
       <div class="notes">
         <div><b>Top</b> — ${f.notes.top}</div>
@@ -1135,7 +1206,7 @@ function cardHTML(f){
     ${f.fragranticaUrl ? `<a class="card-fragrantica" href="${f.fragranticaUrl}" target="_blank" rel="noopener">Fragrantica ↗</a>` : ""}
     <div class="size-picker" data-selected="">
       <div class="size-chips" role="group" aria-label="Choose size" style="--per:${sizes.length === 4 ? 2 : Math.min(sizes.length, 3)}">
-        ${sizes.map((s, i) => `<button type="button" class="size-chip" data-size="${s}"><span class="chip-size">${s.replace("ml","")}</span><span class="chip-unit">ml</span><span class="chip-price"><span class="cur">₹</span>${f.prices[s]}</span><i class="chip-dot"></i></button>`).join("")}
+        ${sizes.map(s => { const so = leIsSizeSoldOut(f, s); return `<button type="button" class="size-chip${so ? " sold" : ""}" data-size="${s}"${so ? " disabled" : ""}><span class="chip-size">${s.replace("ml","")}</span><span class="chip-unit">ml</span><span class="chip-price">${so ? "Sold out" : `<span class="cur">₹</span>${f.prices[s]}`}</span><i class="chip-dot"></i></button>`; }).join("")}
       </div>
       <div class="size-picker-row">
         <span class="le-card-qty-slot"></span>
@@ -1199,7 +1270,7 @@ function attachCardHandlers(container){
       e.stopPropagation();
       selectSize(c.dataset.size);
     }));
-    slot.innerHTML = '<div class="size-hint">Select a size</div>';
+    slot.innerHTML = `<div class="size-hint">${leIsSoldOut(f) ? "Currently unavailable" : "Select a size"}</div>`;
     markChips();
 
     wishBtn.addEventListener("click", (e) => {
@@ -1656,6 +1727,128 @@ window.addEventListener("storage", (e) => {
 renderBrandAccordion();
 renderRecentlyViewed();
 </script>
+
+<script>
+/* ---------- Cart bar + free-shipping nudge ---------- */
+const LE_FREE_SHIP_QTY = 4;
+function renderCartBar(){
+  const bar = document.getElementById("cartBar");
+  if(!bar) return;
+  const count = leCartCount();
+  if(count === 0){ bar.style.display = "none"; return; }
+  bar.style.display = "flex";
+  const left = LE_FREE_SHIP_QTY - count;
+  document.getElementById("cartBarTitle").textContent = `🛒 ${count} decant${count === 1 ? "" : "s"} in cart`;
+  document.getElementById("cartBarNudge").textContent = left > 0
+    ? `Add ${left} more for free shipping`
+    : "✓ Free shipping unlocked";
+  document.getElementById("cartBarFill").style.width = Math.min(count / LE_FREE_SHIP_QTY * 100, 100) + "%";
+  bar.classList.toggle("done", left <= 0);
+}
+window.leOnCartChanged = renderCartBar;
+renderCartBar();
+
+/* ---------- Discovery set ---------- */
+function renderDiscoveryBanner(){
+  const el = document.getElementById("discoveryBanner");
+  if(!el) return;
+  el.innerHTML = `<p>🎁 <b>Discovery set</b> — pick any ${LE_DISCOVERY.count} sample-size decants and save ${LE_DISCOVERY.discountPct}%</p><button type="button" class="disc-btn" id="discOpen">Build your set</button>`;
+  document.getElementById("discOpen").addEventListener("click", openDiscoveryModal);
+}
+
+function openDiscoveryModal(){
+  const need = LE_DISCOVERY.count, pct = LE_DISCOVERY.discountPct;
+  const options = FRAGRANCES.map(f => ({ f, size: leSmallestSize(f) }))
+    .filter(o => o.size && !leIsSizeSoldOut(o.f, o.size))
+    .sort((a, b) => a.f.house.localeCompare(b.f.house) || a.f.name.localeCompare(b.f.name));
+  const picks = new Set();
+
+  const overlay = document.createElement("div");
+  overlay.className = "disc-overlay";
+  overlay.innerHTML = `
+    <div class="disc-modal" role="dialog" aria-modal="true" aria-label="Build your discovery set">
+      <div class="disc-head">
+        <div><h3>Build your discovery set</h3><p>Choose ${need} perfumes in their sample size — ${pct}% off applies automatically.</p></div>
+        <button type="button" class="disc-x" aria-label="Close">×</button>
+      </div>
+      <input class="disc-search" type="search" placeholder="Search perfume or brand" aria-label="Search">
+      <div class="disc-list"></div>
+      <div class="disc-foot">
+        <div class="disc-sum"><span id="discCount"></span><span id="discTotal"></span></div>
+        <button type="button" class="disc-btn" id="discAdd" disabled>Add set to cart</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
+
+  const listEl = overlay.querySelector(".disc-list");
+  const searchEl = overlay.querySelector(".disc-search");
+  const addBtn = overlay.querySelector("#discAdd");
+
+  function close(){
+    document.body.style.overflow = "";
+    overlay.remove();
+    document.removeEventListener("keydown", onKey);
+  }
+  function onKey(e){ if(e.key === "Escape") close(); }
+  document.addEventListener("keydown", onKey);
+  overlay.addEventListener("click", e => { if(e.target === overlay) close(); });
+  overlay.querySelector(".disc-x").addEventListener("click", close);
+
+  function summary(){
+    const chosen = options.filter(o => picks.has(o.f.id));
+    const sum = chosen.reduce((t, o) => t + o.f.prices[o.size], 0);
+    const save = Math.round(sum * pct / 100);
+    overlay.querySelector("#discCount").textContent = `${picks.size} of ${need} chosen`;
+    overlay.querySelector("#discTotal").innerHTML = picks.size === need
+      ? `<s>${currency(sum)}</s> <b>${currency(sum - save)}</b>`
+      : (sum ? `<b>${currency(sum)}</b>` : "");
+    addBtn.disabled = picks.size !== need;
+    listEl.querySelectorAll(".disc-row").forEach(row => {
+      const cb = row.querySelector("input");
+      const off = !cb.checked && picks.size >= need;
+      cb.disabled = off;
+      row.classList.toggle("disabled", off);
+    });
+  }
+
+  function draw(){
+    const q = searchEl.value.trim().toLowerCase();
+    const shown = options.filter(o => !q || (o.f.house + " " + o.f.name).toLowerCase().includes(q));
+    listEl.innerHTML = shown.map(o => `
+      <label class="disc-row">
+        <input type="checkbox" data-id="${o.f.id}" ${picks.has(o.f.id) ? "checked" : ""}>
+        <span class="disc-name"><small>${o.f.house}</small>${o.f.name}</span>
+        <span class="disc-price mono">${o.size} · ${currency(o.f.prices[o.size])}</span>
+      </label>`).join("") || `<p style="padding:16px;color:var(--parchment-dim);">No perfumes match.</p>`;
+    listEl.querySelectorAll("input").forEach(cb => cb.addEventListener("change", () => {
+      if(cb.checked) picks.add(cb.dataset.id); else picks.delete(cb.dataset.id);
+      summary();
+    }));
+    summary();
+  }
+  searchEl.addEventListener("input", draw);
+
+  addBtn.addEventListener("click", () => {
+    options.filter(o => picks.has(o.f.id)).forEach(o => leAddToCart(o.f.id, o.size, 1));
+    close();
+    leShowToast(`✓ Discovery set added — ${pct}% off applied in your cart`, 3600);
+  });
+  draw();
+}
+renderDiscoveryBanner();
+
+/* ---------- Sheet refresh: re-draw when new prices / sold-out status arrive ---------- */
+window.addEventListener("le-data-updated", () => {
+  try{ renderBrandAccordion(); renderRecentlyViewed(); }catch(e){}
+  renderCartBar();
+});
+</script>
+
+<div class="cart-bar" id="cartBar" style="display:none;">
+  <div class="cart-bar-text"><b id="cartBarTitle"></b><span id="cartBarNudge"></span><div class="cart-bar-track"><i id="cartBarFill"></i></div></div>
+  <a class="cart-bar-btn" href="cart.html">View cart</a>
+</div>
 
 <a class="wa-float" href="https://wa.me/917982410620?text=Hi!%20I'd%20like%20to%20place%20a%20decant%20order." target="_blank" rel="noopener" aria-label="Order via WhatsApp">
   <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M16.004 3C9.377 3 4 8.373 4 15c0 2.34.653 4.527 1.786 6.393L4 29l7.8-1.75A11.94 11.94 0 0 0 16.004 27C22.63 27 28 21.627 28 15S22.63 3 16.004 3zm0 21.75a9.7 9.7 0 0 1-4.95-1.354l-.355-.21-4.626 1.038 1.02-4.507-.232-.367A9.72 9.72 0 0 1 5.25 15c0-5.93 4.823-10.75 10.754-10.75S26.75 9.07 26.75 15 21.935 24.75 16.004 24.75zm5.55-7.98c-.304-.152-1.795-.886-2.073-.987-.278-.101-.48-.152-.683.152-.202.303-.783.986-.96 1.19-.176.202-.353.227-.657.076-.304-.152-1.283-.473-2.443-1.51-.903-.805-1.513-1.8-1.69-2.104-.177-.303-.019-.467.133-.618.137-.136.304-.354.456-.53.152-.177.202-.303.304-.505.101-.202.05-.38-.025-.531-.076-.152-.683-1.648-.936-2.257-.246-.593-.497-.513-.683-.522-.177-.008-.38-.01-.582-.01-.202 0-.531.076-.809.38-.278.303-1.06 1.036-1.06 2.527s1.085 2.933 1.236 3.136c.152.202 2.135 3.26 5.174 4.572.723.312 1.287.499 1.727.638.726.231 1.386.198 1.908.12.582-.087 1.795-.734 2.048-1.443.253-.71.253-1.317.177-1.443-.076-.127-.278-.202-.582-.354z"/></svg>
