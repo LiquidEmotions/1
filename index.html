@@ -552,6 +552,9 @@
   .size-chip .chip-dot{display:none; position:absolute; top:-3px; right:-3px; width:8px; height:8px; border-radius:50%; background:#25D366; border:1.5px solid var(--moss);}
   .size-chip.in-cart .chip-dot{display:block;}
   .size-picker-row{margin-top:10px;}
+  .size-hint{width:100%; box-sizing:border-box; text-align:center; padding:11px 10px; font-size:0.9rem; color:var(--parchment-dim); border:1px dashed var(--line); border-radius:4px;}
+  .size-picker .le-card-qty-slot .le-qty-add{padding:11px 12px !important; font-size:0.92rem !important; width:100% !important; display:block !important; text-align:center !important; white-space:nowrap;}
+  .size-picker .le-qty-stepper{justify-content:center; width:100%;}
   .size-picker-row .le-card-qty-slot{display:block;}
   .le-card-qty-slot .le-qty-add{padding:13px 24px !important; font-size:1rem !important;}
   .le-card-qty-slot .le-qty-btn{width:38px !important; height:38px !important;}
@@ -711,6 +714,10 @@
     .chip-unit{font-size:0.58rem;}
     .chip-price{font-size:0.72rem;}
     .size-picker-row{margin-top:8px;}
+    .chip-price .cur{display:none;}
+    .chip-price{font-size:0.7rem;}
+    .size-hint{padding:9px 6px; font-size:0.74rem;}
+    .size-picker .le-card-qty-slot .le-qty-add{padding:9px 4px !important; font-size:0.74rem !important;}
     .card .le-card-qty-slot{width:100%; display:block;}
     .card .le-qty-add{padding:11px 10px !important; font-size:0.85rem !important; width:100% !important; display:block !important; text-align:center !important;}
     .card .le-qty-stepper{gap:6px !important; width:100%; justify-content:center;}
@@ -1126,12 +1133,12 @@ function cardHTML(f){
       </div>
     </div>
     ${f.fragranticaUrl ? `<a class="card-fragrantica" href="${f.fragranticaUrl}" target="_blank" rel="noopener">Fragrantica ↗</a>` : ""}
-    <div class="size-picker" data-selected="${sizes[0]}">
+    <div class="size-picker" data-selected="">
       <div class="size-chips" role="group" aria-label="Choose size">
-        ${sizes.map((s, i) => `<button type="button" class="size-chip${i === 0 ? " active" : ""}" data-size="${s}"><span class="chip-size">${s.replace("ml","")}</span><span class="chip-unit">ml</span><span class="chip-price">${currency(f.prices[s])}</span><i class="chip-dot"></i></button>`).join("")}
+        ${sizes.map((s, i) => `<button type="button" class="size-chip" data-size="${s}"><span class="chip-size">${s.replace("ml","")}</span><span class="chip-unit">ml</span><span class="chip-price"><span class="cur">₹</span>${f.prices[s]}</span><i class="chip-dot"></i></button>`).join("")}
       </div>
       <div class="size-picker-row">
-        <span class="le-card-qty-slot" data-size="${sizes[0]}"></span>
+        <span class="le-card-qty-slot"></span>
       </div>
     </div>
   </div>`;
@@ -1176,17 +1183,23 @@ function attachCardHandlers(container){
     function markChips(){
       chips.forEach(c => c.classList.toggle("in-cart", leCartQtyFor(f.id, c.dataset.size) > 0));
     }
+    function setLabel(){
+      const size = picker.dataset.selected;
+      const btn = slot.querySelector(".le-qty-add");
+      if(btn && size) btn.textContent = `Add ${size} · ${currency(f.prices[size])}`;
+    }
     function selectSize(size){
       picker.dataset.selected = size;
       slot.dataset.size = size;
       chips.forEach(c => c.classList.toggle("active", c.dataset.size === size));
-      leWireQtyControl(slot, f.id, size, "dark", markChips);
+      leWireQtyControl(slot, f.id, size, "dark", () => { markChips(); setLabel(); });
+      setLabel();
     }
     chips.forEach(c => c.addEventListener("click", (e) => {
       e.stopPropagation();
       selectSize(c.dataset.size);
     }));
-    selectSize(chips[0].dataset.size);
+    slot.innerHTML = '<div class="size-hint">Select a size</div>';
     markChips();
 
     wishBtn.addEventListener("click", (e) => {
