@@ -67,7 +67,7 @@
     outline-offset:3px;
   }
   .wrap{
-    max-width:1080px;
+    max-width:1320px;
     margin:0 auto;
     padding:0 28px;
   }
@@ -151,7 +151,7 @@
 
   /* ---------- Hero (compact banner — full brand story lives on about.html) ---------- */
   .hero-compact{
-    padding:14px 28px;
+    padding:14px 0;
     position:relative;
     overflow:hidden;
     border-bottom:1px solid var(--line);
@@ -209,7 +209,7 @@
   .btn-ghost:hover{border-color:var(--taupe); color:var(--parchment);}
 
   /* ---------- Section shared ---------- */
-  section{padding:76px 28px;}
+  section{padding:76px 0;}
   #how{padding:36px 28px 44px;}
   #register{padding-top:10px;}
   .section-head{
@@ -406,7 +406,7 @@
   }
   .brand-acc-grid{
     display:grid;
-    grid-template-columns:repeat(2, 1fr);
+    grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
     gap:22px;
     padding:22px;
     align-items:stretch;
@@ -534,9 +534,9 @@
 
   /* ---------- Compact size picker ---------- */
   .size-picker{margin-top:auto; border-top:1px solid var(--line); padding-top:12px;}
-  .size-chips{display:flex; gap:6px;}
+  .size-chips{--g:6px; display:flex; flex-wrap:wrap; justify-content:center; gap:var(--g);}
   .size-chip{
-    position:relative; flex:1 1 0; min-width:0;
+    position:relative; flex:0 0 calc((100% - (var(--per) - 1) * var(--g)) / var(--per)); min-width:0;
     display:flex; flex-direction:column; align-items:center; gap:2px;
     font-family:'IBM Plex Mono', monospace;
     padding:9px 2px; border-radius:10px; cursor:pointer;
@@ -545,14 +545,14 @@
   }
   .chip-size{font-size:1rem; font-weight:700; line-height:1;}
   .chip-unit{font-size:0.62rem; font-weight:500; line-height:1; margin-top:-1px; opacity:.8;}
-  .chip-price{font-size:0.78rem; font-weight:500; color:var(--amber-bright); white-space:nowrap;}
+  .chip-price{font-size:0.78rem; font-weight:500; color:var(--amber-bright); white-space:nowrap; letter-spacing:0;}
   .size-chip:hover{color:var(--parchment); border-color:var(--amber-bright);}
   .size-chip.active{background:var(--amber-bright); border-color:var(--amber-bright); color:var(--ink);}
   .size-chip.active .chip-price{color:var(--ink);}
   .size-chip .chip-dot{display:none; position:absolute; top:-3px; right:-3px; width:8px; height:8px; border-radius:50%; background:#25D366; border:1.5px solid var(--moss);}
   .size-chip.in-cart .chip-dot{display:block;}
   .size-picker-row{margin-top:10px;}
-  .size-hint{width:100%; box-sizing:border-box; text-align:center; padding:11px 10px; font-size:0.9rem; color:var(--parchment-dim); border:1px dashed var(--line); border-radius:4px;}
+  .size-hint{width:100%; box-sizing:border-box; text-align:center; padding:12px 10px; font-size:0.92rem; font-weight:600; color:var(--parchment); background:rgba(201,140,122,0.18); border:1px solid var(--taupe); border-radius:4px;}
   .size-picker .le-card-qty-slot .le-qty-add{padding:11px 12px !important; font-size:0.92rem !important; width:100% !important; display:block !important; text-align:center !important; white-space:nowrap;}
   .size-picker .le-qty-stepper{justify-content:center; width:100%;}
   .size-picker-row .le-card-qty-slot{display:block;}
@@ -576,7 +576,7 @@
   .le-card-qty-slot .le-qty-count{font-size:1.2rem !important; min-width:20px !important;}
 
   /* ---------- Recently viewed ---------- */
-  .recently-viewed{padding:0 28px 76px;}
+  .recently-viewed{padding:0 0 76px;}
   .recently-viewed h2{font-size:1.15rem; margin:0 0 20px;}
   .rv-grid{display:flex; gap:16px; overflow-x:auto; padding-bottom:6px;}
   .rv-card{flex-shrink:0; width:120px; cursor:pointer;}
@@ -657,7 +657,8 @@
   @media (max-width: 560px){
     nav.links{display:none;}
     .hamburger-btn{display:flex;}
-    .brand-acc-grid{grid-template-columns:1fr; gap:16px; padding:16px;}
+    .wrap{padding:0 12px;}
+    .brand-acc-grid{grid-template-columns:1fr; gap:14px; padding:12px;}
     .brand-acc-header{padding:9px 14px; font-size:0.72rem;}
     .card{padding:20px 16px 16px;}
     .card-body{gap:14px; margin-bottom:16px;}
@@ -672,8 +673,8 @@
     .card .le-qty-count{font-size:1rem !important;}
   }
   @media (max-width: 480px){
-    .brand-acc-grid{grid-template-columns:repeat(2, 1fr); gap:10px; padding:10px;}
-    .card{padding:12px 10px 10px;}
+    .brand-acc-grid{grid-template-columns:repeat(2, 1fr); gap:8px; padding:8px;}
+    .card{padding:12px 8px 8px;}
     .card-top{
       display:grid;
       grid-template-columns:1fr auto;
@@ -708,7 +709,7 @@
     }
     .card-fragrantica{font-size:0.68rem; margin-top:6px;}
     .size-picker{padding-top:8px;}
-    .size-chips{display:grid; grid-template-columns:repeat(3, 1fr); gap:4px;}
+    .size-chips{--g:4px;}
     .size-chip{padding:6px 0; border-radius:8px;}
     .chip-size{font-size:0.9rem;}
     .chip-unit{font-size:0.58rem;}
@@ -716,7 +717,7 @@
     .size-picker-row{margin-top:8px;}
     .chip-price .cur{display:none;}
     .chip-price{font-size:0.7rem;}
-    .size-hint{padding:9px 6px; font-size:0.74rem;}
+    .size-hint{padding:10px 4px; font-size:0.78rem;}
     .size-picker .le-card-qty-slot .le-qty-add{padding:9px 4px !important; font-size:0.74rem !important;}
     .card .le-card-qty-slot{width:100%; display:block;}
     .card .le-qty-add{padding:11px 10px !important; font-size:0.85rem !important; width:100% !important; display:block !important; text-align:center !important;}
@@ -1134,7 +1135,7 @@ function cardHTML(f){
     </div>
     ${f.fragranticaUrl ? `<a class="card-fragrantica" href="${f.fragranticaUrl}" target="_blank" rel="noopener">Fragrantica ↗</a>` : ""}
     <div class="size-picker" data-selected="">
-      <div class="size-chips" role="group" aria-label="Choose size">
+      <div class="size-chips" role="group" aria-label="Choose size" style="--per:${sizes.length === 4 ? 2 : Math.min(sizes.length, 3)}">
         ${sizes.map((s, i) => `<button type="button" class="size-chip" data-size="${s}"><span class="chip-size">${s.replace("ml","")}</span><span class="chip-unit">ml</span><span class="chip-price"><span class="cur">₹</span>${f.prices[s]}</span><i class="chip-dot"></i></button>`).join("")}
       </div>
       <div class="size-picker-row">
