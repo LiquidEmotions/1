@@ -565,13 +565,6 @@
   .le-card-qty-slot .le-qty-add{padding:13px 24px !important; font-size:1rem !important;}
   .le-card-qty-slot .le-qty-btn{width:38px !important; height:38px !important;}
 
-  /* ---------- Sold out ---------- */
-  .size-chip.sold{opacity:.55; cursor:not-allowed; background:repeating-linear-gradient(135deg, transparent 0 6px, rgba(164,141,132,0.16) 6px 7px);}
-  .size-chip.sold:hover{color:var(--parchment-dim); border-color:var(--line);}
-  .size-chip.sold .chip-price{color:var(--parchment-dim); font-size:0.62rem; text-transform:uppercase; letter-spacing:0.02em;}
-  .card.sold-out .vial-slot{opacity:.6;}
-  .new-badge.sold-badge{background:var(--parchment-dim); color:#fff;}
-
   /* ---------- Cart bar ---------- */
   .cart-bar{
     position:fixed; left:24px; bottom:22px; z-index:49; max-width:460px;
@@ -1143,14 +1136,14 @@ function cardHTML(f){
   const sizes = Object.keys(f.prices);
   const wishlisted = leIsWishlisted(f.id);
   return `
-  <div class="card${leIsSoldOut(f) ? " sold-out" : ""}" data-id="${f.id}" data-house="${f.house}">
+  <div class="card" data-id="${f.id}" data-house="${f.house}">
     <div class="card-top">
       <div class="card-info">
         <div class="card-house">${f.house}</div>
         <h3 class="card-name">${f.name}</h3>
         <div class="card-dupe" style="visibility:${f.inspiredBy ? "visible" : "hidden"};">≈ ${f.inspiredBy || "placeholder"}</div>
       </div>
-      ${leIsSoldOut(f) ? `<span class="new-badge sold-badge">Sold out</span>` : (f.isNew ? `<span class="new-badge">✨ New</span>` : "")}
+      ${f.isNew ? `<span class="new-badge">✨ New</span>` : ""}
       <button class="wish-btn${wishlisted ? " active" : ""}" aria-label="Toggle wishlist">${wishlisted ? "♥" : "♡"}</button>
     </div>
     <div class="card-body">
@@ -1166,7 +1159,7 @@ function cardHTML(f){
     ${f.fragranticaUrl ? `<a class="card-fragrantica" href="${f.fragranticaUrl}" target="_blank" rel="noopener">Fragrantica ↗</a>` : ""}
     <div class="size-picker" data-selected="">
       <div class="size-chips" role="group" aria-label="Choose size" style="--per:${sizes.length === 4 ? 2 : Math.min(sizes.length, 3)}">
-        ${sizes.map(s => { const so = leIsSizeSoldOut(f, s); return `<button type="button" class="size-chip${so ? " sold" : ""}" data-size="${s}"${so ? " disabled" : ""}><span class="chip-size">${s.replace("ml","")}</span><span class="chip-unit">ml</span><span class="chip-price">${so ? "Sold out" : `<span class="cur">₹</span>${f.prices[s]}`}</span><i class="chip-dot"></i></button>`; }).join("")}
+        ${sizes.map(s => `<button type="button" class="size-chip" data-size="${s}"><span class="chip-size">${s.replace("ml","")}</span><span class="chip-unit">ml</span><span class="chip-price"><span class="cur">₹</span>${f.prices[s]}</span><i class="chip-dot"></i></button>`).join("")}
       </div>
       <div class="size-picker-row">
         <span class="le-card-qty-slot"></span>
@@ -1230,7 +1223,7 @@ function attachCardHandlers(container){
       e.stopPropagation();
       selectSize(c.dataset.size);
     }));
-    slot.innerHTML = `<div class="size-hint">${leIsSoldOut(f) ? "Currently unavailable" : "Select a size"}</div>`;
+    slot.innerHTML = `<div class="size-hint">Select a size</div>`;
     markChips();
 
     wishBtn.addEventListener("click", (e) => {
@@ -1708,7 +1701,7 @@ function renderCartBar(){
 window.leOnCartChanged = renderCartBar;
 renderCartBar();
 
-/* ---------- Sheet refresh: re-draw when new prices / sold-out status arrive ---------- */
+/* ---------- Sheet refresh: re-draw when new prices arrive ---------- */
 window.addEventListener("le-data-updated", () => {
   try{ renderBrandAccordion(); renderRecentlyViewed(); }catch(e){}
   renderCartBar();

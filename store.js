@@ -1607,10 +1607,6 @@ function leSetCart(cart){
 
 function leAddToCart(id, size, qty){
   qty = qty || 1;
-  if(leIsSizeSoldOut(leFragranceById(id), size)){
-    leShowToast("Sorry — that size is sold out");
-    return;
-  }
   const cart = leGetCart();
   const existing = cart.find(i => i.id === id && i.size === size);
   if(existing){
@@ -1695,9 +1691,6 @@ const LE_QTY_THEMES = {
 function leRenderQtyControl(id, size, theme){
   const t = LE_QTY_THEMES[theme] || LE_QTY_THEMES.dark;
   const qty = leCartQtyFor(id, size);
-  if(qty === 0 && leIsSizeSoldOut(leFragranceById(id), size)){
-    return `<button class="le-qty-soldout" disabled style="background:transparent;border:1px solid #A48D84;color:#6F5A4E;padding:6px 14px;font-size:0.72rem;font-weight:600;border-radius:4px;cursor:not-allowed;white-space:nowrap;opacity:.8;">Sold out</button>`;
-  }
   if(qty === 0){
     return `<button class="le-qty-add" data-id="${id}" data-size="${size}" style="background:${t.addBg};border:1px solid ${t.addBorder};color:${t.addColor};padding:6px 14px;font-size:0.72rem;font-weight:600;border-radius:4px;cursor:pointer;white-space:nowrap;">Add to cart</button>`;
   }
@@ -1769,12 +1762,6 @@ function leValidateCart(){
   if(invalid.length){
     const cart = leGetCart().filter(i => leFragranceById(i.id));
     leSetCart(cart);
-  }
-  /* Lines that have since sold out are removed, with a heads-up. */
-  const soldOut = leGetCart().filter(i => leIsSizeSoldOut(leFragranceById(i.id), i.size));
-  if(soldOut.length){
-    leSetCart(leGetCart().filter(i => !soldOut.includes(i)));
-    soldOut.forEach(i => leShowToast(`${leFragranceById(i.id).name} (${i.size}) just sold out and was removed from your cart`, 4200));
   }
   return invalid;
 }
@@ -2272,29 +2259,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* ============================================================
-   Sold out
-   Mark things sold out in either place (the sheet wins when it
-   has an opinion about a perfume):
-   - In this file: add  soldOut: true  (whole perfume) or
-     soldOutSizes: ["30ml"]  to a fragrance.
-   - In the Google Sheet: type  Sold out  in place of a size's
-     price, or type  Sold out  in the column just after the last
-     size to mark the whole perfume.
-   ============================================================ */
-function leIsSizeSoldOut(f, size){
-  if(!f) return false;
-  if(f.soldOut === true) return true;
-  return Array.isArray(f.soldOutSizes) && f.soldOutSizes.includes(size);
-}
-function leIsSoldOut(f){
-  if(!f) return false;
-  if(f.soldOut === true) return true;
-  const sizes = Object.keys(f.prices || {});
-  return sizes.length > 0 && sizes.every(sz => leIsSizeSoldOut(f, sz));
-}
-
-/* ============================================================
-   Google Sheet sync — prices and sold-out status
+   Google Sheet sync — prices
    Reads the "Decants" tab of the Liquid Emotions Decant List and
    applies it on top of the prices in this file. If the sheet
    can't be reached, the prices in this file are used, so the
@@ -2344,16 +2309,14 @@ function leParseSheetRows(csvRows){
       return;
     }
     if(!sizes || !sizes.length || !a || !b) return;
-    const prices = {}, soldOutSizes = [];
+    const prices = {};
     sizes.forEach(({ col, size }) => {
       const raw = (r[col] || "").trim();
-      if(/sold/i.test(raw)){ soldOutSizes.push(size); return; }
       const n = parseFloat(raw.replace(/[₹,\s]/g, ""));
       if(isFinite(n) && n > 0) prices[size] = n;
     });
-    const flag = (r[sizes[sizes.length - 1].col + 1] || "").trim();
-    if(!Object.keys(prices).length && !soldOutSizes.length) return;
-    out.push({ brand: a, name: b, prices, soldOutSizes, soldOut: /sold/i.test(flag) });
+    if(!Object.keys(prices).length) return;
+    out.push({ brand: a, name: b, prices });
   });
   return { rows: out };
 }
@@ -2395,8 +2358,6 @@ function leApplySheetData(data){
     const sorted = {};
     Object.keys(merged).sort((x, y) => parseInt(x, 10) - parseInt(y, 10)).forEach(sz => { sorted[sz] = merged[sz]; });
     f.prices = sorted;
-    f.soldOutSizes = row.soldOutSizes.slice();
-    f.soldOut = row.soldOut === true;
   });
   if(unmatched.length && typeof console !== "undefined"){
     console.info("[Liquid Emotions] Sheet rows not matched to a perfume on the site:", unmatched);
