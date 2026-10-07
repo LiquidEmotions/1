@@ -444,6 +444,12 @@
     white-space:nowrap;
     flex-shrink:0;
   }
+  .reset-pill{
+    align-self:center; border-style:dashed; font-weight:600;
+    color:var(--parchment-dim);
+  }
+  .reset-pill:hover{color:var(--parchment); border-style:solid;}
+  .reset-pill[hidden]{display:none;}
   .pill-tab.active{
     background:var(--amber);
     border-color:var(--amber);
@@ -1019,6 +1025,7 @@
         <span class="sub-filter-label mono">Season</span>
         <div class="pill-tabs" id="seasonTabs"></div>
       </div>
+      <button class="pill-tab reset-pill" id="resetFiltersBtn" type="button" hidden>↺ Reset filters</button>
     </div>
 
     <div class="brand-accordion" id="brandAccordion"></div>
@@ -1355,6 +1362,7 @@ function renderBrandAccordion(){
   const houses = [...new Set(filtered.map(f => f.house))].sort((a, b) => a.localeCompare(b));
   const sorter = SORTERS[sortSelect.value];
 
+  updateResetBtn();
   catalogueHeading.textContent = activeCategory !== "All" ? activeCategory : "The current catalogue";
   catalogueCount.textContent = `${filtered.length} Perfume${filtered.length === 1 ? "" : "s"} to choose from`;
   noResults.style.display = filtered.length === 0 ? "block" : "none";
@@ -1651,6 +1659,33 @@ sortSelect.addEventListener("change", renderBrandAccordion);
 newFilterToggle.addEventListener("click", () => {
   newFilterActive = !newFilterActive;
   newFilterToggle.classList.toggle("active", newFilterActive);
+  renderBrandAccordion();
+});
+
+/* ---------- Reset: back to the full catalogue ---------- */
+function updateResetBtn(){
+  const btn = document.getElementById("resetFiltersBtn");
+  if(!btn) return;
+  const anyActive = activeCategory !== "All" || activeGender !== "All" || activeSeason !== "All" ||
+    newFilterActive || !!searchTerm || !!pinnedId || sortSelect.value !== "default";
+  btn.hidden = !anyActive;
+}
+
+document.getElementById("resetFiltersBtn").addEventListener("click", () => {
+  activeCategory = "All";
+  activeGender = "All";
+  activeSeason = "All";
+  newFilterActive = false;
+  newFilterToggle.classList.remove("active");
+  searchInput.value = "";
+  searchTerm = "";
+  pinnedId = null;
+  searchClear.style.display = "none";
+  closeSuggestions();
+  sortSelect.value = "default";
+  renderPillTabs(categoryTabsEl, categories, activeCategory, CATEGORY_ICONS);
+  renderPillTabs(genderTabsEl, genders, activeGender, GENDER_ICONS);
+  renderPillTabs(seasonTabsEl, seasons, activeSeason, SEASON_ICONS);
   renderBrandAccordion();
 });
 
