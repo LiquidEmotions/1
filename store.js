@@ -682,7 +682,7 @@ const LE_ALL_FRAGRANCES = [
     color: "#1F2A44",
     image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.77861.2x.avif",
     gender: "Men",
-    season: ["All Season"],
+    season: ["All-Season"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Armaf/Club-de-Nuit-Intense-Man-Limited-Edition-Parfum-77861.html",
     prices: { "5ml": 350, "10ml": 635, "20ml": 1230, "30ml": 1800 }
   },
@@ -695,7 +695,7 @@ const LE_ALL_FRAGRANCES = [
     color: "#1F2A44",
     image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.136770.2x.avif",
     gender: "Men",
-    season: ["All Season"],
+    season: ["All-Season"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Armaf/Club-De-Nuit-Intense-Overdose-136770.html",
     prices: { "5ml": 245, "10ml": 430, "20ml": 820, "30ml": 1190 }
   },
@@ -2445,7 +2445,10 @@ function leCatalogueDetails(entry){
   return {
     notes: { top: entry.top, heart: entry.heart, base: entry.base },
     gender: /^(women|female|ladies|her)/.test(gl) ? "Women" : /^(men|male|him|gents)/.test(gl) ? "Men" : "Unisex",
-    season: entry.season ? entry.season.split(/[,/]/).map(x => x.trim()).filter(Boolean) : ["All-Season"],
+    season: entry.season
+      ? [...new Set(entry.season.split(/[,/]/).map(x => x.trim()).filter(Boolean).map(x =>
+          /^all[\s-]*seasons?$/i.test(x) ? "All-Season" : x.charAt(0).toUpperCase() + x.slice(1).toLowerCase()))]
+      : ["All-Season"],
     inspiredBy: entry.inspired || undefined,
     image: entry.image || (fz ? "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500." + fz[1] + ".2x.avif" : undefined),
     fragranticaUrl: entry.link || undefined,
