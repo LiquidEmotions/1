@@ -517,7 +517,7 @@ const LE_ALL_FRAGRANCES = [
     gender: "Unisex",
     season: ["Spring","Summer"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Maison-Alhambra/Jean-Lowe-Immortal-83666.html",
-    prices: { "5ml": 185, "10ml": 310, "20ml": 580, "30ml": 730 }
+    prices: { "5ml": 185, "10ml": 310, "20ml": 580, "30ml": 830 }
   },
   {
     id: "toscano-leather",
