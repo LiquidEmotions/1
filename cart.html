@@ -395,7 +395,7 @@ function render(){
         <div class="li-main">
           <div class="li-house">${f.house}</div>
           <h3 class="li-name">${f.name}</h3>
-          <div class="li-notes">${f.notes.top} · ${f.notes.heart} · ${f.notes.base}</div>
+          <div class="li-notes">${[f.notes.top, f.notes.heart, f.notes.base].filter(Boolean).join(" · ")}</div>
           <div class="li-controls">
             <button class="li-wishlist${leIsWishlisted(f.id) ? " active" : ""}">${leIsWishlisted(f.id) ? "♥ Saved" : "♡ Save for later"}</button>
           </div>

@@ -2079,6 +2079,7 @@ function leEnsureProductModal(){
 }
 
 function leNoteRow(label, notes){
+  if(!notes) return "";
   return `
     <div style="margin-bottom:10px;">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#6F5A4E;margin-bottom:3px;">${label}</div>
@@ -2301,9 +2302,11 @@ function leParseCsv(text){
 
 function leParseSheetRows(csvRows){
   const out = [];
-  let sizes = null;
+  let sizes = null, section = "";
   csvRows.forEach(r => {
     const a = (r[0] || "").trim(), b = (r[1] || "").trim();
+    const c2 = (r[2] || "").trim();
+    if(!a && !b && c2 && !/^\d/.test(c2) && !/ml$/i.test(c2)) section = c2;
     if(b.toLowerCase() === "perfume"){
       sizes = [];
       for(let c = 2; c < r.length; c++){
@@ -2321,7 +2324,7 @@ function leParseSheetRows(csvRows){
       if(isFinite(n) && n > 0) prices[size] = n;
     });
     if(!Object.keys(prices).length) return;
-    out.push({ brand: a, name: b, prices });
+    out.push({ brand: a, name: b, prices, section });
   });
   return { rows: out };
 }
@@ -2352,11 +2355,98 @@ function leSheetMatches(f, row){
   return nf === nr || nf === nb + nr || nf === nh + nr;
 }
 
+/* ============================================================
+   New perfumes straight from the sheet
+   Add a row in the "NewPerfumes" tab (details) and a row in the
+   "Decants" tab (prices) — the site creates the perfume by itself.
+   The bottle photo is worked out from the Fragrantica link.
+   ============================================================ */
+const LE_CATALOGUE_TAB = "NewPerfumes";
+const LE_CATALOGUE_URL = "https://docs.google.com/spreadsheets/d/" + LE_SHEET_ID +
+  "/gviz/tq?tqx=out:csv&headers=0&sheet=" + encodeURIComponent(LE_CATALOGUE_TAB);
+const LE_NEW_COLORS = ["#4A8067", "#9C5644", "#1F2A44", "#6B4E71", "#8A6D3B", "#3F5F7A", "#7A3B3B", "#2E2E2E", "#5B6B3A", "#A06A4B"];
+
+function leParseCatalogueRows(csvRows){
+  let cols = null;
+  const out = [];
+  csvRows.forEach(r => {
+    const cells = r.map(c => (c || "").trim());
+    if(!cols){
+      const low = cells.map(c => c.toLowerCase());
+      const bi = low.findIndex(c => c === "brand");
+      const pi = low.findIndex(c => c === "perfume" || c === "perfume name");
+      const fi = low.findIndex(c => c.includes("fragrantica"));
+      if(bi > -1 && pi > -1 && fi > -1){
+        const find = (...keys) => low.findIndex(c => keys.some(k => c.includes(k)));
+        cols = { brand: bi, name: pi, link: fi, top: find("top"), heart: find("heart", "middle"),
+                 base: find("base"), inspired: find("inspired", "smells"), gender: find("gender"),
+                 season: find("season"), added: find("added", "date"), image: find("image", "photo") };
+      }
+      return;
+    }
+    const brand = cells[cols.brand], name = cells[cols.name];
+    if(!brand || !name) return;
+    const g = k => cols[k] > -1 ? (cells[cols[k]] || "") : "";
+    out.push({ brand, name, link: g("link"), top: g("top"), heart: g("heart"), base: g("base"),
+               inspired: g("inspired"), gender: g("gender"), season: g("season"), added: g("added"), image: g("image") });
+  });
+  return cols ? out : null;   // null = tab missing or not in the expected format
+}
+
+function leSlug(t){ return String(t || "").toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
+
+function leParseAddedDate(t){
+  t = String(t || "").trim();
+  if(!t) return "";
+  let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t);
+  let y, mo, d;
+  if(m){ y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else if((m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/.exec(t))){ d = +m[1]; mo = +m[2]; y = +m[3]; }   // day first
+  else return "";
+  if(mo < 1 || mo > 12 || d < 1 || d > 31) return "";
+  return y + "-" + String(mo).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+}
+
+function leCreateFromCatalogue(row, catalogue){
+  if(!catalogue) return null;
+  const entry = catalogue.find(c => leSheetMatches({ name: c.name, house: c.brand, id: "" }, row));
+  if(!entry) return null;
+  const cleanName = entry.name.trim();
+  let id = leSlug(cleanName);
+  if(LE_ALL_FRAGRANCES.some(x => x.id === id)) id = leSlug(entry.brand + " " + cleanName);
+  if(LE_ALL_FRAGRANCES.some(x => x.id === id)) return null;
+  const fz = /-(\d+)\.html/.exec(entry.link || "");
+  const image = entry.image || (fz ? "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500." + fz[1] + ".2x.avif" : "");
+  let hash = 0; for(const ch of id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  const gl = entry.gender.toLowerCase();
+  const gender = /^(women|female|ladies|her)/.test(gl) ? "Women" : /^(men|male|him|gents)/.test(gl) ? "Men" : "Unisex";
+  const season = entry.season ? entry.season.split(/[,/]/).map(x => x.trim()).filter(Boolean) : ["All-Season"];
+  const f = {
+    id, name: cleanName, house: entry.brand.trim(),
+    notes: { top: entry.top, heart: entry.heart, base: entry.base },
+    color: LE_NEW_COLORS[hash % LE_NEW_COLORS.length],
+    gender, season, prices: {}, fromSheet: true
+  };
+  if(entry.inspired) f.inspiredBy = entry.inspired;
+  if(image) f.image = image;
+  if(entry.link) f.fragranticaUrl = entry.link;
+  const since = leParseAddedDate(entry.added);
+  if(since){
+    f.newSince = since;
+    Object.defineProperty(f, "isNew", { get(){ return leComputeIsNew(f.newSince); }, enumerable: true, configurable: true });
+  }
+  if(!HOUSE_CATEGORY[f.house] && row.section) HOUSE_CATEGORY[f.house] = row.section;
+  LE_ALL_FRAGRANCES.push(f);
+  FRAGRANCES.push(f);
+  return f;
+}
+
 function leApplySheetData(data){
   const unmatched = [];
   const ORDER = ["3ml", "5ml", "10ml", "20ml", "30ml"];
   data.rows.forEach(row => {
-    const f = LE_ALL_FRAGRANCES.find(x => leSheetMatches(x, row));
+    let f = LE_ALL_FRAGRANCES.find(x => leSheetMatches(x, row));
+    if(!f) f = leCreateFromCatalogue(row, data.catalogue);
     if(!f){ unmatched.push(row.brand + " — " + row.name); return; }
     const merged = Object.assign({}, f.prices);
     Object.keys(row.prices).forEach(sz => { if(ORDER.includes(sz)) merged[sz] = row.prices[sz]; });
@@ -2392,10 +2482,22 @@ function leSheetReport(status){
     }
     box.style.background = status.ok ? "#2e7d32" : "#b3261e";
     box.textContent = status.ok
-      ? "Sheet OK — " + status.rows + " rows read, " + status.changed.length + " price change(s)" +
+      ? "Sheet OK — " + status.rows + " price rows, new-perfume rows: " + status.catalogue + ", " + status.changed.length + " change(s)" +
         (status.changed.length ? ": " + status.changed.join(", ") : "") + "\nvia " + status.source
       : "Sheet NOT applied — " + status.error;
   }catch(e){}
+}
+
+/* Details of new perfumes. Missing tab / blocked request → null, and the
+   last copy saved on this phone (if any) is used instead. */
+function leFetchCatalogue(){
+  const fallback = () => {
+    try{ const c = JSON.parse(localStorage.getItem(LE_SHEET_CACHE_KEY) || "null"); return c && c.catalogue ? c.catalogue : null; }catch(e){ return null; }
+  };
+  return fetch(LE_CATALOGUE_URL, { cache: "no-store" })
+    .then(r => { if(!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+    .then(t => leParseCatalogueRows(leParseCsv(t)))
+    .catch(() => fallback());
 }
 
 function leSyncSheet(){
@@ -2413,13 +2515,16 @@ function leSyncSheet(){
       .then(text => {
         const data = leParseSheetRows(leParseCsv(text));
         if(data.rows.length < LE_SHEET_MIN_ROWS) throw new Error("only " + data.rows.length + " usable rows (header row not found?)");
-        const before = leSheetSnapshot();
-        leApplySheetData(data);
-        const after = leSheetSnapshot();
-        const changed = LE_ALL_FRAGRANCES.filter(f => before[f.id] !== after[f.id]).map(f => f.name);
-        try{ localStorage.setItem(LE_SHEET_CACHE_KEY, JSON.stringify(data)); }catch(e){}
-        if(changed.length) window.dispatchEvent(new Event("le-data-updated"));
-        leSheetReport({ ok: true, source: label, rows: data.rows.length, changed: changed });
+        return leFetchCatalogue().then(catalogue => {
+          data.catalogue = catalogue;
+          const before = leSheetSnapshot();
+          leApplySheetData(data);
+          const after = leSheetSnapshot();
+          const changed = LE_ALL_FRAGRANCES.filter(f => before[f.id] !== after[f.id]).map(f => (before[f.id] === undefined ? "NEW: " : "") + f.name);
+          try{ localStorage.setItem(LE_SHEET_CACHE_KEY, JSON.stringify(data)); }catch(e){}
+          if(changed.length) window.dispatchEvent(new Event("le-data-updated"));
+          leSheetReport({ ok: true, source: label, rows: data.rows.length, catalogue: catalogue ? catalogue.length : "none", changed: changed });
+        });
       })
       .catch(err => { errors.push(label + ": " + (err && err.message || err)); attempt(i + 1); });
   };

@@ -1151,9 +1151,9 @@ function cardHTML(f){
         ? `<img src="${f.image}" alt="${f.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.parentNode.innerHTML=vialSVG('${f.id}','${f.color}',FILL_LEVEL['10ml'])" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">`
         : vialSVG(f.id, f.color, FILL_LEVEL["10ml"])}</div>
       <div class="notes">
-        <div><b>Top</b> — ${f.notes.top}</div>
-        <div><b>Heart</b> — ${f.notes.heart}</div>
-        <div><b>Base</b> — ${f.notes.base}</div>
+        ${f.notes.top ? `<div><b>Top</b> — ${f.notes.top}</div>` : ""}
+        ${f.notes.heart ? `<div><b>Heart</b> — ${f.notes.heart}</div>` : ""}
+        ${f.notes.base ? `<div><b>Base</b> — ${f.notes.base}</div>` : ""}
       </div>
     </div>
     ${f.fragranticaUrl ? `<a class="card-fragrantica" href="${f.fragranticaUrl}" target="_blank" rel="noopener">Fragrantica ↗</a>` : ""}
@@ -1184,10 +1184,12 @@ if(hamburgerBtn && mobileMenu){
 }
 
 const heroStatEl = document.getElementById("heroStat");
-if(heroStatEl){
+function updateHeroStat(){
+  if(!heroStatEl) return;
   const totalBrands = new Set(FRAGRANCES.map(f => f.house)).size;
   heroStatEl.textContent = `${FRAGRANCES.length} Perfumes across ${totalBrands} Brands`;
 }
+updateHeroStat();
 
 const catalogueHeading = document.getElementById("catalogueHeading");
 const catalogueCount = document.getElementById("catalogueCount");
@@ -1703,7 +1705,7 @@ renderCartBar();
 
 /* ---------- Sheet refresh: re-draw when new prices arrive ---------- */
 window.addEventListener("le-data-updated", () => {
-  try{ renderBrandAccordion(); renderRecentlyViewed(); }catch(e){}
+  try{ updateHeroStat(); renderBrandAccordion(); renderRecentlyViewed(); }catch(e){}
   renderCartBar();
 });
 </script>
