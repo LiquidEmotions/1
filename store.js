@@ -504,7 +504,7 @@ const LE_ALL_FRAGRANCES = [
     gender: "Unisex",
     season: ["Winter","Autumn"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Lattafa-Perfumes/Asad-Elixir-117616.html",
-    prices: { "5ml": 170, "10ml": 280, "20ml": 520, "30ml": 740 }
+    prices: { "5ml": 185, "10ml": 310, "20ml": 580, "30ml": 830 }
   },
   {
     id: "jean-lowe-immortel",
@@ -517,7 +517,7 @@ const LE_ALL_FRAGRANCES = [
     gender: "Unisex",
     season: ["Spring","Summer"],
     fragranticaUrl: "https://www.fragrantica.com/perfume/Maison-Alhambra/Jean-Lowe-Immortal-83666.html",
-    prices: { "5ml": 185, "10ml": 310, "20ml": 580, "30ml": 830 }
+    prices: { "5ml": 185, "10ml": 310, "20ml": 580, "30ml": 730 }
   },
   {
     id: "toscano-leather",
