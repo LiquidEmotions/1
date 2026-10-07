@@ -2271,8 +2271,13 @@ document.addEventListener("DOMContentLoaded", () => {
 const LE_SHEET_ENABLED = true;
 const LE_SHEET_ID = "1LKLSVdk2K_eEfx6oOOEjDo-51tluUoYThG4gqG4LQ34";
 const LE_SHEET_TAB = "Decants";
+/* headers=0 stops Google from treating the top rows as column titles, which
+   would otherwise swallow the first section's "Brand / Perfume / 5ml…" row. */
 const LE_SHEET_URL = "https://docs.google.com/spreadsheets/d/" + LE_SHEET_ID +
-  "/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent(LE_SHEET_TAB);
+  "/gviz/tq?tqx=out:csv&headers=0&sheet=" + encodeURIComponent(LE_SHEET_TAB);
+/* Second route, tried only if the first one fails. */
+const LE_SHEET_URL_ALT = "https://docs.google.com/spreadsheets/d/" + LE_SHEET_ID +
+  "/export?format=csv&gid=0";
 const LE_SHEET_CACHE_KEY = "le_sheet_v1";
 const LE_SHEET_MIN_ROWS = 20;   // ignore the sheet if it parses to fewer rows than this
 
@@ -2364,22 +2369,61 @@ function leApplySheetData(data){
   }
 }
 
+function leSheetSnapshot(){
+  const o = {};
+  LE_ALL_FRAGRANCES.forEach(f => { o[f.id] = JSON.stringify(f.prices); });
+  return o;
+}
+
+function leSheetReport(status){
+  window.LE_SHEET_STATUS = status;
+  if(typeof console !== "undefined"){
+    (status.ok ? console.info : console.warn)("[Liquid Emotions] sheet sync:", status);
+  }
+  /* Add ?debugprices to any page address to see this on screen. */
+  try{
+    if(!/[?&]debugprices/.test(location.search)) return;
+    let box = document.getElementById("leSheetDebug");
+    if(!box){
+      box = document.createElement("div");
+      box.id = "leSheetDebug";
+      box.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:99999;padding:8px 12px;font:12px/1.4 monospace;color:#fff;white-space:pre-wrap;";
+      document.body.appendChild(box);
+    }
+    box.style.background = status.ok ? "#2e7d32" : "#b3261e";
+    box.textContent = status.ok
+      ? "Sheet OK — " + status.rows + " rows read, " + status.changed.length + " price change(s)" +
+        (status.changed.length ? ": " + status.changed.join(", ") : "") + "\nvia " + status.source
+      : "Sheet NOT applied — " + status.error;
+  }catch(e){}
+}
+
 function leSyncSheet(){
   if(!LE_SHEET_ENABLED || typeof fetch !== "function") return;
-  fetch(LE_SHEET_URL, { cache: "no-store" })
-    .then(r => { if(!r.ok) throw new Error("sheet " + r.status); return r.text(); })
-    .then(text => {
-      const data = leParseSheetRows(leParseCsv(text));
-      if(data.rows.length < LE_SHEET_MIN_ROWS) return;
-      const json = JSON.stringify(data);
-      let prev = null;
-      try{ prev = localStorage.getItem(LE_SHEET_CACHE_KEY); }catch(e){}
-      if(json === prev) return;
-      try{ localStorage.setItem(LE_SHEET_CACHE_KEY, json); }catch(e){}
-      leApplySheetData(data);
-      window.dispatchEvent(new Event("le-data-updated"));
-    })
-    .catch(() => { /* offline or sheet not shared — keep built-in prices */ });
+  const sources = [["gviz", LE_SHEET_URL], ["export", LE_SHEET_URL_ALT]];
+  const errors = [];
+  const attempt = (i) => {
+    if(i >= sources.length){
+      leSheetReport({ ok: false, error: errors.join(" | ") });
+      return;
+    }
+    const [label, url] = sources[i];
+    fetch(url, { cache: "no-store" })
+      .then(r => { if(!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+      .then(text => {
+        const data = leParseSheetRows(leParseCsv(text));
+        if(data.rows.length < LE_SHEET_MIN_ROWS) throw new Error("only " + data.rows.length + " usable rows (header row not found?)");
+        const before = leSheetSnapshot();
+        leApplySheetData(data);
+        const after = leSheetSnapshot();
+        const changed = LE_ALL_FRAGRANCES.filter(f => before[f.id] !== after[f.id]).map(f => f.name);
+        try{ localStorage.setItem(LE_SHEET_CACHE_KEY, JSON.stringify(data)); }catch(e){}
+        if(changed.length) window.dispatchEvent(new Event("le-data-updated"));
+        leSheetReport({ ok: true, source: label, rows: data.rows.length, changed: changed });
+      })
+      .catch(err => { errors.push(label + ": " + (err && err.message || err)); attempt(i + 1); });
+  };
+  attempt(0);
 }
 
 (function leInitSheet(){
