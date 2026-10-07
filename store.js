@@ -2512,7 +2512,8 @@ function leSheetReport(status){
     box.textContent = status.ok
       ? "Sheet OK — " + status.rows + " price rows, new-perfume rows: " + status.catalogue + ", " + status.changed.length + " change(s)" +
         (status.changed.length ? ": " + status.changed.join(", ") : "") + "\nvia " + status.source +
-        (status.dates && status.dates.length ? "\nDates read: " + status.dates.join("; ") : "")
+        (status.dates && status.dates.length ? "\nDates read: " + status.dates.join("; ") : "\nDates read: (no new-perfume rows)") +
+        (status.errors && status.errors.length ? "\nFirst route failed: " + status.errors.join(" | ") : "")
       : "Sheet NOT applied — " + status.error;
   }catch(e){}
 }
@@ -2552,8 +2553,8 @@ function leSyncSheet(){
           const changed = LE_ALL_FRAGRANCES.filter(f => before[f.id] !== after[f.id]).map(f => (before[f.id] === undefined ? "NEW: " : "") + f.name);
           try{ localStorage.setItem(LE_SHEET_CACHE_KEY, JSON.stringify(data)); }catch(e){}
           if(changed.length) window.dispatchEvent(new Event("le-data-updated"));
-          const dates = (catalogue || []).filter(c => c.added).map(c => c.name + ": \"" + c.added + "\" → " + (leParseAddedDate(c.added) || "unreadable"));
-          leSheetReport({ ok: true, source: label, rows: data.rows.length, catalogue: catalogue ? catalogue.length : "none", changed: changed, dates: dates });
+          const dates = (catalogue || []).map(c => c.name + ": \"" + (c.added || "") + "\" → " + (leParseAddedDate(c.added) || (c.added ? "unreadable" : "empty")));
+          leSheetReport({ ok: true, source: label, rows: data.rows.length, catalogue: catalogue ? catalogue.length : "none", changed: changed, dates: dates, errors: errors.slice() });
         });
       })
       .catch(err => { errors.push(label + ": " + (err && err.message || err)); attempt(i + 1); });
