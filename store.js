@@ -2398,12 +2398,21 @@ function leSlug(t){ return String(t || "").toLowerCase().replace(/&/g, "and").re
 function leParseAddedDate(t){
   t = String(t || "").trim();
   if(!t) return "";
-  let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t);
-  let y, mo, d;
-  if(m){ y = +m[1]; mo = +m[2]; d = +m[3]; }
-  else if((m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/.exec(t))){ d = +m[1]; mo = +m[2]; y = +m[3]; }   // day first
-  else return "";
-  if(mo < 1 || mo > 12 || d < 1 || d > 31) return "";
+  const MONTHS = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
+  let y, mo, d, m;
+  if((m = /^Date\((\d{4}),\s*(\d{1,2}),\s*(\d{1,2})/.exec(t))){            // Date(2026,9,7) — months start at 0
+    y = +m[1]; mo = +m[2] + 1; d = +m[3];
+  }else if((m = /^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/.exec(t))){           // 2026-10-07
+    y = +m[1]; mo = +m[2]; d = +m[3];
+  }else if((m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/.exec(t))){           // 7/10/2026 — day first (India)
+    d = +m[1]; mo = +m[2]; y = +m[3];
+    if(mo > 12 && d <= 12){ const x = d; d = mo; mo = x; }                      // 10/25/2026 can only be month-first
+  }else if((m = /^(\d{1,2})[\s-]+([A-Za-z]{3})[a-z]*[\s,.-]+(\d{4})/.exec(t))){ // 7 Oct 2026, 7-Oct-2026
+    d = +m[1]; mo = MONTHS.indexOf(m[2].toLowerCase()) + 1; y = +m[3];
+  }else if((m = /^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/.exec(t))){      // Oct 7, 2026
+    mo = MONTHS.indexOf(m[1].toLowerCase()) + 1; d = +m[2]; y = +m[3];
+  }else return "";
+  if(!(mo >= 1 && mo <= 12 && d >= 1 && d <= 31)) return "";
   return y + "-" + String(mo).padStart(2, "0") + "-" + String(d).padStart(2, "0");
 }
 
