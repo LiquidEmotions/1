@@ -2438,6 +2438,32 @@ function leParseAddedDate(t){
   return "";
 }
 
+/* Everything about a perfume that comes from its NewPerfumes row. */
+function leCatalogueDetails(entry){
+  const fz = /-(\d+)\.html/.exec(entry.link || "");
+  const gl = (entry.gender || "").toLowerCase();
+  return {
+    notes: { top: entry.top, heart: entry.heart, base: entry.base },
+    gender: /^(women|female|ladies|her)/.test(gl) ? "Women" : /^(men|male|him|gents)/.test(gl) ? "Men" : "Unisex",
+    season: entry.season ? entry.season.split(/[,/]/).map(x => x.trim()).filter(Boolean) : ["All-Season"],
+    inspiredBy: entry.inspired || undefined,
+    image: entry.image || (fz ? "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500." + fz[1] + ".2x.avif" : undefined),
+    fragranticaUrl: entry.link || undefined,
+    newSince: leParseAddedDate(entry.added) || undefined
+  };
+}
+
+function leFillFromCatalogue(f, entry){
+  const d = leCatalogueDetails(entry);
+  f.notes = d.notes; f.gender = d.gender; f.season = d.season;
+  ["inspiredBy", "image", "fragranticaUrl", "newSince"].forEach(k => {
+    if(d[k] === undefined) delete f[k]; else f[k] = d[k];
+  });
+  if(!Object.getOwnPropertyDescriptor(f, "isNew")){
+    Object.defineProperty(f, "isNew", { get(){ return leComputeIsNew(f.newSince); }, enumerable: true, configurable: true });
+  }
+}
+
 function leCreateFromCatalogue(row, catalogue){
   if(!catalogue) return null;
   const entry = catalogue.find(c => leSheetMatches({ name: c.name, house: c.brand, id: "" }, row));
@@ -2446,26 +2472,13 @@ function leCreateFromCatalogue(row, catalogue){
   let id = leSlug(cleanName);
   if(LE_ALL_FRAGRANCES.some(x => x.id === id)) id = leSlug(entry.brand + " " + cleanName);
   if(LE_ALL_FRAGRANCES.some(x => x.id === id)) return null;
-  const fz = /-(\d+)\.html/.exec(entry.link || "");
-  const image = entry.image || (fz ? "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500." + fz[1] + ".2x.avif" : "");
   let hash = 0; for(const ch of id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
-  const gl = entry.gender.toLowerCase();
-  const gender = /^(women|female|ladies|her)/.test(gl) ? "Women" : /^(men|male|him|gents)/.test(gl) ? "Men" : "Unisex";
-  const season = entry.season ? entry.season.split(/[,/]/).map(x => x.trim()).filter(Boolean) : ["All-Season"];
   const f = {
     id, name: cleanName, house: entry.brand.trim(),
-    notes: { top: entry.top, heart: entry.heart, base: entry.base },
     color: LE_NEW_COLORS[hash % LE_NEW_COLORS.length],
-    gender, season, prices: {}, fromSheet: true
+    prices: {}, fromSheet: true
   };
-  if(entry.inspired) f.inspiredBy = entry.inspired;
-  if(image) f.image = image;
-  if(entry.link) f.fragranticaUrl = entry.link;
-  const since = leParseAddedDate(entry.added);
-  if(since){
-    f.newSince = since;
-    Object.defineProperty(f, "isNew", { get(){ return leComputeIsNew(f.newSince); }, enumerable: true, configurable: true });
-  }
+  leFillFromCatalogue(f, entry);
   if(!HOUSE_CATEGORY[f.house] && row.section) HOUSE_CATEGORY[f.house] = row.section;
   LE_ALL_FRAGRANCES.push(f);
   FRAGRANCES.push(f);
@@ -2474,11 +2487,18 @@ function leCreateFromCatalogue(row, catalogue){
 
 function leApplySheetData(data){
   const unmatched = [];
+  const present = new Set();
   const ORDER = ["3ml", "5ml", "10ml", "20ml", "30ml"];
   data.rows.forEach(row => {
     let f = LE_ALL_FRAGRANCES.find(x => leSheetMatches(x, row));
     if(!f) f = leCreateFromCatalogue(row, data.catalogue);
+    else if(f.fromSheet && data.catalogue){
+      /* Created earlier (e.g. from the copy saved on this phone): refresh its details. */
+      const entry = data.catalogue.find(c => leSheetMatches({ name: c.name, house: c.brand, id: "" }, row));
+      if(entry) leFillFromCatalogue(f, entry);
+    }
     if(!f){ unmatched.push(row.brand + " — " + row.name); return; }
+    present.add(f.id);
     const merged = Object.assign({}, f.prices);
     Object.keys(row.prices).forEach(sz => { if(ORDER.includes(sz)) merged[sz] = row.prices[sz]; });
     const sorted = {};
@@ -2488,11 +2508,23 @@ function leApplySheetData(data){
   if(unmatched.length && typeof console !== "undefined"){
     console.info("[Liquid Emotions] Sheet rows not matched to a perfume on the site:", unmatched);
   }
+
+  /* The sheet decides what is on sale: a perfume with no row in "Decants" is taken
+     off the site, and comes back when its row is added again. Safety net: if the
+     sheet looks incomplete (fewer than 60% of the site's perfumes found in it),
+     nothing is hidden, so a bad read can never blank the shop. */
+  const known = LE_ALL_FRAGRANCES.filter(f => !f.hidden);
+  const keep = known.filter(f => present.has(f.id));
+  const trusted = data.rows.length >= LE_SHEET_MIN_ROWS && keep.length >= known.length * 0.6;
+  const shown = trusted ? keep : known;
+  FRAGRANCES.length = 0;
+  shown.forEach(f => FRAGRANCES.push(f));
+  return { removed: trusted ? known.filter(f => !present.has(f.id)).map(f => f.name) : [], skipped: !trusted, unmatched };
 }
 
 function leSheetSnapshot(){
   const o = {};
-  LE_ALL_FRAGRANCES.forEach(f => { o[f.id] = JSON.stringify(f.prices); });
+  LE_ALL_FRAGRANCES.forEach(f => { o[f.id] = JSON.stringify(f.prices) + (FRAGRANCES.includes(f) ? "|shown" : "|hidden"); });
   return o;
 }
 
@@ -2516,7 +2548,9 @@ function leSheetReport(status){
       ? "Sheet OK — " + status.rows + " price rows, new-perfume rows: " + status.catalogue + ", " + status.changed.length + " change(s)" +
         (status.changed.length ? ": " + status.changed.join(", ") : "") + "\nvia " + status.source +
         (status.dates && status.dates.length ? "\nDates read: " + status.dates.join("; ") : "\nDates read: (no new-perfume rows)") +
-        (status.errors && status.errors.length ? "\nFirst route failed: " + status.errors.join(" | ") : "")
+        (status.errors && status.errors.length ? "\nFirst route failed: " + status.errors.join(" | ") : "") +
+        (status.hidingSkipped ? "\nWARNING: sheet looks incomplete, nothing was removed from the site" : "") +
+        (status.notInSheet && status.notInSheet.length ? "\nOff the site (no row in sheet): " + status.notInSheet.join(", ") : "")
       : "Sheet NOT applied — " + status.error;
   }catch(e){}
 }
@@ -2551,13 +2585,18 @@ function leSyncSheet(){
         return leFetchCatalogue().then(catalogue => {
           data.catalogue = catalogue;
           const before = leSheetSnapshot();
-          leApplySheetData(data);
+          const result = leApplySheetData(data);
           const after = leSheetSnapshot();
-          const changed = LE_ALL_FRAGRANCES.filter(f => before[f.id] !== after[f.id]).map(f => (before[f.id] === undefined ? "NEW: " : "") + f.name);
+          const changed = LE_ALL_FRAGRANCES.filter(f => before[f.id] !== after[f.id]).map(f => {
+            if(before[f.id] === undefined) return "NEW: " + f.name;
+            const b = before[f.id].split("|"), a = after[f.id].split("|");
+            if(b[1] !== a[1]) return (a[1] === "hidden" ? "REMOVED: " : "BACK: ") + f.name;
+            return f.name;
+          });
           try{ localStorage.setItem(LE_SHEET_CACHE_KEY, JSON.stringify(data)); }catch(e){}
           if(changed.length) window.dispatchEvent(new Event("le-data-updated"));
           const dates = (catalogue || []).map(c => c.name + ": \"" + (c.added || "") + "\" → " + (leParseAddedDate(c.added) || (c.added ? "unreadable" : "empty")));
-          leSheetReport({ ok: true, source: label, rows: data.rows.length, catalogue: catalogue ? catalogue.length : "none", changed: changed, dates: dates, errors: errors.slice() });
+          leSheetReport({ ok: true, source: label, rows: data.rows.length, catalogue: catalogue ? catalogue.length : "none", changed: changed, dates: dates, errors: errors.slice(), notInSheet: result.removed, hidingSkipped: result.skipped });
         });
       })
       .catch(err => { errors.push(label + ": " + (err && err.message || err)); attempt(i + 1); });
