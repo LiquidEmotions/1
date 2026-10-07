@@ -2362,8 +2362,11 @@ function leSheetMatches(f, row){
    The bottle photo is worked out from the Fragrantica link.
    ============================================================ */
 const LE_CATALOGUE_TAB = "NewPerfumes";
+/* headers=1: this tab's first row is a real header row. Telling Google so keeps the
+   date column typed as dates — with headers=0 Google drops the date cell, because
+   one text cell ("Date added") and one date cell look like a tie. */
 const LE_CATALOGUE_URL = "https://docs.google.com/spreadsheets/d/" + LE_SHEET_ID +
-  "/gviz/tq?tqx=out:csv&headers=0&sheet=" + encodeURIComponent(LE_CATALOGUE_TAB);
+  "/gviz/tq?tqx=out:csv&headers=1&sheet=" + encodeURIComponent(LE_CATALOGUE_TAB);
 const LE_NEW_COLORS = ["#4A8067", "#9C5644", "#1F2A44", "#6B4E71", "#8A6D3B", "#3F5F7A", "#7A3B3B", "#2E2E2E", "#5B6B3A", "#A06A4B"];
 
 function leParseCatalogueRows(csvRows){
