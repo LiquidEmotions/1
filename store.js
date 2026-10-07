@@ -2399,21 +2399,40 @@ function leParseAddedDate(t){
   t = String(t || "").trim();
   if(!t) return "";
   const MONTHS = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
-  let y, mo, d, m;
+  const iso = (y, mo, d) => y + "-" + String(mo).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+  const ok = (mo, d) => mo >= 1 && mo <= 12 && d >= 1 && d <= 31;
+  let m;
   if((m = /^Date\((\d{4}),\s*(\d{1,2}),\s*(\d{1,2})/.exec(t))){            // Date(2026,9,7) — months start at 0
-    y = +m[1]; mo = +m[2] + 1; d = +m[3];
-  }else if((m = /^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/.exec(t))){           // 2026-10-07
-    y = +m[1]; mo = +m[2]; d = +m[3];
-  }else if((m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/.exec(t))){           // 7/10/2026 — day first (India)
-    d = +m[1]; mo = +m[2]; y = +m[3];
-    if(mo > 12 && d <= 12){ const x = d; d = mo; mo = x; }                      // 10/25/2026 can only be month-first
-  }else if((m = /^(\d{1,2})[\s-]+([A-Za-z]{3})[a-z]*[\s,.-]+(\d{4})/.exec(t))){ // 7 Oct 2026, 7-Oct-2026
-    d = +m[1]; mo = MONTHS.indexOf(m[2].toLowerCase()) + 1; y = +m[3];
-  }else if((m = /^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/.exec(t))){      // Oct 7, 2026
-    mo = MONTHS.indexOf(m[1].toLowerCase()) + 1; d = +m[2]; y = +m[3];
-  }else return "";
-  if(!(mo >= 1 && mo <= 12 && d >= 1 && d <= 31)) return "";
-  return y + "-" + String(mo).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+    return ok(+m[2] + 1, +m[3]) ? iso(+m[1], +m[2] + 1, +m[3]) : "";
+  }
+  if((m = /^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/.exec(t))){                 // 2026-10-07
+    return ok(+m[2], +m[3]) ? iso(+m[1], +m[2], +m[3]) : "";
+  }
+  if((m = /^(\d{1,2})[\s-]+([A-Za-z]{3})[a-z]*[\s,.-]+(\d{4})/.exec(t))){      // 7 Oct 2026, 7-Oct-2026
+    const mo = MONTHS.indexOf(m[2].toLowerCase()) + 1;
+    return ok(mo, +m[1]) ? iso(+m[3], mo, +m[1]) : "";
+  }
+  if((m = /^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/.exec(t))){         // Oct 7, 2026
+    const mo = MONTHS.indexOf(m[1].toLowerCase()) + 1;
+    return ok(mo, +m[2]) ? iso(+m[3], mo, +m[2]) : "";
+  }
+  if((m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/.exec(t))){                  // 7/10/2026 — day-first or month-first?
+    const a = +m[1], b = +m[2], y = +m[3];
+    const cands = [];
+    if(ok(b, a)) cands.push([y, b, a]);      // day / month
+    if(a !== b && ok(a, b)) cands.push([y, a, b]);   // month / day
+    if(cands.length === 1) return iso(...cands[0]);
+    if(!cands.length) return "";
+    /* Both readings are possible (7/10 = 7 Oct or 10 Jul). A "date added" is
+       never in the future, so take the reading closest to today. */
+    const now = Date.now();
+    const scored = cands.map(c => ({ c, age: (now - new Date(iso(...c) + "T00:00:00").getTime()) / 86400000 }))
+                        .filter(x => x.age >= -1);
+    if(!scored.length) return "";
+    scored.sort((x, y2) => x.age - y2.age);
+    return iso(...scored[0].c);
+  }
+  return "";
 }
 
 function leCreateFromCatalogue(row, catalogue){
@@ -2492,7 +2511,8 @@ function leSheetReport(status){
     box.style.background = status.ok ? "#2e7d32" : "#b3261e";
     box.textContent = status.ok
       ? "Sheet OK — " + status.rows + " price rows, new-perfume rows: " + status.catalogue + ", " + status.changed.length + " change(s)" +
-        (status.changed.length ? ": " + status.changed.join(", ") : "") + "\nvia " + status.source
+        (status.changed.length ? ": " + status.changed.join(", ") : "") + "\nvia " + status.source +
+        (status.dates && status.dates.length ? "\nDates read: " + status.dates.join("; ") : "")
       : "Sheet NOT applied — " + status.error;
   }catch(e){}
 }
@@ -2532,7 +2552,8 @@ function leSyncSheet(){
           const changed = LE_ALL_FRAGRANCES.filter(f => before[f.id] !== after[f.id]).map(f => (before[f.id] === undefined ? "NEW: " : "") + f.name);
           try{ localStorage.setItem(LE_SHEET_CACHE_KEY, JSON.stringify(data)); }catch(e){}
           if(changed.length) window.dispatchEvent(new Event("le-data-updated"));
-          leSheetReport({ ok: true, source: label, rows: data.rows.length, catalogue: catalogue ? catalogue.length : "none", changed: changed });
+          const dates = (catalogue || []).filter(c => c.added).map(c => c.name + ": \"" + c.added + "\" → " + (leParseAddedDate(c.added) || "unreadable"));
+          leSheetReport({ ok: true, source: label, rows: data.rows.length, catalogue: catalogue ? catalogue.length : "none", changed: changed, dates: dates });
         });
       })
       .catch(err => { errors.push(label + ": " + (err && err.message || err)); attempt(i + 1); });
