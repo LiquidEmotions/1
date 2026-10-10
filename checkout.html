@@ -106,6 +106,16 @@
   .confirm-panel p{color:var(--parchment-dim); max-width:44ch; margin:0 auto 8px;}
   .confirm-order-id{display:inline-block; margin-top:18px; font-size:0.8rem; color:var(--amber-bright); border:1px solid var(--brass); padding:8px 16px; border-radius:var(--radius);}
   .confirm-panel .btn-primary{width:auto; display:inline-block; margin-top:36px; padding:14px 28px;}
+  .pay-options{display:grid; gap:10px;}
+  .pay-option{display:flex; gap:12px; align-items:flex-start; padding:14px 15px; background:var(--moss); border:1px solid var(--line); border-radius:var(--radius); cursor:pointer;}
+  .pay-option:has(input:checked){border-color:var(--amber-bright); box-shadow:inset 0 0 0 1px var(--amber-bright);}
+  .pay-option input{margin-top:5px; accent-color:var(--amber-bright);}
+  .pay-text{flex:1; min-width:0;}
+  .pay-title{display:block; font-size:0.95rem; color:var(--parchment);}
+  .pay-sub{display:block; font-size:0.78rem; color:var(--parchment-dim); margin-top:3px; line-height:1.45;}
+  .pay-tag{font-family:'IBM Plex Mono', monospace; font-size:0.74rem; color:var(--amber-bright); white-space:nowrap; padding-top:2px;}
+  .pay-error{display:none; margin:14px 0 0; padding:11px 13px; font-size:0.8rem; color:#7A2E22; background:#F7E4DF; border:1px solid #D9A89D; border-radius:var(--radius);}
+  .pay-error.show{display:block;}
   footer{border-top:1px solid var(--line); padding:44px 28px 36px;}
   .footer-grid{display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px; font-size:0.8rem; color:var(--parchment-dim);}
   @media (max-width: 880px){ .checkout-layout{grid-template-columns:1fr;} .summary{position:static;} }
@@ -214,6 +224,28 @@
           </div>
         </div>
 
+        <div class="form-section">
+          <h2><span class="num">3</span>Payment</h2>
+          <div class="pay-options" id="payOptions" role="radiogroup" aria-label="Payment method">
+            <label class="pay-option">
+              <input type="radio" name="payMethod" value="other" checked>
+              <span class="pay-text">
+                <span class="pay-title">UPI, netbanking or wallet</span>
+                <span class="pay-sub">No extra charge.</span>
+              </span>
+              <span class="pay-tag">No fee</span>
+            </label>
+            <label class="pay-option">
+              <input type="radio" name="payMethod" value="card">
+              <span class="pay-text">
+                <span class="pay-title">Credit or debit card</span>
+                <span class="pay-sub">A 2.6% card fee applies to credit cards. Paying with a debit card? The fee is refunded to you automatically.</span>
+              </span>
+              <span class="pay-tag">+2.6%</span>
+            </label>
+          </div>
+        </div>
+
       </form>
 
       <aside class="summary">
@@ -231,12 +263,17 @@
           <span>Shipping</span>
           <span class="mono" id="miniShipping">₹0</span>
         </div>
+        <div class="summary-row" id="feeRow" style="display:none;">
+          <span>Card fee (2.6%)</span>
+          <span class="mono" id="miniFee">₹0</span>
+        </div>
         <div class="summary-row total">
           <span>Total due</span>
           <span class="mono" id="miniTotal">₹0</span>
         </div>
-        <button type="submit" form="checkoutForm" class="btn-primary" id="placeOrderBtn">Place order via WhatsApp</button>
-        <p class="lock-note">Opens WhatsApp with your order details filled in — just hit send</p>
+        <button type="submit" form="checkoutForm" class="btn-primary" id="placeOrderBtn">Pay now</button>
+        <p class="pay-error" id="payError" role="alert"></p>
+        <p class="lock-note">Secure payment by Razorpay. After you pay, your order details open in WhatsApp.</p>
       </aside>
     </div>
   </main>
@@ -244,12 +281,14 @@
 
 <div class="confirm-panel" id="confirmPanel">
   <div class="seal">✓</div>
-  <h1>Almost there.</h1>
-  <p>We've opened WhatsApp with your order details filled in — just hit send on that chat and we'll begin decanting your bottles by hand.</p>
+  <h1 id="confirmTitle">Payment received.</h1>
+  <p id="confirmText">Your payment went through. WhatsApp should open with your order details. If it doesn't, tap the button below and hit send.</p>
   <div class="confirm-order-id mono" id="orderId"></div>
+  <br>
+  <a class="btn-primary" id="waSendBtn" href="#" target="_blank" rel="noopener">Send order on WhatsApp</a>
   <p style="margin-top:18px;">Want updates on new decants and offers? <a href="https://chat.whatsapp.com/BDzNrJFW8PXB9tdmqReyhZ" target="_blank" rel="noopener" style="text-decoration:underline;">Join our WhatsApp community</a></p>
   <br>
-  <a class="btn-primary" href="index.html">Back to the catalogue</a>
+  <a href="index.html" style="display:inline-block; margin-top:22px; font-size:0.85rem; color:var(--parchment-dim);">Back to the catalogue</a>
 </div>
 
 <footer>
@@ -260,6 +299,7 @@
 </footer>
 
 <script src="store.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
 function miniVial(fragrance){
   if(fragrance.image){
@@ -286,14 +326,34 @@ const ZONE_KEY = "le_ship_zone";
 let currentZone = localStorage.getItem(ZONE_KEY) || "ncr";
 if(!SHIPPING_ZONES[currentZone]) currentZone = "ncr";
 
-function renderSummary(){
+const CARD_FEE_RATE = 0.026;   // keep in step with api/_pricing.js
+let busy = false;
+let confirming = false;
+
+function currentMethod(){
+  const el = document.querySelector('input[name="payMethod"]:checked');
+  return el ? el.value : "other";
+}
+
+function calcTotals(){
   const lines = leCartLines();
+  const count = leCartCount();
+  const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
+  const zone = SHIPPING_ZONES[currentZone];
+  const shipping = subtotal === 0 ? 0 : (count >= FREE_SHIP_QTY ? 0 : zone.flat);
+  const base = subtotal + shipping;
+  const fee = currentMethod() === "card" ? Math.round(base * CARD_FEE_RATE) : 0;
+  return { lines, count, subtotal, shipping, base, fee, total: base + fee, zone };
+}
+
+function renderSummary(){
+  const t = calcTotals();
+  const lines = t.lines;
   const miniItems = document.getElementById("miniItems");
   const placeOrderBtn = document.getElementById("placeOrderBtn");
 
   if(lines.length === 0){
     miniItems.innerHTML = `<p class="empty-note">Your cart is empty. <a href="index.html" style="color:var(--amber-bright);">Browse the catalogue</a> first.</p>`;
-    placeOrderBtn.disabled = true;
   }else{
     miniItems.innerHTML = lines.map(line => `
       <div class="mini-item">
@@ -305,67 +365,150 @@ function renderSummary(){
         <div class="mini-price mono">${currency(line.lineTotal)}</div>
       </div>
     `).join("");
-    placeOrderBtn.disabled = false;
   }
 
-  const count = leCartCount();
-  const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
-  const zone = SHIPPING_ZONES[currentZone];
-  const qualifiesFreeShip = count >= FREE_SHIP_QTY;
-  const shipping = subtotal === 0 ? 0 : (qualifiesFreeShip ? 0 : zone.flat);
+  document.getElementById("miniCountLabel").textContent = t.count === 1 ? "1 item" : `${t.count} items`;
+  document.getElementById("miniSubtotal").textContent = currency(t.subtotal);
+  document.getElementById("miniShipping").textContent = t.shipping === 0 ? "Free" : currency(t.shipping);
+  document.getElementById("feeRow").style.display = t.fee > 0 ? "flex" : "none";
+  document.getElementById("miniFee").textContent = currency(t.fee);
+  document.getElementById("miniTotal").textContent = currency(t.total);
 
-  document.getElementById("miniCountLabel").textContent = count === 1 ? "1 item" : `${count} items`;
-  document.getElementById("miniSubtotal").textContent = currency(subtotal);
-  document.getElementById("miniShipping").textContent = shipping === 0 ? "Free" : currency(shipping);
-  document.getElementById("miniTotal").textContent = currency(subtotal + shipping);
+  if(!busy){
+    placeOrderBtn.disabled = lines.length === 0;
+    placeOrderBtn.textContent = lines.length ? "Pay " + currency(t.total) : "Pay now";
+  }
 
   document.querySelectorAll(".zone-tab").forEach(tab => {
     tab.classList.toggle("active", tab.dataset.zone === currentZone);
   });
 }
 
+function setBusy(on, label){
+  busy = on;
+  const btn = document.getElementById("placeOrderBtn");
+  if(on){ btn.disabled = true; btn.textContent = label || "Please wait..."; }
+  else renderSummary();
+}
+
+function showPayError(msg){
+  const el = document.getElementById("payError");
+  el.textContent = msg || "";
+  el.classList.toggle("show", !!msg);
+}
+
 const WHATSAPP_NUMBER = "917982410620";
+const PENDING_KEY = "le_pending_payment";
 
-function buildWhatsAppMessage(id){
-  const lines = leCartLines();
-  const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
-  const count = leCartCount();
-  const zone = SHIPPING_ZONES[currentZone];
-  const qualifiesFreeShip = count >= FREE_SHIP_QTY;
-  const shipping = subtotal === 0 ? 0 : (qualifiesFreeShip ? 0 : zone.flat);
+/* Everything the WhatsApp message needs, captured at the moment of paying
+   (so it still works if the page reloads while the customer is in a UPI app). */
+function snapshotOrder(t, method){
+  const val = id => document.getElementById(id).value;
+  return {
+    method,
+    zoneLabel: t.zone.label,
+    lines: t.lines.map(l => ({ name: l.fragrance.name, size: l.size, qty: l.qty, lineTotal: l.lineTotal })),
+    subtotal: t.subtotal, shipping: t.shipping, fee: t.fee, total: t.total,
+    customer: {
+      name: `${val("fname")} ${val("lname")}`.trim(), email: val("email"), phone: val("phone"),
+      addr: val("addr"), city: val("city"), state: val("state"), pin: val("pin"), country: val("country")
+    }
+  };
+}
 
-  const name = `${document.getElementById("fname").value} ${document.getElementById("lname").value}`.trim();
-  const email = document.getElementById("email").value;
-  const phone = document.getElementById("phone").value;
-  const addr = document.getElementById("addr").value;
-  const city = document.getElementById("city").value;
-  const state = document.getElementById("state").value;
-  const pin = document.getElementById("pin").value;
-  const country = document.getElementById("country").value;
+function buildWhatsAppMessage(id, s, pay){
+  const c = s.customer;
+  const itemLines = s.lines.map(l => `• ${l.name} (${l.size}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
+  const rows = [
+    `New order: ${id} (PAID ONLINE)`,
+    ``,
+    `*Customer*`, c.name, c.phone, c.email,
+    ``,
+    `*Shipping to*`, c.addr, `${c.city}, ${c.state} ${c.pin}`, c.country,
+    ``,
+    `*Items*`, itemLines,
+    ``,
+    `Subtotal: ${currency(s.subtotal)}`,
+    `Shipping (${s.zoneLabel}): ${s.shipping === 0 ? "Free" : currency(s.shipping)}`
+  ];
+  if(pay.feeKept > 0) rows.push(`Card fee (2.6%): ${currency(pay.feeKept)}`);
+  rows.push(`Total paid: ${currency(pay.paid)}`, `Payment ID: ${pay.paymentId}`);
+  return rows.join("\n");
+}
 
-  const itemLines = lines.map(l => `• ${l.fragrance.name} (${l.size}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
+function showConfirm(o){
+  document.getElementById("confirmTitle").textContent = o.title;
+  document.getElementById("confirmText").textContent = o.text;
+  document.getElementById("orderId").textContent = o.orderLabel;
+  const b = document.getElementById("waSendBtn");
+  b.href = o.waUrl;
+  b.textContent = o.btnLabel;
+  document.getElementById("checkoutView").style.display = "none";
+  document.getElementById("confirmPanel").classList.add("show");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
-  const msg =
-`New order: ${id}
+/* Payment is confirmed by the server — now give the order its number and hand it to WhatsApp. */
+function finishPaid(snap, v){
+  const id = v.orderNumber || leFallbackOrderNumber();
+  const paid = v.paidPaise / 100;
+  const feeKept = snap.method === "card" ? Math.max(0, Math.round(snap.fee - v.refundedPaise / 100)) : 0;
+  const message = buildWhatsAppMessage(id, snap, { paymentId: v.paymentId, paid, feeKept });
+  const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  try{ localStorage.removeItem(PENDING_KEY); }catch(e){}
+  leClearCart();
+  showConfirm({
+    title: "Payment received.",
+    text: "Your payment went through. WhatsApp should open with your order details. If it doesn't, tap the button below and hit send, and we'll start decanting your bottles by hand.",
+    orderLabel: "Order " + id + " · Paid " + currency(paid),
+    waUrl, btnLabel: "Send order on WhatsApp"
+  });
+  try{ window.open(waUrl, "_blank"); }catch(e){}
+}
 
-*Customer*
-${name}
-${phone}
-${email}
+/* Paid, but we couldn't reach our server to confirm. Never leave the customer stranded. */
+function showPaidUnconfirmed(paymentId){
+  const msg = `Hi! I paid for a Liquid Emotions order but the page didn't confirm it. Payment ID: ${paymentId}`;
+  showConfirm({
+    title: "Payment received, one more step.",
+    text: "Your payment went through, but we couldn't confirm it automatically. Message us on WhatsApp with this payment ID and we'll complete your order.",
+    orderLabel: "Payment ID " + paymentId,
+    waUrl: `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`,
+    btnLabel: "Message us on WhatsApp"
+  });
+}
 
-*Shipping to*
-${addr}
-${city}, ${state} ${pin}
-${country}
+async function postJson(url, payload){
+  const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  const data = await r.json().catch(() => ({}));
+  return { status: r.status, ok: r.ok, data };
+}
 
-*Items*
-${itemLines}
+async function onPaid(resp, snap){
+  confirming = true;
+  setBusy(true, "Confirming payment...");
+  let v;
+  try{
+    const r = await postJson("/api/verify-payment", resp);
+    if(!r.ok || !r.data.ok) throw new Error(r.data.error || "not confirmed");
+    v = r.data;
+  }catch(err){
+    showPaidUnconfirmed(resp.razorpay_payment_id);
+    return;
+  }
+  finishPaid(snap, v);
+}
 
-Subtotal: ${currency(subtotal)}
-Shipping (${zone.label}): ${shipping === 0 ? "Free" : currency(shipping)}
-Total: ${currency(subtotal + shipping)}`;
-
-  return msg;
+/* If the customer paid in another app and the page reloaded, pick the order back up. */
+async function recoverPendingPayment(){
+  let p = null;
+  try{ p = JSON.parse(localStorage.getItem(PENDING_KEY) || "null"); }catch(e){}
+  if(!p || !p.orderId || !p.snap) return;
+  if(Date.now() - p.at > 2 * 3600 * 1000){ try{ localStorage.removeItem(PENDING_KEY); }catch(e){} return; }
+  try{
+    const r = await postJson("/api/verify-payment", { recover: true, razorpay_order_id: p.orderId });
+    if(r.ok && r.data.ok) finishPaid(p.snap, r.data);
+  }catch(e){ /* try again next visit */ }
 }
 
 /* ---------- Remember last-used shipping details ---------- */
@@ -391,26 +534,67 @@ loadSavedAddress();
 
 document.getElementById("checkoutForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  if(leCartCount() === 0) return;
+  if(busy || leCartCount() === 0) return;
+  showPayError("");
 
-  const placeOrderBtn = document.getElementById("placeOrderBtn");
-  placeOrderBtn.disabled = true;
-  placeOrderBtn.textContent = "Placing order...";
-
+  const method = currentMethod();
+  const t = calcTotals();
+  setBusy(true, "Preparing payment...");
   saveAddress();
 
-  const id = (await leGetNextOrderNumber()) || leFallbackOrderNumber();
-  const message = buildWhatsAppMessage(id);
-  const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  if(typeof Razorpay === "undefined"){
+    showPayError("The payment window couldn't load. Check your connection and try again.");
+    setBusy(false);
+    return;
+  }
 
-  window.open(waUrl, "_blank");
+  let order;
+  try{
+    const r = await postJson("/api/create-order", {
+      items: leGetCart().map(i => ({ id: i.id, size: i.size, qty: i.qty })),
+      zone: currentZone,
+      method,
+      expectedTotal: t.total
+    });
+    if(r.status === 409){
+      showPayError("Prices were just updated. Reloading so you can review your total.");
+      setTimeout(() => location.reload(), 1800);
+      return;
+    }
+    if(!r.ok) throw new Error(r.data.message || r.data.error || "Could not start the payment.");
+    order = r.data;
+  }catch(err){
+    showPayError(err.message || "Could not start the payment. Please try again.");
+    setBusy(false);
+    return;
+  }
 
-  document.getElementById("orderId").textContent = "Order " + id;
-  document.getElementById("checkoutView").style.display = "none";
-  document.getElementById("confirmPanel").classList.add("show");
-  leClearCart();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  const snap = snapshotOrder(t, method);
+  try{ localStorage.setItem(PENDING_KEY, JSON.stringify({ orderId: order.orderId, snap, at: Date.now() })); }catch(err){}
+
+  const rzp = new Razorpay({
+    key: order.keyId,
+    order_id: order.orderId,
+    amount: order.amount,
+    currency: order.currency,
+    name: "Liquid Emotions",
+    description: "Perfume decants",
+    prefill: { name: snap.customer.name, email: snap.customer.email, contact: snap.customer.phone },
+    theme: { color: "#9C5644" },
+    method: method === "card"
+      ? { card: true, netbanking: false, upi: false, wallet: false, emi: false, paylater: false }
+      : { card: false, netbanking: true, upi: true, wallet: true, emi: false, paylater: false },
+    modal: { ondismiss: () => { if(!confirming) setBusy(false); } },
+    handler: (resp) => onPaid(resp, snap)
+  });
+  rzp.on("payment.failed", (resp) => {
+    const d = resp && resp.error && resp.error.description;
+    showPayError((d ? d + " " : "") + "You haven't been charged for this attempt. Please try again.");
+  });
+  rzp.open();
 });
+
+document.getElementById("payOptions").addEventListener("change", renderSummary);
 
 document.getElementById("zoneTabs").addEventListener("click", (e) => {
   const btn = e.target.closest(".zone-tab");
@@ -429,6 +613,7 @@ window.addEventListener("storage", (e) => {
 });
 
 renderSummary();
+recoverPendingPayment();
 window.addEventListener("le-data-updated", () => { leValidateCart(); renderSummary(); });
 </script>
 
