@@ -239,7 +239,7 @@
               <input type="radio" name="payMethod" value="card">
               <span class="pay-text">
                 <span class="pay-title">Credit or debit card</span>
-                <span class="pay-sub">A 2.6% card fee applies to credit cards. Paying with a debit card? The fee is refunded to you automatically.</span>
+                <span class="pay-sub">A 2.6% card fee applies to both credit and debit cards.</span>
               </span>
               <span class="pay-tag">+2.6%</span>
             </label>
@@ -441,8 +441,8 @@ function showConfirm(o){
   document.getElementById("confirmText").textContent = o.text;
   document.getElementById("orderId").textContent = o.orderLabel;
   const b = document.getElementById("waSendBtn");
-  b.href = o.waUrl;
-  b.textContent = o.btnLabel;
+  b.style.display = o.waUrl ? "" : "none";
+  if(o.waUrl){ b.href = o.waUrl; b.textContent = o.btnLabel; }
   document.getElementById("checkoutView").style.display = "none";
   document.getElementById("confirmPanel").classList.add("show");
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -452,11 +452,21 @@ function showConfirm(o){
 function finishPaid(snap, v){
   const id = v.orderNumber || leFallbackOrderNumber();
   const paid = v.paidPaise / 100;
-  const feeKept = snap.method === "card" ? Math.max(0, Math.round(snap.fee - v.refundedPaise / 100)) : 0;
+  const feeKept = snap.method === "card" ? snap.fee : 0;
   const message = buildWhatsAppMessage(id, snap, { paymentId: v.paymentId, paid, feeKept });
   const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   try{ localStorage.removeItem(PENDING_KEY); }catch(e){}
   leClearCart();
+  if(v.notified){
+    /* The shop already has the full order details, so the customer doesn't need to send anything. */
+    showConfirm({
+      title: "Order placed. Thank you!",
+      text: "Your payment went through and we have your order details. We'll start decanting your bottles by hand and get in touch on the phone number you gave us.",
+      orderLabel: "Order " + id + " · Paid " + currency(paid),
+      waUrl: "", btnLabel: ""
+    });
+    return;
+  }
   showConfirm({
     title: "Payment received.",
     text: "Your payment went through. WhatsApp should open with your order details. If it doesn't, tap the button below and hit send, and we'll start decanting your bottles by hand.",
@@ -489,7 +499,7 @@ async function onPaid(resp, snap){
   setBusy(true, "Confirming payment...");
   let v;
   try{
-    const r = await postJson("/api/verify-payment", resp);
+    const r = await postJson("/api/verify-payment", Object.assign({}, resp, { order: snap }));
     if(!r.ok || !r.data.ok) throw new Error(r.data.error || "not confirmed");
     v = r.data;
   }catch(err){
@@ -506,7 +516,7 @@ async function recoverPendingPayment(){
   if(!p || !p.orderId || !p.snap) return;
   if(Date.now() - p.at > 2 * 3600 * 1000){ try{ localStorage.removeItem(PENDING_KEY); }catch(e){} return; }
   try{
-    const r = await postJson("/api/verify-payment", { recover: true, razorpay_order_id: p.orderId });
+    const r = await postJson("/api/verify-payment", { recover: true, razorpay_order_id: p.orderId, order: p.snap });
     if(r.ok && r.data.ok) finishPaid(p.snap, r.data);
   }catch(e){ /* try again next visit */ }
 }
