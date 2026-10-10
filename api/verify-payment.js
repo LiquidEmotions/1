@@ -1,10 +1,10 @@
 /* POST /api/verify-payment
-   body: { razorpay_order_id, razorpay_payment_id, razorpay_signature }
+   body: { razorpay_order_id, razorpay_payment_id, razorpay_signature, order:<order snapshot> }
          or { recover:true, razorpay_order_id } when the customer returns after paying in another app
    1. checks Razorpay's signature (proves the payment is real)
    2. asks Razorpay for the payment, to confirm status and card type
-   3. if a debit/prepaid card was used, refunds the 2.6% card fee automatically
-   4. gives the order its LE number (only now, so failed payments never use a number) */
+   3. gives the order its LE number (only now, so failed payments never use a number)
+   4. sends the full order to the shop owner on Telegram (once per order) */
 
 const crypto = require("crypto");
 
@@ -12,8 +12,49 @@ const RZP = "https://api.razorpay.com/v1";
 const COUNTER_URL = process.env.ORDER_COUNTER_URL ||
   "https://script.google.com/macros/s/AKfycbx-DJzp1TAsu4U8Ha9bGrP0BB8j_WR3iL2bG1SyuKZQAgt0QH8-5RqGCyfx3RoKZa2N/exec";
 
-/* Set to "off" in Vercel to keep the card fee on debit cards too. */
-const REFUND_DEBIT_FEE = process.env.REFUND_DEBIT_CARD_FEE !== "off";
+/* Order alerts to your phone via Telegram (free). Set both in Vercel. */
+const TG_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TG_CHAT = process.env.TELEGRAM_CHAT_ID;
+
+const clip = (v, n) => String(v == null ? "" : v).replace(/\s+/g, " ").trim().slice(0, n || 200);
+const rupees = (n) => "Rs " + Number(n || 0).toLocaleString("en-IN");
+
+function buildAlert(orderNumber, o, payment, paidPaise, feeKeptPaise){
+  const c = (o && o.customer) || {};
+  const lines = ((o && o.lines) || []).slice(0, 40)
+    .map(l => `- ${clip(l.name, 80)} (${clip(l.size, 10)}) x${clip(l.qty, 3)}  ${rupees(l.lineTotal)}`).join("\n");
+  const via = payment.method === "card" ? `card${payment.card && payment.card.type ? " (" + payment.card.type + ")" : ""}` : payment.method;
+  const rows = [
+    `NEW PAID ORDER ${orderNumber || "(number unavailable, use payment ID)"}`,
+    "",
+    "CUSTOMER",
+    clip(c.name), clip(c.phone), clip(c.email),
+    "",
+    "SHIP TO",
+    clip(c.addr, 300), `${clip(c.city)}, ${clip(c.state)} ${clip(c.pin, 12)}`, clip(c.country),
+    "",
+    "ITEMS",
+    lines,
+    "",
+    `Subtotal: ${rupees(o && o.subtotal)}`,
+    `Shipping (${clip(o && o.zoneLabel, 30)}): ${o && o.shipping ? rupees(o.shipping) : "Free"}`
+  ];
+  if(feeKeptPaise > 0) rows.push(`Card fee: ${rupees(feeKeptPaise / 100)}`);
+  rows.push(`TOTAL PAID: ${rupees(paidPaise / 100)}`, `Paid via: ${via}`, `Payment ID: ${payment.id}`);
+  return rows.join("\n");
+}
+
+async function sendTelegram(text){
+  if(!TG_TOKEN || !TG_CHAT) return false;
+  try{
+    const r = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: TG_CHAT, text })
+    });
+    return r.ok;
+  }catch(e){ return false; }
+}
 
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
@@ -73,21 +114,9 @@ module.exports = async (req, res) => {
     const feePaise = parseInt(notes.fee_paise, 10) || 0;
     const cardType = payment.card && payment.card.type ? payment.card.type : null;
 
-    /* 3. card fee applies to credit cards only */
-    let refundedPaise = payment.amount_refunded || 0;
+    /* 3. the card fee (if any) stays on every card, credit or debit */
+    const refundedPaise = payment.amount_refunded || 0;
     let notesChanged = false;
-    if(REFUND_DEBIT_FEE && payment.method === "card" && feePaise > 0 && cardType && cardType !== "credit"
-       && payment.status === "captured" && refundedPaise < feePaise && !notes.le_fee_refund){
-      const refund = await rz("POST", `/payments/${paymentId}/refunds`, {
-        amount: feePaise,
-        notes: { reason: "Card fee applies to credit cards only", order: orderId }
-      });
-      if(refund.ok){
-        refundedPaise += feePaise;
-        notes.le_fee_refund = refund.json.id;
-        notesChanged = true;
-      }
-    }
 
     /* 4. order number, issued once per Razorpay order */
     let orderNumber = notes.le_order || null;
@@ -99,6 +128,14 @@ module.exports = async (req, res) => {
       }catch(e){ orderNumber = null; }
       if(orderNumber){ notes.le_order = orderNumber; notes.le_payment = paymentId; notesChanged = true; }
     }
+    /* 5. tell the shop owner, once per order */
+    let notified = notes.le_notified === "1";
+    if(!notified && b.order){
+      const feeKeptPaise = payment.method === "card" ? feePaise : 0;
+      notified = await sendTelegram(buildAlert(orderNumber, b.order, payment, payment.amount - refundedPaise, feeKeptPaise));
+      if(notified){ notes.le_notified = "1"; notesChanged = true; }
+    }
+
     if(notesChanged) await rz("PATCH", `/orders/${orderId}`, { notes });
 
     return res.status(200).json({
@@ -108,6 +145,7 @@ module.exports = async (req, res) => {
       method: payment.method,
       cardType,
       paidPaise: payment.amount - refundedPaise,
+      notified,
       refundedPaise
     });
   }catch(err){
