@@ -908,6 +908,23 @@
     .le-splash-skip{ transform:translateX(-50%) !important; }
     .le-splash-drop, .le-splash-bloom, .le-splash-ripple, .le-splash-particle, .le-splash-mist{ display:none !important; }
   }
+
+  /* ---------- Back to top ---------- */
+  .to-top{
+    position:fixed; right:24px; bottom:92px; z-index:50;
+    width:46px; height:46px; border-radius:50%; border:0; padding:0; cursor:pointer;
+    background:var(--parchment); color:#FAF6F2;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 14px rgba(70,54,47,0.3);
+    opacity:0; transform:translateY(10px); pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease, background .15s ease;
+  }
+  .to-top.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
+  .to-top:hover{ background:var(--amber-bright); }
+  .to-top svg{ width:20px; height:20px; display:block; }
+  @media (max-width:620px){
+    .to-top{ right:18px; bottom:78px; width:42px; height:42px; }
+  }
 </style>
 </head>
 <body>
@@ -1375,6 +1392,7 @@ categoryTabsEl.addEventListener("click", (e) => {
   activeCategory = btn.dataset.value;
   renderPillTabs(categoryTabsEl, categories, activeCategory, CATEGORY_ICONS);
   renderBrandAccordion();
+  scrollToResults();
 });
 
 genderTabsEl.addEventListener("click", (e) => {
@@ -1383,6 +1401,7 @@ genderTabsEl.addEventListener("click", (e) => {
   activeGender = btn.dataset.value;
   renderPillTabs(genderTabsEl, genders, activeGender, GENDER_ICONS);
   renderBrandAccordion();
+  scrollToResults();
 });
 
 seasonTabsEl.addEventListener("click", (e) => {
@@ -1391,6 +1410,7 @@ seasonTabsEl.addEventListener("click", (e) => {
   activeSeason = btn.dataset.value;
   renderPillTabs(seasonTabsEl, seasons, activeSeason, SEASON_ICONS);
   renderBrandAccordion();
+  scrollToResults();
 });
 
 function fragranceSearchText(f){
@@ -1423,6 +1443,15 @@ let newFilterActive = false;
 /* ---------- Brand accordion: every brand is its own collapsible row ---------- */
 const openBrands = new Set();
 
+/* Bring the results into view (just under the sticky header) after a filter is picked. */
+function scrollToResults(){
+  const hdr = document.querySelector("header");
+  const offset = (hdr ? hdr.offsetHeight : 0) + 12;
+  const y = brandAccordion.getBoundingClientRect().top + window.pageYOffset - offset;
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: Math.max(y, 0), behavior: reduced ? "auto" : "smooth" });
+}
+
 function renderBrandAccordion(){
   const catItems = activeCategory === "All" ? FRAGRANCES : FRAGRANCES.filter(f => leHouseCategory(f.house) === activeCategory);
   const filtered = catItems.filter(f => {
@@ -1436,10 +1465,10 @@ function renderBrandAccordion(){
   const houses = [...new Set(filtered.map(f => f.house))].sort((a, b) => a.localeCompare(b));
   const sorter = SORTERS[sortSelect.value];
 
-  /* Auto-expand brands when a filter or search narrows the list to a manageable size. */
+  /* Auto-expand every matching brand whenever a filter or search is active. */
   const filtersOn = activeCategory !== "All" || activeGender !== "All" ||
     activeSeason !== "All" || newFilterActive || !!searchTerm || !!pinnedId;
-  const autoOpen = filtersOn && filtered.length <= 60;
+  const autoOpen = filtersOn;
 
   updateResetBtn();
   catalogueHeading.textContent = activeCategory !== "All" ? activeCategory : "The current catalogue";
@@ -1739,6 +1768,7 @@ newFilterToggle.addEventListener("click", () => {
   newFilterActive = !newFilterActive;
   newFilterToggle.classList.toggle("active", newFilterActive);
   renderBrandAccordion();
+  scrollToResults();
 });
 
 /* ---------- Reset: back to the full catalogue ---------- */
@@ -1828,6 +1858,23 @@ window.addEventListener("le-data-updated", () => {
   <div class="cart-bar-text"><b id="cartBarTitle"></b><span id="cartBarNudge"></span><div class="cart-bar-track"><i id="cartBarFill"></i></div></div>
   <a class="cart-bar-btn" href="cart.html">View cart</a>
 </div>
+
+<button class="to-top" id="toTopBtn" type="button" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+</button>
+<script>
+(function(){
+  var btn = document.getElementById('toTopBtn');
+  if(!btn) return;
+  function onScroll(){ btn.classList.toggle('show', (window.pageYOffset || document.documentElement.scrollTop) > 500); }
+  window.addEventListener('scroll', onScroll, { passive:true });
+  onScroll();
+  btn.addEventListener('click', function(){
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top:0, behavior: reduced ? 'auto' : 'smooth' });
+  });
+})();
+</script>
 
 <a class="wa-float" href="https://wa.me/917982410620?text=Hi!%20I'd%20like%20to%20place%20a%20decant%20order." target="_blank" rel="noopener" aria-label="Order via WhatsApp">
   <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M16.004 3C9.377 3 4 8.373 4 15c0 2.34.653 4.527 1.786 6.393L4 29l7.8-1.75A11.94 11.94 0 0 0 16.004 27C22.63 27 28 21.627 28 15S22.63 3 16.004 3zm0 21.75a9.7 9.7 0 0 1-4.95-1.354l-.355-.21-4.626 1.038 1.02-4.507-.232-.367A9.72 9.72 0 0 1 5.25 15c0-5.93 4.823-10.75 10.754-10.75S26.75 9.07 26.75 15 21.935 24.75 16.004 24.75zm5.55-7.98c-.304-.152-1.795-.886-2.073-.987-.278-.101-.48-.152-.683.152-.202.303-.783.986-.96 1.19-.176.202-.353.227-.657.076-.304-.152-1.283-.473-2.443-1.51-.903-.805-1.513-1.8-1.69-2.104-.177-.303-.019-.467.133-.618.137-.136.304-.354.456-.53.152-.177.202-.303.304-.505.101-.202.05-.38-.025-.531-.076-.152-.683-1.648-.936-2.257-.246-.593-.497-.513-.683-.522-.177-.008-.38-.01-.582-.01-.202 0-.531.076-.809.38-.278.303-1.06 1.036-1.06 2.527s1.085 2.933 1.236 3.136c.152.202 2.135 3.26 5.174 4.572.723.312 1.287.499 1.727.638.726.231 1.386.198 1.908.12.582-.087 1.795-.734 2.048-1.443.253-.71.253-1.317.177-1.443-.076-.127-.278-.202-.582-.354z"/></svg>
