@@ -779,10 +779,10 @@
     .testimonial-grid{grid-template-columns:1fr;}
   }
 
-  /* ---------- Entry splash: a drop that opens onto the shop ---------- */
+  /* ---------- Entry splash: a drop falls, ripples bloom, the name pours in ---------- */
   #leSplash{
     position:fixed; inset:0; z-index:99999;
-    background:var(--ink); cursor:pointer;
+    background:var(--ink); cursor:pointer; overflow:hidden;
     display:flex; align-items:center; justify-content:center;
     --r:0vmax;
     -webkit-mask-image: radial-gradient(circle var(--r) at 50% 55%, transparent 0, transparent calc(var(--r) - 2px), black var(--r));
@@ -794,66 +794,119 @@
       radial-gradient(900px 600px at 50% 30%, rgba(233,212,160,0.30), transparent 62%),
       radial-gradient(800px 620px at 50% 80%, rgba(232,184,166,0.24), transparent 62%);
   }
-  .le-splash-inner{ position:relative; text-align:center; }
-  .le-splash-particles{ position:absolute; inset:-200px -120px; pointer-events:none; overflow:visible; }
+  /* drifting scent mist */
+  .le-splash-mist{ position:absolute; inset:0; pointer-events:none; }
+  .le-splash-mist i{
+    position:absolute; width:360px; height:360px; border-radius:50%; opacity:0;
+    background:radial-gradient(circle, rgba(232,184,166,0.65), rgba(232,184,166,0) 68%);
+    animation: leMistDrift 7s ease-in-out infinite alternate, leMistIn 1400ms ease forwards;
+  }
+  .le-splash-mist i:nth-child(1){ left:-120px; top:8%;  animation-delay:0s, 0s; }
+  .le-splash-mist i:nth-child(2){ right:-140px; top:38%; width:420px; height:420px;
+    background:radial-gradient(circle, rgba(233,212,160,0.7), rgba(233,212,160,0) 68%); animation-delay:-3s, 200ms; }
+  .le-splash-mist i:nth-child(3){ left:10%; bottom:-160px; width:400px; height:400px; animation-delay:-5s, 400ms; }
+  @keyframes leMistIn{ to{ opacity:1; } }
+  @keyframes leMistDrift{
+    0%{ transform:translate(0,0) scale(1); }
+    100%{ transform:translate(50px,-40px) scale(1.18); }
+  }
+
+  .le-splash-inner{ position:relative; text-align:center; padding:0 20px; }
+  .le-splash-particles{ position:absolute; inset:-220px -120px; pointer-events:none; overflow:visible; }
   .le-splash-particle{
-    position:absolute; bottom:-20px; border-radius:50% 50% 50% 0;
+    position:absolute; bottom:-20px; border-radius:0 50% 50% 50%;
     background:var(--amber-bright); opacity:0;
     animation-name: leParticleFloat; animation-timing-function:ease-in; animation-iteration-count:infinite;
   }
   @keyframes leParticleFloat{
     0%{ opacity:0; transform:translateY(0) rotate(45deg) scale(0.6); }
-    12%{ opacity:0.65; }
-    85%{ opacity:0.4; }
-    100%{ opacity:0; transform:translateY(-380px) rotate(45deg) scale(1); }
+    12%{ opacity:0.85; }
+    85%{ opacity:0.5; }
+    100%{ opacity:0; transform:translateY(-420px) rotate(45deg) scale(1.1); }
+  }
+
+  /* stage: the falling drop, the colour bloom and the ripples all share its centre */
+  .le-splash-stage{ position:relative; width:120px; height:90px; margin:0 auto 6px; }
+  .le-splash-bloom{
+    position:absolute; left:50%; top:50%; width:560px; height:560px; margin:-280px 0 0 -280px; border-radius:50%;
+    background:radial-gradient(circle, rgba(232,184,166,0.65), rgba(233,212,160,0.30) 42%, transparent 70%);
+    opacity:0; transform:scale(0.1); pointer-events:none;
+    animation: leBloom 1700ms ease-out 880ms forwards;
+  }
+  @keyframes leBloom{
+    0%{ opacity:0; transform:scale(0.1); }
+    30%{ opacity:1; }
+    100%{ opacity:0.8; transform:scale(1); }
+  }
+  .le-splash-ripple{
+    position:absolute; left:50%; top:50%; width:22px; height:22px; margin:-11px 0 0 -11px; border-radius:50%;
+    border:2px solid rgba(156,86,68,0.7); opacity:0; pointer-events:none;
+    animation: leRipple 1500ms cubic-bezier(.2,.6,.3,1) forwards;
+  }
+  .le-splash-ripple:nth-of-type(1){ animation-delay:880ms; }
+  .le-splash-ripple:nth-of-type(2){ animation-delay:1080ms; }
+  .le-splash-ripple:nth-of-type(3){ animation-delay:1280ms; }
+  @keyframes leRipple{
+    0%{ opacity:0.9; transform:scale(0.2); }
+    100%{ opacity:0; transform:scale(15); }
   }
   .le-splash-drop{
-    width:10px; height:10px; border-radius:50% 50% 50% 0; transform:rotate(45deg) translateY(-30px) scale(0.5);
-    background:var(--amber-bright); margin:0 auto 22px; opacity:0;
-    animation: leDropFall 900ms cubic-bezier(.4,0,.2,1) forwards, leDropGlow 2600ms ease-in-out 900ms infinite;
-  }
-  @keyframes leDropGlow{
-    0%,100%{ filter:drop-shadow(0 0 0 rgba(201,140,122,0)); }
-    50%{ filter:drop-shadow(0 0 10px rgba(201,140,122,0.65)); }
-  }
-  .le-splash-word{
-    position:relative; font-size:2.1rem; margin:0; color:var(--parchment); opacity:0;
-    animation: leFadeUp 700ms ease forwards; animation-delay:420ms;
-  }
-  .le-splash-word::after{
-    content:""; position:absolute; inset:-6px -14px; pointer-events:none;
-    background:linear-gradient(100deg, transparent 42%, rgba(255,255,255,0.55) 50%, transparent 58%);
-    background-size:260% 100%; background-position:130% 0;
-    opacity:0; mix-blend-mode:overlay;
-    animation: leShimmerSweep 2400ms ease-in-out 1500ms infinite;
-  }
-  @keyframes leShimmerSweep{
-    0%{ background-position:150% 0; opacity:0; }
-    8%{ opacity:1; }
-    35%{ opacity:0; }
-    100%{ background-position:-40% 0; opacity:0; }
-  }
-  .le-splash-tag{
-    margin:8px 0 0; color:var(--amber-bright); letter-spacing:0.16em; text-transform:uppercase;
-    font-size:0.72rem; opacity:0; animation: leFadeUp 700ms ease forwards; animation-delay:620ms;
-  }
-  .le-splash-skip{
-    position:absolute; bottom:-70px; left:50%; transform:translateX(-50%);
-    font-size:0.66rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--parchment-dim);
-    opacity:0; animation: leFadeUp 700ms ease forwards, lePulse 1900ms ease-in-out infinite;
-    animation-delay:900ms, 1600ms;
+    position:absolute; left:50%; top:50%; width:26px; height:26px; margin:-13px 0 0 -13px;
+    border-radius:0 50% 50% 50%; transform:translateY(-280px) rotate(45deg); opacity:0;
+    background:radial-gradient(circle at 65% 65%, #F6D3C8 0, var(--amber) 45%, var(--amber-bright) 100%);
+    box-shadow:0 0 18px rgba(201,140,122,0.7);
+    animation: leDropFall 1150ms forwards;
   }
   @keyframes leDropFall{
-    0%{opacity:0; transform:rotate(45deg) translateY(-30px) scale(0.5);}
-    55%{opacity:1;}
-    100%{opacity:1; transform:rotate(45deg) translateY(0) scale(1);}
+    0%{ opacity:0; transform:translateY(-280px) rotate(45deg) scale(0.8); animation-timing-function:cubic-bezier(.5,0,.9,.5); }
+    12%{ opacity:1; }
+    78%{ opacity:1; transform:translateY(0) rotate(45deg) scale(1); animation-timing-function:ease-out; }
+    100%{ opacity:0; transform:translateY(0) rotate(45deg) scale(0.15); }
   }
-  @keyframes leFadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  /* wordmark: letters sharpen in one by one, then a colour wave runs through them */
+  .le-splash-word{
+    position:relative; margin:0; color:var(--parchment); white-space:nowrap;
+    font-size:clamp(1.9rem, 9vw, 2.9rem); line-height:1.15;
+  }
+  .le-ch{
+    display:inline-block; opacity:0; filter:blur(14px); transform:translateY(22px) scale(1.35);
+    animation:
+      leLetterIn 750ms cubic-bezier(.2,.7,.2,1) forwards,
+      leLetterGlow 2600ms ease-in-out infinite;
+    animation-delay:
+      calc(1000ms + var(--i) * 60ms),
+      calc(2700ms + var(--i) * 80ms);
+  }
+  .le-ch.le-sp{ width:0.32em; }
+  @keyframes leLetterIn{
+    to{ opacity:1; filter:blur(0); transform:translateY(0) scale(1); }
+  }
+  @keyframes leLetterGlow{
+    0%,40%,100%{ color:var(--parchment); text-shadow:0 0 0 rgba(201,140,122,0); }
+    20%{ color:var(--amber-bright); text-shadow:0 0 16px rgba(201,140,122,0.75); }
+  }
+  .le-splash-tag{
+    margin:10px 0 0; color:var(--amber-bright); letter-spacing:0.16em; text-transform:uppercase;
+    font-size:0.72rem; opacity:0; animation: leTagIn 900ms ease forwards; animation-delay:2200ms;
+  }
+  @keyframes leTagIn{
+    from{ opacity:0; letter-spacing:0.6em; }
+    to{ opacity:1; letter-spacing:0.16em; }
+  }
+  .le-splash-skip{
+    position:absolute; bottom:-80px; left:50%; transform:translateX(-50%);
+    font-size:0.66rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--parchment-dim); white-space:nowrap;
+    opacity:0; animation: leFadeUp 700ms ease forwards, lePulse 1900ms ease-in-out infinite;
+    animation-delay:2600ms, 3300ms;
+  }
+  @keyframes leFadeUp{ from{opacity:0; transform:translate(-50%,10px);} to{opacity:1; transform:translate(-50%,0);} }
   @keyframes lePulse{ 0%,100%{opacity:0.45;} 50%{opacity:1;} }
   body.le-splash-active{ overflow:hidden; height:100vh; }
   @media (prefers-reduced-motion: reduce){
-    .le-splash-drop, .le-splash-word, .le-splash-tag, .le-splash-skip{ animation:none !important; opacity:1 !important; transform:none !important; }
-    .le-splash-word::after, .le-splash-particle{ display:none !important; }
+    .le-splash-drop, .le-splash-tag, .le-splash-skip, .le-ch{ animation:none !important; opacity:1 !important; transform:none !important; filter:none !important; }
+    .le-splash-skip{ transform:translateX(-50%) !important; }
+    .le-splash-drop, .le-splash-bloom, .le-splash-ripple, .le-splash-particle, .le-splash-mist{ display:none !important; }
   }
 </style>
 </head>
@@ -861,9 +914,16 @@
 
 <noscript><style>#leSplash{display:none !important;} body{overflow:auto !important;}</style></noscript>
 <div id="leSplash" role="button" tabindex="0" aria-label="Enter Liquid Emotions">
+  <div class="le-splash-mist" aria-hidden="true"><i></i><i></i><i></i></div>
   <div class="le-splash-inner">
     <div class="le-splash-particles" id="leSplashParticles"></div>
-    <div class="le-splash-drop"></div>
+    <div class="le-splash-stage" aria-hidden="true">
+      <div class="le-splash-bloom"></div>
+      <span class="le-splash-ripple"></span>
+      <span class="le-splash-ripple"></span>
+      <span class="le-splash-ripple"></span>
+      <div class="le-splash-drop"></div>
+    </div>
     <h1 class="le-splash-word">Liquid Emotions</h1>
     <p class="le-splash-tag mono">Perfume Decants</p>
     <p class="le-splash-skip mono">tap to enter</p>
@@ -881,19 +941,33 @@
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var revealed = false;
 
+  /* split the name into letters so they can animate one by one */
+  var word = splash.querySelector('.le-splash-word');
+  if(word){
+    var text = word.textContent;
+    word.setAttribute('aria-label', text);
+    word.innerHTML = text.split('').map(function(ch, i){
+      return ch === ' '
+        ? '<span class="le-ch le-sp" aria-hidden="true" style="--i:' + i + '"></span>'
+        : '<span class="le-ch" aria-hidden="true" style="--i:' + i + '">' + ch + '</span>';
+    }).join('');
+  }
+
   var particleHost = document.getElementById('leSplashParticles');
   if(particleHost && !reduced){
-    var n = 14;
+    var colours = ['#C98C7A', '#9C5644', '#E8B8A6', '#D9B77A'];
+    var n = 20;
     for(var i = 0; i < n; i++){
       var p = document.createElement('span');
       p.className = 'le-splash-particle';
-      var size = 4 + Math.random() * 6;
+      var size = 6 + Math.random() * 9;
       p.style.width = size + 'px';
       p.style.height = size + 'px';
       p.style.left = (Math.random() * 100) + '%';
+      p.style.background = colours[i % colours.length];
       p.style.opacity = '0';
-      var duration = 2600 + Math.random() * 2200;
-      var delay = Math.random() * 3200;
+      var duration = 2800 + Math.random() * 2400;
+      var delay = 900 + Math.random() * 3000;
       p.style.animationDuration = duration + 'ms';
       p.style.animationDelay = delay + 'ms';
       particleHost.appendChild(p);
@@ -932,7 +1006,7 @@
   splash.addEventListener('keydown', function(e){
     if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); reveal(); }
   });
-  setTimeout(reveal, 3200);
+  setTimeout(reveal, 4600);
 })();
 </script>
 
@@ -1362,6 +1436,11 @@ function renderBrandAccordion(){
   const houses = [...new Set(filtered.map(f => f.house))].sort((a, b) => a.localeCompare(b));
   const sorter = SORTERS[sortSelect.value];
 
+  /* Auto-expand brands when a filter or search narrows the list to a manageable size. */
+  const filtersOn = activeCategory !== "All" || activeGender !== "All" ||
+    activeSeason !== "All" || newFilterActive || !!searchTerm || !!pinnedId;
+  const autoOpen = filtersOn && filtered.length <= 60;
+
   updateResetBtn();
   catalogueHeading.textContent = activeCategory !== "All" ? activeCategory : "The current catalogue";
   catalogueCount.textContent = `${filtered.length} Perfume${filtered.length === 1 ? "" : "s"} to choose from`;
@@ -1370,7 +1449,7 @@ function renderBrandAccordion(){
   brandAccordion.innerHTML = houses.map(h => {
     const items = filtered.filter(f => f.house === h);
     const ordered = sorter ? [...items].sort(sorter) : items;
-    const isOpen = openBrands.has(h);
+    const isOpen = autoOpen || openBrands.has(h);
     return `
       <div class="brand-acc-item${isOpen ? " open" : ""}" data-house="${h}">
         <button class="brand-acc-header" data-house="${h}" type="button">
