@@ -118,6 +118,8 @@
   .pay-error.show{display:block;}
 
   /* editable order summary */
+  .mini-size{background:var(--moss); border:1px solid var(--line); color:var(--parchment-dim); font-size:0.74rem; padding:5px 8px; border-radius:var(--radius); max-width:100%;}
+  .mini-size:focus{border-color:var(--amber); color:var(--parchment);}
   .mini-qty{display:flex; align-items:center; gap:6px; margin-top:7px;}
   .mini-qty button{border:1px solid var(--taupe); background:transparent; color:var(--parchment); width:28px; height:28px; border-radius:50%; font-size:1rem; line-height:1; padding:0; display:flex; align-items:center; justify-content:center;}
   .mini-qty button:hover{border-color:var(--amber-bright); color:var(--amber-bright);}
@@ -377,7 +379,9 @@ function renderSummary(){
         <div>${miniVial(line.fragrance)}</div>
         <div class="mini-info">
           <p class="mini-name">${line.fragrance.name}</p>
-          <div class="mini-meta">${line.size}</div>
+          <select class="mini-size" data-id="${line.id}" data-size="${line.size}" aria-label="Size for ${line.fragrance.name}">
+            ${Object.keys(line.fragrance.prices).map(sz => `<option value="${sz}"${sz === line.size ? " selected" : ""}>${sz} · ${currency(line.fragrance.prices[sz])}</option>`).join("")}
+          </select>
           <div class="mini-qty" data-id="${line.id}" data-size="${line.size}">
             <button type="button" data-act="dec" aria-label="Decrease quantity">−</button>
             <span class="mini-qty-n mono">${line.qty}</span>
@@ -641,6 +645,12 @@ document.getElementById("miniItems").addEventListener("click", (e) => {
   else if(b.dataset.act === "dec") leUpdateQty(id, size, cur - 1);
   else leRemoveFromCart(id, size);
   /* leSetCart() fires leOnCartChanged, which redraws the summary. */
+});
+/* Switch a line to another size (merges with the same size if it's already in the cart). */
+document.getElementById("miniItems").addEventListener("change", (e) => {
+  const sel = e.target.closest("select.mini-size");
+  if(!sel || busy || confirming) return;
+  leUpdateSize(sel.dataset.id, sel.dataset.size, sel.value);
 });
 window.leOnCartChanged = renderSummary;
 
