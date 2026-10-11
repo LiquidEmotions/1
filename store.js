@@ -1664,7 +1664,12 @@ function leCartLines(){
       if(!f) return null;
       return { ...i, fragrance: f, unitPrice: f.prices[i.size], lineTotal: f.prices[i.size] * i.qty };
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    /* Always list the cart A–Z: brand first, then perfume name, then smallest size first. */
+    .sort((a, b) =>
+      a.fragrance.house.localeCompare(b.fragrance.house) ||
+      a.fragrance.name.localeCompare(b.fragrance.name) ||
+      parseInt(a.size, 10) - parseInt(b.size, 10));
 }
 
 /* ============================================================

@@ -440,7 +440,7 @@ function snapshotOrder(t, method){
   return {
     method,
     zoneLabel: t.zone.label,
-    lines: t.lines.map(l => ({ name: l.fragrance.name, size: l.size, qty: l.qty, lineTotal: l.lineTotal })),
+    lines: t.lines.map(l => ({ house: l.fragrance.house, name: l.fragrance.name, size: l.size, qty: l.qty, lineTotal: l.lineTotal })),
     subtotal: t.subtotal, shipping: t.shipping, fee: t.fee, total: t.total,
     customer: {
       name: `${val("fname")} ${val("lname")}`.trim(), email: val("email"), phone: val("phone"),
@@ -451,7 +451,11 @@ function snapshotOrder(t, method){
 
 function buildWhatsAppMessage(id, s, pay){
   const c = s.customer;
-  const itemLines = s.lines.map(l => `• ${l.name} (${l.size}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
+  const sortedLines = s.lines.slice().sort((a, b) =>
+    (a.house || "").localeCompare(b.house || "") ||
+    a.name.localeCompare(b.name) ||
+    parseInt(a.size, 10) - parseInt(b.size, 10));
+  const itemLines = sortedLines.map(l => `• ${l.name} (${l.size}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
   const rows = [
     `New order: ${id} (PAID ONLINE)`,
     ``,
