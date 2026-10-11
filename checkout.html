@@ -116,6 +116,19 @@
   .pay-tag{font-family:'IBM Plex Mono', monospace; font-size:0.74rem; color:var(--amber-bright); white-space:nowrap; padding-top:2px;}
   .pay-error{display:none; margin:14px 0 0; padding:11px 13px; font-size:0.8rem; color:#7A2E22; background:#F7E4DF; border:1px solid #D9A89D; border-radius:var(--radius);}
   .pay-error.show{display:block;}
+
+  /* editable order summary */
+  .mini-qty{display:flex; align-items:center; gap:6px; margin-top:7px;}
+  .mini-qty button{border:1px solid var(--taupe); background:transparent; color:var(--parchment); width:28px; height:28px; border-radius:50%; font-size:1rem; line-height:1; padding:0; display:flex; align-items:center; justify-content:center;}
+  .mini-qty button:hover{border-color:var(--amber-bright); color:var(--amber-bright);}
+  .mini-qty .mini-qty-n{min-width:20px; text-align:center; font-size:0.85rem;}
+  .mini-qty .mini-rm{width:auto; height:auto; border:0; border-radius:0; margin-left:6px; padding:4px 2px; font-size:0.7rem; color:var(--parchment-dim); text-decoration:underline;}
+  .mini-qty .mini-rm:hover{color:#B23B2E;}
+  .mini-actions{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 0 6px; font-size:0.78rem;}
+  .add-more{color:var(--amber-bright); text-decoration:none; font-weight:600;}
+  .add-more:hover{text-decoration:underline;}
+  .ship-nudge{color:var(--parchment-dim); font-size:0.72rem;}
+  .ship-nudge.done{color:var(--amber-bright);}
   footer{border-top:1px solid var(--line); padding:44px 28px 36px;}
   .footer-grid{display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px; font-size:0.8rem; color:var(--parchment-dim);}
   @media (max-width: 880px){ .checkout-layout{grid-template-columns:1fr;} .summary{position:static;} }
@@ -175,11 +188,11 @@
           <div class="field-grid">
             <div class="field full">
               <label for="email">Email</label>
-              <input type="email" id="email" placeholder="you@email.com" required>
+              <input type="email" id="email" name="email" placeholder="you@email.com" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" required>
             </div>
             <div class="field full">
               <label for="phone">Phone</label>
-              <input type="tel" id="phone" placeholder="+91 98765 43210" required>
+              <input type="tel" id="phone" name="phone" placeholder="+91 98765 43210" autocomplete="tel" inputmode="tel" required>
             </div>
           </div>
         </div>
@@ -189,31 +202,31 @@
           <div class="field-grid">
             <div class="field">
               <label for="fname">First name</label>
-              <input type="text" id="fname" placeholder="First name" required>
+              <input type="text" id="fname" name="fname" placeholder="First name" autocomplete="given-name" autocapitalize="words" required>
             </div>
             <div class="field">
               <label for="lname">Last name</label>
-              <input type="text" id="lname" placeholder="Last name" required>
+              <input type="text" id="lname" name="lname" placeholder="Last name" autocomplete="family-name" autocapitalize="words" required>
             </div>
             <div class="field full">
               <label for="addr">Address</label>
-              <input type="text" id="addr" placeholder="House no., street, area" required>
+              <input type="text" id="addr" name="addr" placeholder="House no., street, area" autocomplete="address-line1" autocapitalize="words" required>
             </div>
             <div class="field">
               <label for="city">City</label>
-              <input type="text" id="city" placeholder="City" required>
+              <input type="text" id="city" name="city" placeholder="City" autocomplete="address-level2" autocapitalize="words" required>
             </div>
             <div class="field">
               <label for="state">State</label>
-              <input type="text" id="state" placeholder="State" required>
+              <input type="text" id="state" name="state" placeholder="State" autocomplete="address-level1" autocapitalize="words" required>
             </div>
             <div class="field">
               <label for="pin">PIN code</label>
-              <input type="text" id="pin" placeholder="110001" required>
+              <input type="text" id="pin" name="pin" placeholder="110001" autocomplete="postal-code" inputmode="numeric" required>
             </div>
             <div class="field">
               <label for="country">Country</label>
-              <select id="country" required>
+              <select id="country" name="country" autocomplete="country-name" required>
                 <option>India</option>
                 <option>United States</option>
                 <option>United Kingdom</option>
@@ -255,6 +268,10 @@
           <button class="zone-tab" data-zone="india">Rest of India</button>
         </div>
         <div id="miniItems"></div>
+        <div class="mini-actions" id="miniActions">
+          <a class="add-more" href="index.html">＋ Add more perfumes</a>
+          <span class="ship-nudge mono" id="shipNudge"></span>
+        </div>
         <div class="summary-row">
           <span id="miniCountLabel">0 items</span>
           <span class="mono" id="miniSubtotal">₹0</span>
@@ -360,12 +377,24 @@ function renderSummary(){
         <div>${miniVial(line.fragrance)}</div>
         <div class="mini-info">
           <p class="mini-name">${line.fragrance.name}</p>
-          <div class="mini-meta">${line.size} × ${line.qty}</div>
+          <div class="mini-meta">${line.size}</div>
+          <div class="mini-qty" data-id="${line.id}" data-size="${line.size}">
+            <button type="button" data-act="dec" aria-label="Decrease quantity">−</button>
+            <span class="mini-qty-n mono">${line.qty}</span>
+            <button type="button" data-act="inc" aria-label="Increase quantity">+</button>
+            <button type="button" class="mini-rm" data-act="rm" aria-label="Remove ${line.fragrance.name} ${line.size}">Remove</button>
+          </div>
         </div>
         <div class="mini-price mono">${currency(line.lineTotal)}</div>
       </div>
     `).join("");
   }
+
+  document.getElementById("miniActions").style.display = lines.length ? "flex" : "none";
+  const left = FREE_SHIP_QTY - t.count;
+  const nudge = document.getElementById("shipNudge");
+  nudge.textContent = t.count === 0 ? "" : (left > 0 ? `Add ${left} more for free shipping` : "✓ Free shipping unlocked");
+  nudge.classList.toggle("done", t.count > 0 && left <= 0);
 
   document.getElementById("miniCountLabel").textContent = t.count === 1 ? "1 item" : `${t.count} items`;
   document.getElementById("miniSubtotal").textContent = currency(t.subtotal);
@@ -463,7 +492,11 @@ function finishPaid(snap, v){
     orderLabel: "Order " + id + " · Paid " + currency(paid),
     waUrl, btnLabel: "Send order on WhatsApp"
   });
-  try{ window.open(waUrl, "_blank"); }catch(e){}
+  /* Open WhatsApp straight away. Browsers often block pop-ups that aren't tied to a tap,
+     so if it was blocked, move to WhatsApp in this tab after a moment instead. */
+  let opened = null;
+  try{ opened = window.open(waUrl, "_blank"); }catch(e){}
+  if(!opened){ setTimeout(() => { window.location.href = waUrl; }, 1500); }
 }
 
 /* Paid, but we couldn't reach our server to confirm. Never leave the customer stranded. */
@@ -596,6 +629,20 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
 });
 
 document.getElementById("payOptions").addEventListener("change", renderSummary);
+
+/* Change quantity / remove right here, so the separate cart page isn't needed. */
+document.getElementById("miniItems").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-act]");
+  if(!b || busy || confirming) return;
+  const box = b.closest(".mini-qty");
+  const id = box.dataset.id, size = box.dataset.size;
+  const cur = leCartQtyFor(id, size);
+  if(b.dataset.act === "inc") leUpdateQty(id, size, cur + 1);
+  else if(b.dataset.act === "dec") leUpdateQty(id, size, cur - 1);
+  else leRemoveFromCart(id, size);
+  /* leSetCart() fires leOnCartChanged, which redraws the summary. */
+});
+window.leOnCartChanged = renderSummary;
 
 document.getElementById("zoneTabs").addEventListener("click", (e) => {
   const btn = e.target.closest(".zone-tab");

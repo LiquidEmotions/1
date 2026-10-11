@@ -1323,7 +1323,9 @@ function attachCardHandlers(container){
       e.stopPropagation();
       selectSize(c.dataset.size);
     }));
-    slot.innerHTML = `<div class="size-hint">Select a size</div>`;
+    /* Pre-select 10ml so "Add to cart" is ready on the first tap. */
+    if(f.prices["10ml"] !== undefined) selectSize("10ml");
+    else slot.innerHTML = `<div class="size-hint">Select a size</div>`;
     markChips();
 
     wishBtn.addEventListener("click", (e) => {
@@ -1856,7 +1858,7 @@ window.addEventListener("le-data-updated", () => {
 
 <div class="cart-bar" id="cartBar" style="display:none;">
   <div class="cart-bar-text"><b id="cartBarTitle"></b><span id="cartBarNudge"></span><div class="cart-bar-track"><i id="cartBarFill"></i></div></div>
-  <a class="cart-bar-btn" href="cart.html">View cart</a>
+  <a class="cart-bar-btn" href="checkout.html">Checkout →</a>
 </div>
 
 <button class="to-top" id="toTopBtn" type="button" aria-label="Back to top">
