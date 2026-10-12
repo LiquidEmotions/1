@@ -10,7 +10,7 @@ const vm = require("vm");
 /* Keep these in step with checkout.html */
 const SHIPPING_ZONES = { ncr: 55, india: 75 };
 const FREE_SHIP_QTY = 4;
-const CARD_FEE_RATE = 0;          // no site fee: Razorpay adds its own fee at payment (customer fee bearer)
+const CARD_FEE_RATE = 0;          // Razorpay now charges its fee to the customer itself, so the order amount has no card fee
 const CACHE_MS = 60 * 1000;       // re-read the sheet at most once a minute
 
 let cache = { at: 0, prices: null, maxQty: 10 };
