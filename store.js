@@ -1615,7 +1615,6 @@ function leAddToCart(id, size, qty){
     cart.push({ id, size, qty: Math.min(qty, LE_MAX_QTY) });
   }
   leSetCart(cart);
-  leShowToast(`✓ Added ${leFragranceById(id)?.name || "item"} (${size}) to cart`);
 }
 
 function leUpdateQty(id, size, qty){
