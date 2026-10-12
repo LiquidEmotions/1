@@ -523,7 +523,7 @@ function buildWhatsAppMessage(id, s, pay){
     `Subtotal: ${currency(s.subtotal)}`,
     `Shipping (${s.zoneLabel}): ${s.shipping === 0 ? "Free" : currency(s.shipping)}`
   ];
-  if(pay.feeKept > 0) rows.push(`Card fee (2.6%): ${currency(pay.feeKept)}`);
+  if(pay.feeKept > 0) rows.push(`Gateway fee: ${currency(pay.feeKept)}`);
   rows.push(`Total paid: ${currency(pay.paid)}`);
   if(pay.upi) rows.push(`Paid to: ${UPI_ID}`);
   else rows.push(`Payment ID: ${pay.paymentId}`);
@@ -546,7 +546,8 @@ function showConfirm(o){
 function finishPaid(snap, v){
   const id = v.orderNumber || leFallbackOrderNumber();
   const paid = v.paidPaise / 100;
-  const feeKept = snap.method === "card" ? snap.fee : 0;
+  /* Razorpay adds its own gateway fee on top of the order total; show it if the customer paid more. */
+  const feeKept = snap.method === "card" ? Math.max(0, Math.round(paid - snap.total)) : 0;
   const message = buildWhatsAppMessage(id, snap, { paymentId: v.paymentId, paid, feeKept });
   const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   try{ localStorage.removeItem(PENDING_KEY); }catch(e){}
