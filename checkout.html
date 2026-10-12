@@ -675,8 +675,14 @@ function recoverPendingUpi(){
   let o = null;
   try{ o = JSON.parse(localStorage.getItem(UPI_KEY) || "null"); }catch(e){}
   if(!o || !o.id || !o.snap) return;
-  if(Date.now() - o.at > 2 * 3600 * 1000){ try{ localStorage.removeItem(UPI_KEY); }catch(e){} return; }
-  if(leCartCount() === 0) { try{ localStorage.removeItem(UPI_KEY); }catch(e){} return; }
+  const clear = () => { try{ localStorage.removeItem(UPI_KEY); }catch(e){} };
+  if(Date.now() - o.at > 2 * 3600 * 1000 || leCartCount() === 0){ clear(); return; }
+  /* Only bring the pay screen back when the page was reloaded / returned to (e.g. after
+     switching to a UPI app) AND the cart still matches. Arriving fresh from the shop
+     always starts at the normal checkout form. */
+  const nav = (performance.getEntriesByType && performance.getEntriesByType("navigation")[0]) || {};
+  const returning = nav.type === "reload" || nav.type === "back_forward";
+  if(!returning || o.amount !== calcTotals().total){ clear(); return; }
   showUpiPanel(o);
 }
 
