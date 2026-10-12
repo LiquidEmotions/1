@@ -275,9 +275,9 @@
               <input type="radio" name="payMethod" value="card">
               <span class="pay-text">
                 <span class="pay-title">Credit or debit card</span>
-                <span class="pay-sub">A 2.6% card fee applies to both credit and debit cards.</span>
+                <span class="pay-sub">Razorpay adds a small payment fee at the payment step.</span>
               </span>
-              <span class="pay-tag">+2.6%</span>
+              <span class="pay-tag">+ gateway fee</span>
             </label>
           </div>
         </div>
@@ -397,7 +397,7 @@ const ZONE_KEY = "le_ship_zone";
 let currentZone = localStorage.getItem(ZONE_KEY) || "ncr";
 if(!SHIPPING_ZONES[currentZone]) currentZone = "ncr";
 
-const CARD_FEE_RATE = 0.026;   // keep in step with api/_pricing.js
+const CARD_FEE_RATE = 0;   // Razorpay now adds its fee itself (customer fee bearer); keep in step with api/_pricing.js
 let busy = false;
 let confirming = false;
 
