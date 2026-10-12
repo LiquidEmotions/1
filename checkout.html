@@ -109,8 +109,12 @@
   .upi-qr-box canvas, .upi-qr-box img{display:block; margin:0 auto;}
   .upi-id-row{display:flex; align-items:center; justify-content:center; gap:10px; margin:16px 0 4px; font-size:0.85rem; flex-wrap:wrap;}
   .upi-id-row button{background:transparent; border:1px solid var(--line); color:var(--parchment); padding:5px 12px; font-size:0.72rem; border-radius:var(--radius); cursor:pointer;}
-  .upi-app-btn{display:none;}
-  .upi-panel.is-mobile .upi-app-btn{display:block;}
+  .upi-apps{display:none; margin-bottom:6px;}
+  .upi-panel.is-mobile .upi-apps{display:block;}
+  .upi-app-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:10px;}
+  .upi-app{display:block; text-align:center; text-decoration:none; padding:13px 6px; background:var(--moss); border:1px solid var(--line); border-radius:var(--radius); font-size:0.82rem; font-weight:600; color:var(--parchment);}
+  .upi-app:hover, .upi-app:active{border-color:var(--amber-bright); color:var(--amber-bright);}
+  .upi-apps .upi-sub{margin:10px 0 0; font-size:0.74rem;}
   .upi-panel.is-mobile .upi-qr-wrap{margin-top:18px;}
   .upi-step{text-align:left; margin-top:28px; padding-top:22px; border-top:1px solid var(--line);}
   .upi-step h2{font-size:1rem; margin:0 0 6px;}
@@ -320,7 +324,15 @@
   <p class="upi-sub">Pay the exact amount below, then tap the button at the bottom to send your order on WhatsApp.</p>
   <div class="upi-amount mono" id="upiAmount"></div>
   <div class="upi-order mono" id="upiOrder"></div>
-  <a class="btn-primary upi-app-btn" id="upiAppBtn" href="#">Open UPI app to pay</a>
+  <div class="upi-apps">
+    <div class="upi-app-grid">
+      <a class="upi-app" id="upiGpay" href="#">Google Pay</a>
+      <a class="upi-app" id="upiPhonepe" href="#">PhonePe</a>
+      <a class="upi-app" id="upiPaytm" href="#">Paytm</a>
+    </div>
+    <a class="btn-primary" id="upiAppBtn" href="#" style="margin-top:0;">Other UPI app</a>
+    <p class="upi-sub">Tap your app to pay. If nothing opens, use "Other UPI app" or the QR below.</p>
+  </div>
   <div class="upi-qr-wrap">
     <div class="upi-qr-box"><div id="upiQr"></div></div>
     <p class="upi-sub" style="margin:10px 0 0;">Scan with any UPI app. The amount is filled in for you.</p>
@@ -601,11 +613,21 @@ async function recoverPendingPayment(){
 const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 let upiOrder = null;   // { id, snap, amount, at }
 
-function upiLink(amount, orderId){
-  return "upi://pay?pa=" + UPI_ID +
+function upiQuery(amount, orderId){
+  return "pa=" + UPI_ID +
     "&pn=" + encodeURIComponent(UPI_NAME) +
     "&am=" + amount.toFixed(2) +
     "&cu=INR&tn=" + encodeURIComponent(orderId);
+}
+function upiLink(amount, orderId){ return "upi://pay?" + upiQuery(amount, orderId); }
+function upiAppLinks(amount, orderId){
+  const q = upiQuery(amount, orderId);
+  return {
+    upiGpay:    "tez://upi/pay?" + q,
+    upiPhonepe: "phonepe://pay?" + q,
+    upiPaytm:   "paytmmp://pay?" + q,
+    upiAppBtn:  "upi://pay?" + q
+  };
 }
 
 function showUpiPanel(o){
@@ -614,7 +636,8 @@ function showUpiPanel(o){
   document.getElementById("upiAmount").textContent = currency(o.amount);
   document.getElementById("upiOrder").textContent = "Order " + o.id;
   document.getElementById("upiIdText").textContent = UPI_ID;
-  document.getElementById("upiAppBtn").href = link;
+  const apps = upiAppLinks(o.amount, o.id);
+  Object.keys(apps).forEach(id => { document.getElementById(id).href = apps[id]; });
   const qr = document.getElementById("upiQr");
   qr.innerHTML = "";
   if(typeof QRCode !== "undefined"){
