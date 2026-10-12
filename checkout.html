@@ -99,6 +99,23 @@
   .btn-primary:disabled{background:transparent; color:var(--parchment-dim); border-color:var(--line); cursor:not-allowed;}
   .lock-note{font-size:0.68rem; color:var(--parchment-dim); text-align:center; margin-top:12px; display:flex; align-items:center; justify-content:center; gap:6px;}
   .empty-note{color:var(--parchment-dim); font-size:0.85rem; text-align:center; padding:20px 0;}
+  .upi-panel{display:none; max-width:520px; margin:0 auto; text-align:center; padding:56px 24px 90px;}
+  .upi-panel.show{display:block;}
+  .upi-panel h1{font-size:1.8rem; margin:0 0 6px;}
+  .upi-panel .upi-sub{font-size:0.88rem; color:var(--parchment-dim); margin:0 0 22px;}
+  .upi-amount{font-size:2rem; color:var(--amber-bright); margin:4px 0 2px;}
+  .upi-order{font-size:0.8rem; color:var(--parchment-dim); margin-bottom:20px;}
+  .upi-qr-box{display:inline-block; background:#fff; padding:14px; border:1px solid var(--line); border-radius:var(--radius);}
+  .upi-qr-box canvas, .upi-qr-box img{display:block; margin:0 auto;}
+  .upi-id-row{display:flex; align-items:center; justify-content:center; gap:10px; margin:16px 0 4px; font-size:0.85rem; flex-wrap:wrap;}
+  .upi-id-row button{background:transparent; border:1px solid var(--line); color:var(--parchment); padding:5px 12px; font-size:0.72rem; border-radius:var(--radius); cursor:pointer;}
+  .upi-app-btn{display:none;}
+  .upi-panel.is-mobile .upi-app-btn{display:block;}
+  .upi-panel.is-mobile .upi-qr-wrap{margin-top:18px;}
+  .upi-step{text-align:left; margin-top:28px; padding-top:22px; border-top:1px solid var(--line);}
+  .upi-step h2{font-size:1rem; margin:0 0 6px;}
+  .upi-step p{font-size:0.8rem; color:var(--parchment-dim); margin:0 0 12px;}
+  .upi-back{display:inline-block; margin-top:18px; font-size:0.8rem; color:var(--parchment-dim); background:none; border:none; text-decoration:underline; cursor:pointer;}
   .confirm-panel{display:none; text-align:center; padding:80px 28px 100px;}
   .confirm-panel.show{display:block;}
   .confirm-panel .seal{width:64px; height:64px; margin:0 auto 26px; border:1px solid var(--amber); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--amber-bright); font-size:1.6rem;}
@@ -243,10 +260,10 @@
           <h2><span class="num">3</span>Payment</h2>
           <div class="pay-options" id="payOptions" role="radiogroup" aria-label="Payment method">
             <label class="pay-option">
-              <input type="radio" name="payMethod" value="other" checked>
+              <input type="radio" name="payMethod" value="upi" checked>
               <span class="pay-text">
-                <span class="pay-title">UPI, netbanking or wallet</span>
-                <span class="pay-sub">No extra charge.</span>
+                <span class="pay-title">UPI (GPay, PhonePe, Paytm, any UPI app)</span>
+                <span class="pay-sub">Pay straight to our UPI ID. No extra charge.</span>
               </span>
               <span class="pay-tag">No fee</span>
             </label>
@@ -292,10 +309,37 @@
         </div>
         <button type="submit" form="checkoutForm" class="btn-primary" id="placeOrderBtn">Pay now</button>
         <p class="pay-error" id="payError" role="alert"></p>
-        <p class="lock-note">Secure payment by Razorpay. After you pay, your order details open in WhatsApp.</p>
+        <p class="lock-note" id="lockNote">Pay by UPI to our UPI ID. After you pay, send your order on WhatsApp.</p>
       </aside>
     </div>
   </main>
+</div>
+
+<div class="upi-panel" id="upiPanel">
+  <h1>Pay by UPI</h1>
+  <p class="upi-sub">Pay the exact amount below, then enter your UPI transaction ID to place the order.</p>
+  <div class="upi-amount mono" id="upiAmount"></div>
+  <div class="upi-order mono" id="upiOrder"></div>
+  <a class="btn-primary upi-app-btn" id="upiAppBtn" href="#">Open UPI app to pay</a>
+  <div class="upi-qr-wrap">
+    <div class="upi-qr-box"><div id="upiQr"></div></div>
+    <p class="upi-sub" style="margin:10px 0 0;">Scan with any UPI app. The amount is filled in for you.</p>
+  </div>
+  <div class="upi-id-row">
+    <span>UPI ID: <b class="mono" id="upiIdText"></b></span>
+    <button type="button" id="upiCopyBtn">Copy</button>
+  </div>
+  <div class="upi-step">
+    <h2>After you've paid</h2>
+    <p>Enter the 12-digit UTR / UPI transaction ID shown in your UPI app, then tap the button. Your order opens in WhatsApp.</p>
+    <div class="field" style="margin-bottom:0;">
+      <label for="upiUtr">UTR / transaction ID</label>
+      <input id="upiUtr" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="12-digit number">
+    </div>
+    <p class="pay-error" id="upiError" role="alert" style="margin-top:12px;"></p>
+    <button type="button" class="btn-primary" id="upiDoneBtn">I've paid — send order on WhatsApp</button>
+  </div>
+  <button type="button" class="upi-back" id="upiBackBtn">← Back to checkout</button>
 </div>
 
 <div class="confirm-panel" id="confirmPanel">
@@ -319,6 +363,7 @@
 
 <script src="store.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 function miniVial(fragrance){
   if(fragrance.image){
@@ -351,7 +396,7 @@ let confirming = false;
 
 function currentMethod(){
   const el = document.querySelector('input[name="payMethod"]:checked');
-  return el ? el.value : "other";
+  return el ? el.value : "upi";
 }
 
 function calcTotals(){
@@ -431,6 +476,9 @@ function showPayError(msg){
 }
 
 const WHATSAPP_NUMBER = "917982410620";
+const UPI_ID = "enigmaperfumes1@naviaxis";
+const UPI_NAME = "Liquid Emotions";
+const UPI_KEY = "le_pending_upi";
 const PENDING_KEY = "le_pending_payment";
 
 /* Everything the WhatsApp message needs, captured at the moment of paying
@@ -457,7 +505,7 @@ function buildWhatsAppMessage(id, s, pay){
     parseInt(a.size, 10) - parseInt(b.size, 10));
   const itemLines = sortedLines.map(l => `• ${l.name} (${l.size}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
   const rows = [
-    `New order: ${id} (PAID ONLINE)`,
+    pay.upiUtr ? `New order: ${id} (PAID VIA UPI — please verify)` : `New order: ${id} (PAID ONLINE)`,
     ``,
     `*Customer*`, c.name, c.phone, c.email,
     ``,
@@ -469,7 +517,9 @@ function buildWhatsAppMessage(id, s, pay){
     `Shipping (${s.zoneLabel}): ${s.shipping === 0 ? "Free" : currency(s.shipping)}`
   ];
   if(pay.feeKept > 0) rows.push(`Card fee (2.6%): ${currency(pay.feeKept)}`);
-  rows.push(`Total paid: ${currency(pay.paid)}`, `Payment ID: ${pay.paymentId}`);
+  rows.push(`Total paid: ${currency(pay.paid)}`);
+  if(pay.upiUtr) rows.push(`UPI UTR: ${pay.upiUtr}`, `Paid to: ${UPI_ID}`);
+  else rows.push(`Payment ID: ${pay.paymentId}`);
   return rows.join("\n");
 }
 
@@ -552,6 +602,103 @@ async function recoverPendingPayment(){
   }catch(e){ /* try again next visit */ }
 }
 
+/* ---------- Direct UPI payment (own UPI ID, no gateway fee) ---------- */
+const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+let upiOrder = null;   // { id, snap, amount, at }
+
+function upiLink(amount, orderId){
+  return "upi://pay?pa=" + UPI_ID +
+    "&pn=" + encodeURIComponent(UPI_NAME) +
+    "&am=" + amount.toFixed(2) +
+    "&cu=INR&tn=" + encodeURIComponent(orderId);
+}
+
+function showUpiPanel(o){
+  upiOrder = o;
+  const link = upiLink(o.amount, o.id);
+  document.getElementById("upiAmount").textContent = currency(o.amount);
+  document.getElementById("upiOrder").textContent = "Order " + o.id;
+  document.getElementById("upiIdText").textContent = UPI_ID;
+  document.getElementById("upiAppBtn").href = link;
+  const qr = document.getElementById("upiQr");
+  qr.innerHTML = "";
+  if(typeof QRCode !== "undefined"){
+    new QRCode(qr, { text: link, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+  }else{
+    qr.textContent = "QR couldn't load. Use the UPI ID above.";
+  }
+  const panel = document.getElementById("upiPanel");
+  panel.classList.toggle("is-mobile", IS_MOBILE);
+  panel.classList.add("show");
+  document.getElementById("checkoutView").style.display = "none";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function hideUpiPanel(){
+  document.getElementById("upiPanel").classList.remove("show");
+  document.getElementById("checkoutView").style.display = "";
+  upiOrder = null;
+  try{ localStorage.removeItem(UPI_KEY); }catch(e){}
+  setBusy(false);
+}
+
+async function startUpiPayment(t, method){
+  setBusy(true, "Preparing payment...");
+  saveAddress();
+  const snap = snapshotOrder(t, method);
+  let id = await leGetNextOrderNumber();
+  if(!id) id = leFallbackOrderNumber();
+  const o = { id, snap, amount: t.total, at: Date.now() };
+  try{ localStorage.setItem(UPI_KEY, JSON.stringify(o)); }catch(e){}
+  showUpiPanel(o);
+}
+
+function recoverPendingUpi(){
+  let o = null;
+  try{ o = JSON.parse(localStorage.getItem(UPI_KEY) || "null"); }catch(e){}
+  if(!o || !o.id || !o.snap) return;
+  if(Date.now() - o.at > 2 * 3600 * 1000){ try{ localStorage.removeItem(UPI_KEY); }catch(e){} return; }
+  if(leCartCount() === 0) { try{ localStorage.removeItem(UPI_KEY); }catch(e){} return; }
+  showUpiPanel(o);
+}
+
+function finishUpi(utr){
+  const o = upiOrder;
+  const message = buildWhatsAppMessage(o.id, o.snap, { upiUtr: utr, paid: o.amount, feeKept: 0 });
+  const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  try{ localStorage.removeItem(UPI_KEY); }catch(e){}
+  leClearCart();
+  document.getElementById("upiPanel").classList.remove("show");
+  showConfirm({
+    title: "Order placed.",
+    text: "Thanks! WhatsApp should open with your order details. If it doesn't, tap the button below and hit send. We'll check your payment and start decanting your bottles by hand.",
+    orderLabel: "Order " + o.id + " · UPI " + currency(o.amount),
+    waUrl, btnLabel: "Send order on WhatsApp"
+  });
+  let opened = null;
+  try{ opened = window.open(waUrl, "_blank"); }catch(e){}
+  if(!opened){ setTimeout(() => { window.location.href = waUrl; }, 1500); }
+}
+
+document.getElementById("upiDoneBtn").addEventListener("click", () => {
+  const err = document.getElementById("upiError");
+  const utr = document.getElementById("upiUtr").value.replace(/\s/g, "");
+  if(!/^\d{12}$/.test(utr)){
+    err.textContent = "Please enter the 12-digit UTR / transaction ID from your UPI app.";
+    err.classList.add("show");
+    return;
+  }
+  err.classList.remove("show");
+  finishUpi(utr);
+});
+document.getElementById("upiUtr").addEventListener("input", () => document.getElementById("upiError").classList.remove("show"));
+document.getElementById("upiBackBtn").addEventListener("click", hideUpiPanel);
+document.getElementById("upiCopyBtn").addEventListener("click", async (e) => {
+  try{ await navigator.clipboard.writeText(UPI_ID); e.target.textContent = "Copied"; }
+  catch(err){ e.target.textContent = UPI_ID; }
+  setTimeout(() => { e.target.textContent = "Copy"; }, 1800);
+});
+
 /* ---------- Remember last-used shipping details ---------- */
 const ADDRESS_KEY = "le_last_address";
 const ADDRESS_FIELDS = ["email", "phone", "fname", "lname", "addr", "city", "state", "pin", "country"];
@@ -580,6 +727,7 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
 
   const method = currentMethod();
   const t = calcTotals();
+  if(method === "upi"){ startUpiPayment(t, method); return; }
   setBusy(true, "Preparing payment...");
   saveAddress();
 
@@ -623,9 +771,7 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
     description: "Perfume decants",
     prefill: { name: snap.customer.name, email: snap.customer.email, contact: snap.customer.phone },
     theme: { color: "#9C5644" },
-    method: method === "card"
-      ? { card: true, netbanking: false, upi: false, wallet: false, emi: false, paylater: false }
-      : { card: false, netbanking: true, upi: true, wallet: true, emi: false, paylater: false },
+    method: { card: true, netbanking: false, upi: false, wallet: false, emi: false, paylater: false },
     modal: { ondismiss: () => { if(!confirming) setBusy(false); } },
     handler: (resp) => onPaid(resp, snap)
   });
@@ -636,7 +782,12 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
   rzp.open();
 });
 
-document.getElementById("payOptions").addEventListener("change", renderSummary);
+function updateLockNote(){
+  document.getElementById("lockNote").textContent = currentMethod() === "card"
+    ? "Secure card payment by Razorpay. After you pay, your order details open in WhatsApp."
+    : "Pay by UPI to our UPI ID. After you pay, send your order on WhatsApp.";
+}
+document.getElementById("payOptions").addEventListener("change", () => { renderSummary(); updateLockNote(); });
 
 /* Change quantity / remove right here, so the separate cart page isn't needed. */
 document.getElementById("miniItems").addEventListener("click", (e) => {
@@ -675,7 +826,9 @@ window.addEventListener("storage", (e) => {
 });
 
 renderSummary();
+updateLockNote();
 recoverPendingPayment();
+recoverPendingUpi();
 window.addEventListener("le-data-updated", () => { leValidateCart(); renderSummary(); });
 </script>
 
