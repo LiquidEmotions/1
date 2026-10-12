@@ -317,7 +317,7 @@
 
 <div class="upi-panel" id="upiPanel">
   <h1>Pay by UPI</h1>
-  <p class="upi-sub">Pay the exact amount below, then enter your UPI transaction ID to place the order.</p>
+  <p class="upi-sub">Pay the exact amount below, then tap the button at the bottom to send your order on WhatsApp.</p>
   <div class="upi-amount mono" id="upiAmount"></div>
   <div class="upi-order mono" id="upiOrder"></div>
   <a class="btn-primary upi-app-btn" id="upiAppBtn" href="#">Open UPI app to pay</a>
@@ -331,12 +331,7 @@
   </div>
   <div class="upi-step">
     <h2>After you've paid</h2>
-    <p>Enter the 12-digit UTR / UPI transaction ID shown in your UPI app, then tap the button. Your order opens in WhatsApp.</p>
-    <div class="field" style="margin-bottom:0;">
-      <label for="upiUtr">UTR / transaction ID</label>
-      <input id="upiUtr" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="12-digit number">
-    </div>
-    <p class="pay-error" id="upiError" role="alert" style="margin-top:12px;"></p>
+    <p>Tap the button once your payment is done. Your order opens in WhatsApp, ready to send.</p>
     <button type="button" class="btn-primary" id="upiDoneBtn">I've paid — send order on WhatsApp</button>
   </div>
   <button type="button" class="upi-back" id="upiBackBtn">← Back to checkout</button>
@@ -505,7 +500,7 @@ function buildWhatsAppMessage(id, s, pay){
     parseInt(a.size, 10) - parseInt(b.size, 10));
   const itemLines = sortedLines.map(l => `• ${l.name} (${l.size}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
   const rows = [
-    pay.upiUtr ? `New order: ${id} (PAID VIA UPI — please verify)` : `New order: ${id} (PAID ONLINE)`,
+    pay.upi ? `New order: ${id} (PAID VIA UPI — please verify)` : `New order: ${id} (PAID ONLINE)`,
     ``,
     `*Customer*`, c.name, c.phone, c.email,
     ``,
@@ -518,7 +513,7 @@ function buildWhatsAppMessage(id, s, pay){
   ];
   if(pay.feeKept > 0) rows.push(`Card fee (2.6%): ${currency(pay.feeKept)}`);
   rows.push(`Total paid: ${currency(pay.paid)}`);
-  if(pay.upiUtr) rows.push(`UPI UTR: ${pay.upiUtr}`, `Paid to: ${UPI_ID}`);
+  if(pay.upi) rows.push(`Paid to: ${UPI_ID}`);
   else rows.push(`Payment ID: ${pay.paymentId}`);
   return rows.join("\n");
 }
@@ -662,9 +657,9 @@ function recoverPendingUpi(){
   showUpiPanel(o);
 }
 
-function finishUpi(utr){
+function finishUpi(){
   const o = upiOrder;
-  const message = buildWhatsAppMessage(o.id, o.snap, { upiUtr: utr, paid: o.amount, feeKept: 0 });
+  const message = buildWhatsAppMessage(o.id, o.snap, { upi: true, paid: o.amount, feeKept: 0 });
   const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   try{ localStorage.removeItem(UPI_KEY); }catch(e){}
   leClearCart();
@@ -680,18 +675,7 @@ function finishUpi(utr){
   if(!opened){ setTimeout(() => { window.location.href = waUrl; }, 1500); }
 }
 
-document.getElementById("upiDoneBtn").addEventListener("click", () => {
-  const err = document.getElementById("upiError");
-  const utr = document.getElementById("upiUtr").value.replace(/\s/g, "");
-  if(!/^\d{12}$/.test(utr)){
-    err.textContent = "Please enter the 12-digit UTR / transaction ID from your UPI app.";
-    err.classList.add("show");
-    return;
-  }
-  err.classList.remove("show");
-  finishUpi(utr);
-});
-document.getElementById("upiUtr").addEventListener("input", () => document.getElementById("upiError").classList.remove("show"));
+document.getElementById("upiDoneBtn").addEventListener("click", finishUpi);
 document.getElementById("upiBackBtn").addEventListener("click", hideUpiPanel);
 document.getElementById("upiCopyBtn").addEventListener("click", async (e) => {
   try{ await navigator.clipboard.writeText(UPI_ID); e.target.textContent = "Copied"; }
