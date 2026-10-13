@@ -1261,6 +1261,7 @@ function cardHTML(f){
         ? `<img src="${f.image}" alt="${f.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.parentNode.innerHTML=vialSVG('${f.id}','${f.color}',FILL_LEVEL['10ml'])" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">`
         : vialSVG(f.id, f.color, FILL_LEVEL["10ml"])}</div>
       <div class="notes">
+        ${f.notes.all ? `<div><b>Notes</b> — ${f.notes.all}</div>` : ""}
         ${f.notes.top ? `<div><b>Top</b> — ${f.notes.top}</div>` : ""}
         ${f.notes.heart ? `<div><b>Heart</b> — ${f.notes.heart}</div>` : ""}
         ${f.notes.base ? `<div><b>Base</b> — ${f.notes.base}</div>` : ""}
@@ -1431,7 +1432,7 @@ seasonTabsEl.addEventListener("click", (e) => {
 });
 
 function fragranceSearchText(f){
-  return [f.name, f.house, leHouseCategory(f.house) || "", f.inspiredBy || "", f.notes.top, f.notes.heart, f.notes.base, f.gender, ...(f.season || [])].join(" ").toLowerCase();
+  return [f.name, f.house, leHouseCategory(f.house) || "", f.inspiredBy || "", f.notes.top, f.notes.heart, f.notes.base, f.notes.all || "", f.gender, ...(f.season || [])].join(" ").toLowerCase();
 }
 
 let searchTerm = "";
@@ -1605,7 +1606,7 @@ function buildSuggestCandidates(pool){
     if(f.inspiredBy) inspired.set(f.inspiredBy, (inspired.get(f.inspiredBy) || 0) + 1);
 
     const own = new Set();
-    [f.notes.top, f.notes.heart, f.notes.base].join(",").split(",").forEach(raw => {
+    [f.notes.top, f.notes.heart, f.notes.base, f.notes.all].join(",").split(",").forEach(raw => {
       const n = raw.trim();
       if(n) own.add(n);
     });
