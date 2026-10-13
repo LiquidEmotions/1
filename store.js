@@ -1605,7 +1605,15 @@ function leSetCart(cart){
   leUpdateCartBadges();
 }
 
+function leIsSoldOut(id, size){
+  const f = leFragranceById(id);
+  if(!f) return false;
+  if(f.soldOut) return true;
+  return !!(size && f.soldSizes && f.soldSizes.includes(size));
+}
+
 function leAddToCart(id, size, qty){
+  if(leIsSoldOut(id, size)) return;
   qty = qty || 1;
   const cart = leGetCart();
   const existing = cart.find(i => i.id === id && i.size === size);
@@ -1695,6 +1703,9 @@ const LE_QTY_THEMES = {
 function leRenderQtyControl(id, size, theme){
   const t = LE_QTY_THEMES[theme] || LE_QTY_THEMES.dark;
   const qty = leCartQtyFor(id, size);
+  if(leIsSoldOut(id, size)){
+    return `<button class="le-qty-soldout" disabled style="background:transparent;border:1px solid ${t.stepBorder};color:${t.removeColor};padding:6px 14px;font-size:0.72rem;font-weight:600;border-radius:4px;cursor:not-allowed;white-space:nowrap;opacity:.8;">Sold out</button>`;
+  }
   if(qty === 0){
     return `<button class="le-qty-add" data-id="${id}" data-size="${size}" style="background:${t.addBg};border:1px solid ${t.addBorder};color:${t.addColor};padding:6px 14px;font-size:0.72rem;font-weight:600;border-radius:4px;cursor:pointer;white-space:nowrap;">Add to cart</button>`;
   }
@@ -1758,13 +1769,13 @@ function leUpdateCartBadges(){
    Cart validation
    ============================================================ */
 function leGetInvalidCartItems(){
-  return leGetCart().filter(i => !leFragranceById(i.id));
+  return leGetCart().filter(i => !leFragranceById(i.id) || leIsSoldOut(i.id, i.size));
 }
 
 function leValidateCart(){
   const invalid = leGetInvalidCartItems();
   if(invalid.length){
-    const cart = leGetCart().filter(i => leFragranceById(i.id));
+    const cart = leGetCart().filter(i => leFragranceById(i.id) && !leIsSoldOut(i.id, i.size));
     leSetCart(cart);
   }
   return invalid;
@@ -2111,7 +2122,7 @@ function leOpenProductModal(id){
         : `<div style="width:160px;height:160px;border-radius:10px;background:${f.color};border:1px solid rgba(70,54,47,0.15);flex-shrink:0;"></div>`}
       <div style="flex:1;min-width:200px;">
         <div style="font-size:12px;color:#6F5A4E;">${f.house}</div>
-        <h2 style="margin:2px 0 4px;">${f.name}</h2>
+        <h2 style="margin:2px 0 4px;">${f.name}${f.soldOut ? ` <span style="display:inline-block;vertical-align:middle;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:#9C5644;color:#fff;padding:3px 9px;border-radius:100px;">Sold out</span>` : ""}</h2>
         
         <!-- Fixed alignment gap discrepancy layout line -->
         <div style="font-size:12px;color:#9C5644;margin-bottom:6px;visibility:${f.inspiredBy ? 'visible' : 'hidden'};height:18px;line-height:18px;">
@@ -2142,7 +2153,7 @@ function leOpenProductModal(id){
           <div style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 16px;${i > 0 ? "border-top:1px solid #E6CFCB;" : ""}font-size:14px;color:#46362F;">
             <span style="display:flex;gap:10px;align-items:center;">
               <span>${sz}</span>
-              <span style="font-weight:600;">${leFormatPrice(f.prices[sz])}</span>
+              <span style="font-weight:600;${leIsSoldOut(f.id, sz) ? "text-decoration:line-through;opacity:.55;" : ""}">${leFormatPrice(f.prices[sz])}</span>
             </span>
             <span class="le-modal-qty-slot" data-size="${sz}"></span>
           </div>
@@ -2322,13 +2333,24 @@ function leParseSheetRows(csvRows){
     }
     if(!sizes || !sizes.length || !a || !b) return;
     const prices = {};
+    const soldSizes = [];
+    const isSold = (t) => /^sold\s*-?\s*out$/i.test(String(t || "").trim());
     sizes.forEach(({ col, size }) => {
       const raw = (r[col] || "").trim();
+      if(isSold(raw)){ soldSizes.push(size); return; }
       const n = parseFloat(raw.replace(/[₹,\s]/g, ""));
       if(isFinite(n) && n > 0) prices[size] = n;
     });
-    if(!Object.keys(prices).length) return;
-    out.push({ brand: a, name: b, prices, section });
+    /* "Sold out" written in any other cell of the row (e.g. a column after the last size)
+       marks the whole perfume as sold out. */
+    const sizeCols = sizes.map(x => x.col);
+    let soldAll = false;
+    for(let c = 2; c < r.length; c++){
+      if(!sizeCols.includes(c) && isSold(r[c])) soldAll = true;
+    }
+    if(!Object.keys(prices).length && soldSizes.length) soldAll = true;
+    if(!Object.keys(prices).length && !soldSizes.length && !soldAll) return;
+    out.push({ brand: a, name: b, prices, section, soldSizes, soldAll });
   });
   return { rows: out };
 }
@@ -2508,6 +2530,9 @@ function leApplySheetData(data){
     present.add(f.id);
     const merged = Object.assign({}, f.prices);
     Object.keys(row.prices).forEach(sz => { if(ORDER.includes(sz)) merged[sz] = row.prices[sz]; });
+    /* Sold out: the size stays visible (with its last known price) but can't be ordered. */
+    f.soldSizes = (row.soldAll ? Object.keys(merged) : (row.soldSizes || []).filter(sz => merged[sz] !== undefined));
+    f.soldOut = !!row.soldAll || (Object.keys(merged).length > 0 && Object.keys(merged).every(sz => f.soldSizes.includes(sz)));
     const sorted = {};
     Object.keys(merged).sort((x, y) => parseInt(x, 10) - parseInt(y, 10)).forEach(sz => { sorted[sz] = merged[sz]; });
     f.prices = sorted;
@@ -2531,7 +2556,7 @@ function leApplySheetData(data){
 
 function leSheetSnapshot(){
   const o = {};
-  LE_ALL_FRAGRANCES.forEach(f => { o[f.id] = JSON.stringify(f.prices) + (FRAGRANCES.includes(f) ? "|shown" : "|hidden"); });
+  LE_ALL_FRAGRANCES.forEach(f => { o[f.id] = JSON.stringify(f.prices) + JSON.stringify(f.soldSizes || []) + (FRAGRANCES.includes(f) ? "|shown" : "|hidden"); });
   return o;
 }
 

@@ -564,6 +564,15 @@
   .size-chip .chip-dot{display:none; position:absolute; top:-3px; right:-3px; width:8px; height:8px; border-radius:50%; background:#25D366; border:1.5px solid var(--moss);}
   .size-chip.in-cart .chip-dot{display:block;}
   .size-picker-row{margin-top:10px;}
+  .soldout-badge{
+    flex-shrink:0; display:inline-flex; align-items:center;
+    font-family:'IBM Plex Mono', monospace; font-size:0.74rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase;
+    color:#fff; background:#9C5644; padding:5px 11px; border-radius:100px; white-space:nowrap; margin-top:1px;
+  }
+  .card.sold-out .vial-slot, .card.sold-out .notes{opacity:.45; filter:grayscale(.6);}
+  .size-chip.sold{opacity:.5; cursor:not-allowed;}
+  .size-chip.sold .chip-price{color:var(--parchment-dim); font-size:0.66rem; text-transform:uppercase; letter-spacing:.04em;}
+  .le-qty-soldout{width:100%; background:transparent; border:1px solid var(--line); color:var(--parchment-dim); padding:9px 14px; font-size:0.8rem; font-weight:600; border-radius:6px; cursor:not-allowed; opacity:.8;}
   .size-hint{width:100%; box-sizing:border-box; text-align:center; padding:12px 10px; font-size:0.92rem; font-weight:600; color:var(--parchment); background:rgba(201,140,122,0.18); border:1px solid var(--taupe); border-radius:4px;}
   .size-picker .le-card-qty-slot .le-qty-add{padding:11px 12px !important; font-size:0.92rem !important; width:100% !important; display:block !important; text-align:center !important; white-space:nowrap;}
   .size-picker .le-qty-stepper{justify-content:center; width:100%;}
@@ -1237,14 +1246,14 @@ function cardHTML(f){
   const sizes = Object.keys(f.prices);
   const wishlisted = leIsWishlisted(f.id);
   return `
-  <div class="card" data-id="${f.id}" data-house="${f.house}">
+  <div class="card${f.soldOut ? " sold-out" : ""}" data-id="${f.id}" data-house="${f.house}">
     <div class="card-top">
       <div class="card-info">
         <div class="card-house">${f.house}</div>
         <h3 class="card-name">${f.name}</h3>
         <div class="card-dupe" style="visibility:${f.inspiredBy ? "visible" : "hidden"};">≈ ${f.inspiredBy || "placeholder"}</div>
       </div>
-      ${f.isNew ? `<span class="new-badge">✨ New</span>` : ""}
+      ${f.soldOut ? `<span class="soldout-badge">Sold out</span>` : f.isNew ? `<span class="new-badge">✨ New</span>` : ""}
       <button class="wish-btn${wishlisted ? " active" : ""}" aria-label="Toggle wishlist">${wishlisted ? "♥" : "♡"}</button>
     </div>
     <div class="card-body">
@@ -1260,7 +1269,7 @@ function cardHTML(f){
     ${f.fragranticaUrl ? `<a class="card-fragrantica" href="${f.fragranticaUrl}" target="_blank" rel="noopener">Fragrantica ↗</a>` : ""}
     <div class="size-picker" data-selected="">
       <div class="size-chips" role="group" aria-label="Choose size" style="--per:${sizes.length === 4 ? 2 : Math.min(sizes.length, 3)}">
-        ${sizes.map(s => `<button type="button" class="size-chip" data-size="${s}"><span class="chip-size">${s.replace("ml","")}</span><span class="chip-unit">ml</span><span class="chip-price"><span class="cur">₹</span>${f.prices[s]}</span><i class="chip-dot"></i></button>`).join("")}
+        ${sizes.map(s => `<button type="button" class="size-chip${leIsSoldOut(f.id, s) ? " sold" : ""}" data-size="${s}"><span class="chip-size">${s.replace("ml","")}</span><span class="chip-unit">ml</span><span class="chip-price">${leIsSoldOut(f.id, s) ? "Sold out" : `<span class="cur">₹</span>${f.prices[s]}`}</span><i class="chip-dot"></i></button>`).join("")}
       </div>
       <div class="size-picker-row">
         <span class="le-card-qty-slot"></span>
@@ -1327,7 +1336,10 @@ function attachCardHandlers(container){
       selectSize(c.dataset.size);
     }));
     /* Pre-select 10ml so "Add to cart" is ready on the first tap. */
-    if(f.prices["10ml"] !== undefined) selectSize("10ml");
+    const firstFree = Object.keys(f.prices).find(sz => !leIsSoldOut(f.id, sz));
+    if(f.prices["10ml"] !== undefined && !leIsSoldOut(f.id, "10ml")) selectSize("10ml");
+    else if(firstFree) selectSize(firstFree);
+    else if(f.soldOut) slot.innerHTML = `<button class="le-qty-soldout" disabled>Sold out</button>`;
     else slot.innerHTML = `<div class="size-hint">Select a size</div>`;
     markChips();
 
