@@ -116,6 +116,7 @@
   .upi-app:hover, .upi-app:active{border-color:var(--amber-bright); color:var(--amber-bright);}
   .upi-apps .upi-sub{margin:10px 0 0; font-size:0.74rem;}
   .upi-panel.is-mobile .upi-qr-wrap{margin-top:18px;}
+  .upi-warn{background:var(--moss); border:1px solid var(--amber-bright); border-radius:var(--radius); padding:10px 12px; font-size:0.78rem; line-height:1.45; text-align:left; margin:0 0 12px;}
   .upi-step{text-align:left; margin-top:28px; padding-top:22px; border-top:1px solid var(--line);}
   .upi-step h2{font-size:1rem; margin:0 0 6px;}
   .upi-step p{font-size:0.8rem; color:var(--parchment-dim); margin:0 0 12px;}
@@ -324,6 +325,7 @@
   <p class="upi-sub">Pay the exact amount below, then tap the button at the bottom to send your order on WhatsApp.</p>
   <div class="upi-amount mono" id="upiAmount"></div>
   <div class="upi-order mono" id="upiOrder"></div>
+  <div class="upi-warn" id="upiInAppWarn" style="display:none;">This page is open inside another app's browser (Instagram, Facebook etc.), which blocks UPI apps. Tap ⋮ or ⋯ and choose "Open in Chrome" or "Open in Safari", or pay using the QR or UPI ID below.</div>
   <div class="upi-apps">
     <div class="upi-app-grid">
       <a class="upi-app" id="upiGpay" href="#">Google Pay</a>
@@ -332,6 +334,7 @@
     </div>
     <a class="btn-primary" id="upiAppBtn" href="#" style="margin-top:0;">Other UPI app</a>
     <p class="upi-sub">Tap your app to pay. If nothing opens, use "Other UPI app" or the QR below.</p>
+    <div class="upi-warn" id="upiNoOpenHint" style="display:none;">No UPI app opened? Copy the UPI ID and amount below, paste them into any UPI app, and put the order number in the note. Or scan the QR from another phone.</div>
   </div>
   <div class="upi-qr-wrap">
     <div class="upi-qr-box"><div id="upiQr"></div></div>
@@ -341,9 +344,13 @@
     <span>UPI ID: <b class="mono" id="upiIdText"></b></span>
     <button type="button" id="upiCopyBtn">Copy</button>
   </div>
+  <div class="upi-id-row">
+    <span>Amount: <b class="mono" id="upiAmtText"></b></span>
+    <button type="button" id="upiCopyAmtBtn">Copy</button>
+  </div>
   <div class="upi-step">
     <h2>After you've paid</h2>
-    <p>Tap the button once your payment is done. Your order opens in WhatsApp, ready to send.</p>
+    <p>Tap the button once your payment is done. Your order opens in WhatsApp, ready to send. We dispatch only after the payment shows in our account.</p>
     <button type="button" class="btn-primary" id="upiDoneBtn">I've paid — send order on WhatsApp</button>
   </div>
   <button type="button" class="upi-back" id="upiBackBtn">← Back to checkout</button>
@@ -512,7 +519,7 @@ function buildWhatsAppMessage(id, s, pay){
     parseInt(a.size, 10) - parseInt(b.size, 10));
   const itemLines = sortedLines.map(l => `• ${l.name} (${l.size}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
   const rows = [
-    pay.upi ? `New order: ${id} (PAID VIA UPI — please verify)` : `New order: ${id} (PAID ONLINE)`,
+    pay.upi ? `New order: ${id} (UPI — PAYMENT NOT YET VERIFIED)` : `New order: ${id} (PAID ONLINE)`,
     ``,
     `*Customer*`, c.name, c.phone, c.email,
     ``,
@@ -524,9 +531,13 @@ function buildWhatsAppMessage(id, s, pay){
     `Shipping (${s.zoneLabel}): ${s.shipping === 0 ? "Free" : currency(s.shipping)}`
   ];
   if(pay.feeKept > 0) rows.push(`Gateway fee: ${currency(pay.feeKept)}`);
-  rows.push(`Total paid: ${currency(pay.paid)}`);
-  if(pay.upi) rows.push(`Paid to: ${UPI_ID}`);
-  else rows.push(`Payment ID: ${pay.paymentId}`);
+  if(pay.upi){
+    rows.push(`Amount to verify: ${currency(pay.paid)}`);
+    rows.push(`Customer says paid to: ${UPI_ID} (note: ${id})`);
+  }else{
+    rows.push(`Total paid: ${currency(pay.paid)}`);
+  }
+  if(!pay.upi) rows.push(`Payment ID: ${pay.paymentId}`);
   return rows.join("\n");
 }
 
@@ -621,10 +632,12 @@ function upiQuery(amount, orderId){
     "&cu=INR&tn=" + encodeURIComponent(orderId);
 }
 function upiLink(amount, orderId){ return "upi://pay?" + upiQuery(amount, orderId); }
+const IS_IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const IN_APP_BROWSER = /Instagram|FBAN|FBAV|FB_IAB|Snapchat|Line\/|Twitter|LinkedInApp|GSA\//i.test(navigator.userAgent);
 function upiAppLinks(amount, orderId){
   const q = upiQuery(amount, orderId);
   return {
-    upiGpay:    "tez://upi/pay?" + q,
+    upiGpay:    (IS_IOS ? "gpay://upi/pay?" : "tez://upi/pay?") + q,
     upiPhonepe: "phonepe://pay?" + q,
     upiPaytm:   "paytmmp://pay?" + q,
     upiAppBtn:  "upi://pay?" + q
@@ -646,8 +659,11 @@ function showUpiPanel(o){
   }else{
     qr.textContent = "QR couldn't load. Use the UPI ID above.";
   }
+  document.getElementById("upiAmtText").textContent = o.amount.toFixed(2);
+  document.getElementById("upiInAppWarn").style.display = IN_APP_BROWSER ? "block" : "none";
+  document.getElementById("upiNoOpenHint").style.display = "none";
   const panel = document.getElementById("upiPanel");
-  panel.classList.toggle("is-mobile", IS_MOBILE);
+  panel.classList.toggle("is-mobile", IS_MOBILE || IS_IOS);
   panel.classList.add("show");
   document.getElementById("checkoutView").style.display = "none";
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -695,9 +711,9 @@ function finishUpi(){
   leClearCart();
   document.getElementById("upiPanel").classList.remove("show");
   showConfirm({
-    title: "Order placed.",
-    text: "Thanks! WhatsApp should open with your order details. If it doesn't, tap the button below and hit send. We'll check your payment and start decanting your bottles by hand.",
-    orderLabel: "Order " + o.id + " · UPI " + currency(o.amount),
+    title: "Order received.",
+    text: "Thanks! WhatsApp should open with your order details. If it doesn't, tap the button below and hit send. Your order is confirmed once we see the payment in our account, and then we start decanting your bottles by hand.",
+    orderLabel: "Order " + o.id + " · UPI " + currency(o.amount) + " · awaiting verification",
     waUrl, btnLabel: "Send order on WhatsApp"
   });
   let opened = null;
@@ -706,6 +722,20 @@ function finishUpi(){
 }
 
 document.getElementById("upiDoneBtn").addEventListener("click", finishUpi);
+/* If tapping a UPI app link doesn't take the customer out of the browser, show the manual-pay hint. */
+["upiGpay","upiPhonepe","upiPaytm","upiAppBtn"].forEach(id => {
+  document.getElementById(id).addEventListener("click", () => {
+    const hint = document.getElementById("upiNoOpenHint");
+    hint.style.display = "none";
+    setTimeout(() => { if(!document.hidden) hint.style.display = "block"; }, 2200);
+  });
+});
+document.getElementById("upiCopyAmtBtn").addEventListener("click", async (e) => {
+  const amt = upiOrder ? upiOrder.amount.toFixed(2) : "";
+  try{ await navigator.clipboard.writeText(amt); e.target.textContent = "Copied"; }
+  catch(err){ e.target.textContent = amt; }
+  setTimeout(() => { e.target.textContent = "Copy"; }, 1800);
+});
 document.getElementById("upiBackBtn").addEventListener("click", hideUpiPanel);
 document.getElementById("upiCopyBtn").addEventListener("click", async (e) => {
   try{ await navigator.clipboard.writeText(UPI_ID); e.target.textContent = "Copied"; }
