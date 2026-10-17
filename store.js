@@ -2400,7 +2400,8 @@ function leParseSheetRows(csvRows){
     }
     sizes.forEach(({ col, size }) => {
       const raw = (r[col] || "").trim();
-      if(isSold(raw) || soonRe.test(raw)){ soldSizes.push(size); return; }
+      if(isSold(raw)){ soldSizes.push(size); return; }
+      if(soonRe.test(raw)) return;   // "Coming soon" typed in a size cell: no price for that size yet
       const n = parseFloat(raw.replace(/[₹,\s]/g, ""));
       if(isFinite(n) && n > 0) prices[size] = n;
     });
@@ -2412,8 +2413,7 @@ function leParseSheetRows(csvRows){
       if(!sizeCols.includes(c) && isSold(r[c])) soldAll = true;
     }
     if(!Object.keys(prices).length && soldSizes.length) soldAll = true;
-    if(comingSoon) soldAll = true;
-    if(!Object.keys(prices).length && !soldSizes.length && !soldAll) return;
+    if(!Object.keys(prices).length && !soldSizes.length && !soldAll && !comingSoon) return;
     out.push({ brand: a, name: b, prices, section, soldSizes, soldAll, comingSoon, arrival });
   });
   return { rows: out };
@@ -2484,6 +2484,35 @@ function leParseCatalogueRows(csvRows){
                inspired: g("inspired"), gender: g("gender"), season: g("season"), added: g("added"), image: g("image") });
   });
   return cols ? out : null;   // null = tab missing or not in the expected format
+}
+
+/* Arrival date written after "Coming soon" in the sheet, e.g. "25 Oct", "25 Oct 2026",
+   "25/10", "25-10-2026", "Oct 25", "2026-10-25" -> "YYYY-MM-DD" ("" if no date is recognised). */
+function leTodayISO(){
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function leParseArrivalDate(t){
+  t = String(t || "").trim();
+  if(!t) return "";
+  const full = leParseAddedDate(t);
+  if(full) return full;
+  const MONTHS = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
+  const iso = (y, mo, d) => y + "-" + String(mo).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+  let m, mo, d, y = null;
+  if((m = /^(\d{1,2})(?:st|nd|rd|th)?[\s-]+([A-Za-z]{3})[a-z]*\b/.exec(t))){ d = +m[1]; mo = MONTHS.indexOf(m[2].toLowerCase()) + 1; }          // 25 Oct
+  else if((m = /^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b/.exec(t))){ mo = MONTHS.indexOf(m[1].toLowerCase()) + 1; d = +m[2]; }   // Oct 25
+  else if((m = /^(\d{1,2})[\/.-](\d{1,2})(?:[\/.-](\d{2,4}))?\b/.exec(t))){                                                                    // 25/10 or 25-10-2026 (day first)
+    d = +m[1]; mo = +m[2]; if(m[3]) y = +m[3] < 100 ? 2000 + +m[3] : +m[3];
+  }
+  if(!(mo >= 1 && mo <= 12 && d >= 1 && d <= 31)) return "";
+  if(y === null){
+    const now = new Date();
+    y = now.getFullYear();
+    const cand = new Date(y, mo - 1, d);
+    if(cand.getTime() < now.getTime() - 60 * 86400000) y += 1;   // no year given and long past: it means next year
+  }
+  return iso(y, mo, d);
 }
 
 function leSlug(t){ return String(t || "").toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
@@ -2658,10 +2687,21 @@ function leApplySheetData(data){
     Object.keys(merged).forEach(sz => { if(leIsPartial(sz)) delete merged[sz]; });   // partials are re-read from the sheet each time
     Object.keys(row.prices).forEach(sz => { if(ORDER.includes(sz)) merged[sz] = row.prices[sz]; });
     /* Sold out: the size stays visible (with its last known price) but can't be ordered. */
-    f.soldSizes = (row.soldAll ? Object.keys(merged) : (row.soldSizes || []).filter(sz => merged[sz] !== undefined));
+    /* Coming soon: blocked until the arrival date. From that date on it goes on sale by itself and
+       counts as New for LE_NEW_DAYS days, so nothing needs editing in the sheet. With no
+       recognisable date it stays "Coming soon" until the marker is deleted. */
+    const arrISO = row.comingSoon ? leParseArrivalDate(row.arrival) : "";
+    const soon = !!row.comingSoon && !(arrISO && leTodayISO() >= arrISO);
+    f.soldSizes = ((row.soldAll || soon) ? Object.keys(merged) : (row.soldSizes || []).filter(sz => merged[sz] !== undefined));
     f.heldSizes = [];
-    f.comingSoon = !!row.comingSoon;
+    f.comingSoon = soon;
     f.arrival = row.arrival || "";
+    if(arrISO){
+      f.newSince = arrISO;
+      if(!Object.getOwnPropertyDescriptor(f, "isNew")){
+        Object.defineProperty(f, "isNew", { get(){ return leComputeIsNew(f.newSince); }, enumerable: true, configurable: true });
+      }
+    }
     f.partials = {};
     /* Partial bottles for this perfume, from the "Partials" tab. Their own Status decides
        whether they can be bought, independent of the decant sizes. */
