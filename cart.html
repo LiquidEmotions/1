@@ -381,7 +381,7 @@ function render(){
       const open = addOpen.has(f.id) && others.length > 0;
       const sizeRow = (s, showEach) => `
               <div class="size-table-row" data-size="${s}">
-                <span class="size-table-size">${leSizeLabel(s)}</span>
+                <span class="size-table-size">${leSizeLabel(s, f.id)}</span>
                 <div class="size-table-right">
                   <span class="size-table-price mono">${currency(f.prices[s])}${showEach ? "<small>each</small>" : ""}</span>
                   <span class="le-card-qty-slot" data-size="${s}"></span>

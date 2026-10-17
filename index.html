@@ -1250,7 +1250,7 @@ function chipHTML(f, s){
   const unavailable = leIsSoldOut(f.id, s);
   const price = unavailable ? (leIsHeld(f.id, s) ? "Reserved" : "Sold out") : `<span class="cur">₹</span>${f.prices[s]}`;
   if(leIsPartial(s)){
-    return `<button type="button" class="size-chip partial${unavailable ? " sold" : ""}" data-size="${s}"><span class="chip-tag">Partial</span><span class="chip-size">${parseInt(s, 10)}</span><span class="chip-unit">ml</span><span class="chip-price">${price}</span><i class="chip-dot"></i></button>`;
+    return `<button type="button" class="size-chip partial${unavailable ? " sold" : ""}" data-size="${s}"><span class="chip-tag">${f.partials && f.partials[s] && f.partials[s].tester ? "Tester partial" : "Partial"}</span><span class="chip-size">${parseInt(s, 10)}</span><span class="chip-unit">ml</span><span class="chip-price">${price}</span><i class="chip-dot"></i></button>`;
   }
   return `<button type="button" class="size-chip${unavailable ? " sold" : ""}" data-size="${s}"><span class="chip-size">${s.replace("ml","")}</span><span class="chip-unit">ml</span><span class="chip-price">${price}</span><i class="chip-dot"></i></button>`;
 }
@@ -1337,7 +1337,7 @@ function attachCardHandlers(container){
     function setLabel(){
       const size = picker.dataset.selected;
       const btn = slot.querySelector(".le-qty-add");
-      if(btn && size) btn.textContent = `Add ${leSizeLabel(size)} · ${currency(f.prices[size])}`;
+      if(btn && size) btn.textContent = `Add ${leSizeLabel(size, f.id)} · ${currency(f.prices[size])}`;
     }
     function selectSize(size){
       picker.dataset.selected = size;

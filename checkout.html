@@ -440,13 +440,13 @@ function renderSummary(){
         <div class="mini-info">
           <p class="mini-name">${line.fragrance.name}</p>
           <select class="mini-size" data-id="${line.id}" data-size="${line.size}" aria-label="Size for ${line.fragrance.name}">
-            ${Object.keys(line.fragrance.prices).filter(sz => leIsPartial(line.size) ? sz === line.size : !leIsPartial(sz)).map(sz => `<option value="${sz}"${sz === line.size ? " selected" : ""}>${leSizeLabel(sz)} · ${currency(line.fragrance.prices[sz])}</option>`).join("")}
+            ${Object.keys(line.fragrance.prices).filter(sz => leIsPartial(line.size) ? sz === line.size : !leIsPartial(sz)).map(sz => `<option value="${sz}"${sz === line.size ? " selected" : ""}>${leSizeLabel(sz, line.id)} · ${currency(line.fragrance.prices[sz])}</option>`).join("")}
           </select>
           <div class="mini-qty" data-id="${line.id}" data-size="${line.size}">
             ${leIsPartial(line.size) ? "" : `<button type="button" data-act="dec" aria-label="Decrease quantity">−</button>`}
             <span class="mini-qty-n mono">${line.qty}</span>
             ${leIsPartial(line.size) ? "" : `<button type="button" data-act="inc" aria-label="Increase quantity">+</button>`}
-            <button type="button" class="mini-rm" data-act="rm" aria-label="Remove ${line.fragrance.name} ${leSizeLabel(line.size)}">Remove</button>
+            <button type="button" class="mini-rm" data-act="rm" aria-label="Remove ${line.fragrance.name} ${leSizeLabel(line.size, line.id)}">Remove</button>
           </div>
         </div>
         <div class="mini-price mono">${currency(line.lineTotal)}</div>
@@ -503,7 +503,7 @@ function snapshotOrder(t, method){
   return {
     method,
     zoneLabel: t.zone.label,
-    lines: t.lines.map(l => ({ house: l.fragrance.house, name: l.fragrance.name, size: l.size, qty: l.qty, lineTotal: l.lineTotal })),
+    lines: t.lines.map(l => ({ house: l.fragrance.house, name: l.fragrance.name, id: l.id, size: l.size, qty: l.qty, lineTotal: l.lineTotal })),
     subtotal: t.subtotal, shipping: t.shipping, fee: t.fee, total: t.total,
     customer: {
       name: `${val("fname")} ${val("lname")}`.trim(), email: val("email"), phone: val("phone"),
@@ -518,7 +518,7 @@ function buildWhatsAppMessage(id, s, pay){
     (a.house || "").localeCompare(b.house || "") ||
     a.name.localeCompare(b.name) ||
     parseInt(a.size, 10) - parseInt(b.size, 10));
-  const itemLines = sortedLines.map(l => `• ${l.name} (${leSizeLabel(l.size)}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
+  const itemLines = sortedLines.map(l => `• ${l.name} (${leSizeLabel(l.size, l.id)}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
   const rows = [
     pay.upi ? `New order: ${id} (UPI — PAYMENT NOT YET VERIFIED)` : `New order: ${id} (PAID ONLINE)`,
     ``,

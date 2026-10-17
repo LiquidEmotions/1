@@ -1594,7 +1594,16 @@ const LE_MAX_QTY       = 10;   // soft per-line stock cap
    checkout and the server price check treat them like any other priced size.
    Keep leIsPartial in step with api/_pricing.js. */
 function leIsPartial(size){ return /-P$/.test(String(size || "")); }
-function leSizeLabel(size){ return leIsPartial(size) ? "Partial " + parseInt(size, 10) + "ml" : size; }
+/* A partial can also be a tester (flag from the sheet's "Tester" column). */
+function leIsTesterPartial(id, size){
+  if(!id || !leIsPartial(size)) return false;
+  const f = leFragranceById(id);
+  return !!(f && f.partials && f.partials[size] && f.partials[size].tester);
+}
+function leSizeLabel(size, id){
+  if(!leIsPartial(size)) return size;
+  return (leIsTesterPartial(id, size) ? "Tester partial " : "Partial ") + parseInt(size, 10) + "ml";
+}
 function leMaxQtyFor(size){ return leIsPartial(size) ? 1 : LE_MAX_QTY; }
 function leIsHeld(id, size){
   const f = leFragranceById(id);
@@ -2036,7 +2045,7 @@ function leRenderCartDrawer(){
         : `<div style="width:56px;height:56px;border-radius:6px;background:${line.fragrance.color};flex-shrink:0;"></div>`}
       <div style="flex:1;min-width:0;">
         <div style="font-weight:600;font-size:14px;">${line.fragrance.name}</div>
-        <div style="font-size:12px;color:#6F5A4E;">${leSizeLabel(line.size)} · ${leFormatPrice(line.unitPrice)}</div>
+        <div style="font-size:12px;color:#6F5A4E;">${leSizeLabel(line.size, line.id)} · ${leFormatPrice(line.unitPrice)}</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
           ${leIsPartial(line.size) ? `<span style="font-size:12px;color:#6F5A4E;">One bottle</span>` : `<button data-le-qty-dec data-id="${line.id}" data-size="${line.size}" style="width:28px;height:28px;border:1px solid #A48D84;background:transparent;color:#46362F;border-radius:4px;cursor:pointer;line-height:1;">−</button>
           <span style="min-width:16px;text-align:center;">${line.qty}</span>
@@ -2188,9 +2197,9 @@ function leOpenProductModal(id){
         ${sizeKeys.map((sz, i) => `
           <div style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 16px;${i > 0 ? "border-top:1px solid #E6CFCB;" : ""}font-size:14px;color:#46362F;">
             <span style="display:flex;gap:10px;align-items:center;">
-              <span>${leSizeLabel(sz)}</span>
+              <span>${leSizeLabel(sz, f.id)}</span>
               <span style="font-weight:600;${leIsSoldOut(f.id, sz) ? "text-decoration:line-through;opacity:.55;" : ""}">${leFormatPrice(f.prices[sz])}</span>
-              ${leIsPartial(sz) ? `<span style="font-size:11px;color:#6F5A4E;">one bottle · packaging &amp; shipping included${f.partials && f.partials[sz] && f.partials[sz].box ? " · with box" : ""}</span>` : ""}
+              ${leIsPartial(sz) ? `<span style="font-size:11px;color:#6F5A4E;">${f.partials && f.partials[sz] && f.partials[sz].tester ? `<span style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1px solid #A48D84;border-radius:4px;padding:1px 5px;">Tester</span> ` : ""}one bottle · packaging &amp; shipping included${f.partials && f.partials[sz] && f.partials[sz].box ? " · with box" : ""}</span>` : ""}
             </span>
             <span class="le-modal-qty-slot" data-size="${sz}"></span>
           </div>
@@ -2554,7 +2563,8 @@ function leCreateFromCatalogue(row, catalogue){
 /* ============================================================
    Partial bottles from the sheet
    A "Partials" tab with the headers: Brand, Perfume, Bottle size (ml),
-   ML left, SP (full-bottle price), Price, Box, Status.
+   ML left, SP (full-bottle price, optional), Price, Box, Tester, Status.
+   Tester: type yes in that column to mark the partial as a tester.
    Price shown = the Price column; if that is empty it is worked out as
    ((SP - 100) / bottle size) * ml left + 125.
    Status: empty = on sale, "Hold" = Reserved, "Sold out" = sold.
@@ -2579,7 +2589,7 @@ function leParsePartialRows(csvRows){
                  size: find("bottle size", "original size"),
                  left: find("left", "remaining"),
                  sp: low.findIndex(c => c === "sp" || /^sp\b/.test(c) || c.includes("selling price") || c.includes("full-bottle") || c.includes("full bottle")),
-                 final: low.findIndex(c => c.includes("final") || c === "price"), box: find("box"), status: find("status") };
+                 final: low.findIndex(c => c.includes("final") || c === "price"), box: find("box"), tester: find("tester"), status: find("status") };
       }
       return;
     }
@@ -2596,6 +2606,7 @@ function leParsePartialRows(csvRows){
     const st = g("status").toLowerCase();
     out.push({ brand, name, ml: left, price, key: left + "ml-P",
                box: /^(y|yes|true|✓)/i.test(g("box")),
+               tester: /^(y|yes|true|✓|tester)/i.test(g("tester")),
                status: /sold/.test(st) ? "sold" : /hold|reserv/.test(st) ? "hold" : "" });
   });
   return cols ? out : null;   // null = tab missing or not in the expected format
@@ -2636,7 +2647,7 @@ function leApplySheetData(data){
        whether they can be bought, independent of the decant sizes. */
     (data.partials || []).filter(p => leSheetMatches(f, p)).forEach(p => {
       merged[p.key] = p.price;
-      f.partials[p.key] = { ml: p.ml, box: p.box };
+      f.partials[p.key] = { ml: p.ml, box: p.box, tester: !!p.tester };
       if(p.status === "sold") f.soldSizes.push(p.key);
       else if(p.status === "hold") f.heldSizes.push(p.key);
     });
