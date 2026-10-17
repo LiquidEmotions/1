@@ -1647,7 +1647,7 @@ function leUnavailableLabel(id, size, short){
   if(leIsComingSoon(id)) return short ? "Soon" : "Coming soon";
   return leIsHeld(id, size) ? "Reserved" : "Sold out";
 }
-function leComingLabel(f){ return f && f.arrival ? "Coming on " + f.arrival : "Coming soon"; }
+function leComingLabel(f){ return f && f.arrival ? "Arriving on " + f.arrival : "Coming soon"; }
 function leArrivalText(f){ return f && f.comingSoon ? (f.arrival ? "Arriving " + f.arrival : "Arriving soon") : ""; }
 function leIsSoldOut(id, size){
   const f = leFragranceById(id);
