@@ -1588,6 +1588,19 @@ const LE_WISHLIST_KEY = "le_wishlist_v1";
 const LE_RECENT_KEY   = "le_recent_v1";
 const LE_CART_VERSION_KEY = "le_cart_version";
 const LE_MAX_QTY       = 10;   // soft per-line stock cap
+
+/* Partial bottles: one-off bottles with some perfume left, sold whole. They sit in
+   f.prices under a key made of the ml left plus "-P" (e.g. "80ml-P"), so the cart,
+   checkout and the server price check treat them like any other priced size.
+   Keep leIsPartial in step with api/_pricing.js. */
+function leIsPartial(size){ return /-P$/.test(String(size || "")); }
+function leSizeLabel(size){ return leIsPartial(size) ? "Partial " + parseInt(size, 10) + "ml" : size; }
+function leMaxQtyFor(size){ return leIsPartial(size) ? 1 : LE_MAX_QTY; }
+function leIsHeld(id, size){
+  const f = leFragranceById(id);
+  return !!(f && f.heldSizes && f.heldSizes.includes(size));
+}
+function leCartHasPartial(){ return leGetCart().some(i => leIsPartial(i.size)); }
 const LE_RECENT_LIMIT  = 8;
 
 /* ============================================================
@@ -1622,7 +1635,7 @@ function leIsSoldOut(id, size){
   const f = leFragranceById(id);
   if(!f) return false;
   if(f.soldOut) return true;
-  return !!(size && f.soldSizes && f.soldSizes.includes(size));
+  return !!(size && ((f.soldSizes && f.soldSizes.includes(size)) || (f.heldSizes && f.heldSizes.includes(size))));
 }
 
 function leAddToCart(id, size, qty){
@@ -1631,9 +1644,9 @@ function leAddToCart(id, size, qty){
   const cart = leGetCart();
   const existing = cart.find(i => i.id === id && i.size === size);
   if(existing){
-    existing.qty = Math.min(existing.qty + qty, LE_MAX_QTY);
+    existing.qty = Math.min(existing.qty + qty, leMaxQtyFor(size));
   }else{
-    cart.push({ id, size, qty: Math.min(qty, LE_MAX_QTY) });
+    cart.push({ id, size, qty: Math.min(qty, leMaxQtyFor(size)) });
   }
   leSetCart(cart);
 }
@@ -1646,11 +1659,12 @@ function leUpdateQty(id, size, qty){
     leSetCart(cart.filter(i => i !== item));
     return;
   }
-  item.qty = Math.min(qty, LE_MAX_QTY);
+  item.qty = Math.min(qty, leMaxQtyFor(size));
   leSetCart(cart);
 }
 
 function leUpdateSize(id, oldSize, newSize){
+  if(leIsPartial(oldSize) !== leIsPartial(newSize)) return;   // a partial can't be swapped for a decant size
   const cart = leGetCart();
   const item = cart.find(i => i.id === id && i.size === oldSize);
   if(!item) return;
@@ -1689,6 +1703,7 @@ function leCartLines(){
     .sort((a, b) =>
       a.fragrance.house.localeCompare(b.fragrance.house) ||
       a.fragrance.name.localeCompare(b.fragrance.name) ||
+      (leIsPartial(a.size) - leIsPartial(b.size)) ||
       parseInt(a.size, 10) - parseInt(b.size, 10));
 }
 
@@ -1717,10 +1732,18 @@ function leRenderQtyControl(id, size, theme){
   const t = LE_QTY_THEMES[theme] || LE_QTY_THEMES.dark;
   const qty = leCartQtyFor(id, size);
   if(leIsSoldOut(id, size)){
-    return `<button class="le-qty-soldout" disabled style="background:transparent;border:1px solid ${t.stepBorder};color:${t.removeColor};padding:6px 14px;font-size:0.72rem;font-weight:600;border-radius:4px;cursor:not-allowed;white-space:nowrap;opacity:.8;">Sold out</button>`;
+    return `<button class="le-qty-soldout" disabled style="background:transparent;border:1px solid ${t.stepBorder};color:${t.removeColor};padding:6px 14px;font-size:0.72rem;font-weight:600;border-radius:4px;cursor:not-allowed;white-space:nowrap;opacity:.8;">${leIsHeld(id, size) ? "Reserved" : "Sold out"}</button>`;
   }
   if(qty === 0){
     return `<button class="le-qty-add" data-id="${id}" data-size="${size}" style="background:${t.addBg};border:1px solid ${t.addBorder};color:${t.addColor};padding:6px 14px;font-size:0.72rem;font-weight:600;border-radius:4px;cursor:pointer;white-space:nowrap;">Add to cart</button>`;
+  }
+  if(leIsPartial(size)){
+    /* One bottle only: no +/- , just a tick and a remove button. */
+    return `
+    <div class="le-qty-stepper" style="display:flex;align-items:center;gap:8px;">
+      <span class="le-qty-count" style="color:${t.countColor};font-size:0.8rem;font-weight:600;">✓ In cart</span>
+      <button class="le-qty-remove" data-id="${id}" data-size="${size}" aria-label="Remove from cart" style="border:none;background:none;color:${t.removeColor};cursor:pointer;font-size:0.9rem;padding:0 0 0 2px;">🗑</button>
+    </div>`;
   }
   return `
     <div class="le-qty-stepper" style="display:flex;align-items:center;gap:8px;">
@@ -2013,11 +2036,11 @@ function leRenderCartDrawer(){
         : `<div style="width:56px;height:56px;border-radius:6px;background:${line.fragrance.color};flex-shrink:0;"></div>`}
       <div style="flex:1;min-width:0;">
         <div style="font-weight:600;font-size:14px;">${line.fragrance.name}</div>
-        <div style="font-size:12px;color:#6F5A4E;">${line.size} · ${leFormatPrice(line.unitPrice)}</div>
+        <div style="font-size:12px;color:#6F5A4E;">${leSizeLabel(line.size)} · ${leFormatPrice(line.unitPrice)}</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
-          <button data-le-qty-dec data-id="${line.id}" data-size="${line.size}" style="width:28px;height:28px;border:1px solid #A48D84;background:transparent;color:#46362F;border-radius:4px;cursor:pointer;line-height:1;">−</button>
+          ${leIsPartial(line.size) ? `<span style="font-size:12px;color:#6F5A4E;">One bottle</span>` : `<button data-le-qty-dec data-id="${line.id}" data-size="${line.size}" style="width:28px;height:28px;border:1px solid #A48D84;background:transparent;color:#46362F;border-radius:4px;cursor:pointer;line-height:1;">−</button>
           <span style="min-width:16px;text-align:center;">${line.qty}</span>
-          <button data-le-qty-inc data-id="${line.id}" data-size="${line.size}" style="width:28px;height:28px;border:1px solid #A48D84;background:transparent;color:#46362F;border-radius:4px;cursor:pointer;line-height:1;">+</button>
+          <button data-le-qty-inc data-id="${line.id}" data-size="${line.size}" style="width:28px;height:28px;border:1px solid #A48D84;background:transparent;color:#46362F;border-radius:4px;cursor:pointer;line-height:1;">+</button>`}
           <button data-le-remove data-id="${line.id}" data-size="${line.size}" style="margin-left:auto;border:none;background:none;color:#c00;cursor:pointer;font-size:12px;padding:6px 0;">Remove</button>
         </div>
       </div>
@@ -2165,8 +2188,9 @@ function leOpenProductModal(id){
         ${sizeKeys.map((sz, i) => `
           <div style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 16px;${i > 0 ? "border-top:1px solid #E6CFCB;" : ""}font-size:14px;color:#46362F;">
             <span style="display:flex;gap:10px;align-items:center;">
-              <span>${sz}</span>
+              <span>${leSizeLabel(sz)}</span>
               <span style="font-weight:600;${leIsSoldOut(f.id, sz) ? "text-decoration:line-through;opacity:.55;" : ""}">${leFormatPrice(f.prices[sz])}</span>
+              ${leIsPartial(sz) ? `<span style="font-size:11px;color:#6F5A4E;">one bottle · packaging &amp; shipping included${f.partials && f.partials[sz] && f.partials[sz].box ? " · with box" : ""}</span>` : ""}
             </span>
             <span class="le-modal-qty-slot" data-size="${sz}"></span>
           </div>
@@ -2527,6 +2551,66 @@ function leCreateFromCatalogue(row, catalogue){
   return f;
 }
 
+/* ============================================================
+   Partial bottles from the sheet
+   A "Partials" tab with the headers: Brand, Perfume, Bottle size (ml),
+   ML left, SP (full-bottle price), Suggested price, Final price, Box, Status.
+   Price shown = Final price; if that is empty it is worked out as
+   ((SP - 100) / bottle size) * ml left + 125.
+   Status: empty = on sale, "Hold" = Reserved, "Sold out" = sold.
+   ============================================================ */
+const LE_PARTIALS_TAB = "Partials";
+const LE_PARTIALS_URL = "https://docs.google.com/spreadsheets/d/" + LE_SHEET_ID +
+  "/gviz/tq?tqx=out:csv&headers=1&sheet=" + encodeURIComponent(LE_PARTIALS_TAB);
+
+function leParsePartialRows(csvRows){
+  let cols = null;
+  const out = [];
+  const num = t => { const n = parseFloat(String(t || "").replace(/[₹,\s]/g, "")); return isFinite(n) ? n : 0; };
+  csvRows.forEach(r => {
+    const cells = r.map(c => (c || "").trim());
+    if(!cols){
+      const low = cells.map(c => c.toLowerCase());
+      const bi = low.findIndex(c => c === "brand");
+      const pi = low.findIndex(c => c === "perfume" || c === "perfume name");
+      const find = (...keys) => low.findIndex(c => keys.some(k => c.includes(k)));
+      if(bi > -1 && pi > -1){
+        cols = { brand: bi, name: pi,
+                 size: find("bottle size", "original size"),
+                 left: find("left", "remaining"),
+                 sp: low.findIndex(c => c === "sp" || /^sp\b/.test(c) || c.includes("selling price") || c.includes("full-bottle") || c.includes("full bottle")),
+                 final: find("final"), box: find("box"), status: find("status") };
+      }
+      return;
+    }
+    if(cols.left < 0) return;                       // not a Partials tab
+    const brand = cells[cols.brand], name = cells[cols.name];
+    if(!brand || !name) return;
+    const g = k => cols[k] > -1 ? (cells[cols[k]] || "") : "";
+    const left = Math.round(num(g("left")));
+    if(!(left > 0)) return;
+    const size = num(g("size")), sp = num(g("sp"));
+    let price = Math.round(num(g("final")));
+    if(!(price > 0) && sp > 0 && size > 0) price = Math.round(((sp - 100) / size) * left + 125);
+    if(!(price > 0)) return;
+    const st = g("status").toLowerCase();
+    out.push({ brand, name, ml: left, price, key: left + "ml-P",
+               box: /^(y|yes|true|✓)/i.test(g("box")),
+               status: /sold/.test(st) ? "sold" : /hold|reserv/.test(st) ? "hold" : "" });
+  });
+  return cols ? out : null;   // null = tab missing or not in the expected format
+}
+
+function leFetchPartials(){
+  const fallback = () => {
+    try{ const c = JSON.parse(localStorage.getItem(LE_SHEET_CACHE_KEY) || "null"); return c && c.partials ? c.partials : null; }catch(e){ return null; }
+  };
+  return fetch(LE_PARTIALS_URL, { cache: "no-store" })
+    .then(r => { if(!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+    .then(t => leParsePartialRows(leParseCsv(t)) || fallback())
+    .catch(() => fallback());
+}
+
 function leApplySheetData(data){
   const unmatched = [];
   const present = new Set();
@@ -2542,12 +2626,26 @@ function leApplySheetData(data){
     if(!f){ unmatched.push(row.brand + " — " + row.name); return; }
     present.add(f.id);
     const merged = Object.assign({}, f.prices);
+    Object.keys(merged).forEach(sz => { if(leIsPartial(sz)) delete merged[sz]; });   // partials are re-read from the sheet each time
     Object.keys(row.prices).forEach(sz => { if(ORDER.includes(sz)) merged[sz] = row.prices[sz]; });
     /* Sold out: the size stays visible (with its last known price) but can't be ordered. */
     f.soldSizes = (row.soldAll ? Object.keys(merged) : (row.soldSizes || []).filter(sz => merged[sz] !== undefined));
-    f.soldOut = !!row.soldAll || (Object.keys(merged).length > 0 && Object.keys(merged).every(sz => f.soldSizes.includes(sz)));
+    f.heldSizes = [];
+    f.partials = {};
+    /* Partial bottles for this perfume, from the "Partials" tab. Their own Status decides
+       whether they can be bought, independent of the decant sizes. */
+    (data.partials || []).filter(p => leSheetMatches(f, p)).forEach(p => {
+      merged[p.key] = p.price;
+      f.partials[p.key] = { ml: p.ml, box: p.box };
+      if(p.status === "sold") f.soldSizes.push(p.key);
+      else if(p.status === "hold") f.heldSizes.push(p.key);
+    });
+    const mergedKeys = Object.keys(merged);
+    f.soldOut = mergedKeys.length > 0
+      ? mergedKeys.every(sz => f.soldSizes.includes(sz) || f.heldSizes.includes(sz))
+      : !!row.soldAll;
     const sorted = {};
-    Object.keys(merged).sort((x, y) => parseInt(x, 10) - parseInt(y, 10)).forEach(sz => { sorted[sz] = merged[sz]; });
+    mergedKeys.sort((x, y) => (leIsPartial(x) - leIsPartial(y)) || (parseInt(x, 10) - parseInt(y, 10))).forEach(sz => { sorted[sz] = merged[sz]; });
     f.prices = sorted;
   });
   if(unmatched.length && typeof console !== "undefined"){
@@ -2569,7 +2667,7 @@ function leApplySheetData(data){
 
 function leSheetSnapshot(){
   const o = {};
-  LE_ALL_FRAGRANCES.forEach(f => { o[f.id] = JSON.stringify(f.prices) + JSON.stringify(f.soldSizes || []) + (FRAGRANCES.includes(f) ? "|shown" : "|hidden"); });
+  LE_ALL_FRAGRANCES.forEach(f => { o[f.id] = JSON.stringify(f.prices) + JSON.stringify(f.soldSizes || []) + JSON.stringify(f.heldSizes || []) + JSON.stringify(f.partials || {}) + (FRAGRANCES.includes(f) ? "|shown" : "|hidden"); });
   return o;
 }
 
@@ -2627,8 +2725,9 @@ function leSyncSheet(){
       .then(text => {
         const data = leParseSheetRows(leParseCsv(text));
         if(data.rows.length < LE_SHEET_MIN_ROWS) throw new Error("only " + data.rows.length + " usable rows (header row not found?)");
-        return leFetchCatalogue().then(catalogue => {
+        return Promise.all([leFetchCatalogue(), leFetchPartials()]).then(([catalogue, partials]) => {
           data.catalogue = catalogue;
+          data.partials = partials || [];
           const before = leSheetSnapshot();
           const result = leApplySheetData(data);
           const after = leSheetSnapshot();

@@ -307,7 +307,7 @@ function render(){
           <div class="size-table">
             ${sizes.map(s => `
               <div class="size-table-row" data-size="${s}">
-                <span class="size-table-size">${s}</span>
+                <span class="size-table-size">${leSizeLabel(s)}</span>
                 <div class="size-table-right">
                   <span class="size-table-price mono"${leIsSoldOut(f.id, s) ? ' style="color:var(--parchment-dim);font-size:0.72rem;text-transform:uppercase;letter-spacing:.04em;"' : ""}>${leIsSoldOut(f.id, s) ? "Sold out" : currency(f.prices[s])}</span>
                   <span class="le-card-qty-slot" data-size="${s}"></span>
@@ -346,7 +346,7 @@ function attachHandlers(){
 document.getElementById("addAllBtn").addEventListener("click", () => {
   const items = leWishlistItems();
   items.forEach(f => {
-    const sz = Object.keys(f.prices).find(s => !leIsSoldOut(f.id, s));
+    const sz = Object.keys(f.prices).find(s => !leIsSoldOut(f.id, s) && !leIsPartial(s));
     if(sz) leAddToCart(f.id, sz, 1);
   });
   render();

@@ -418,7 +418,8 @@ function calcTotals(){
   const count = leCartCount();
   const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
   const zone = SHIPPING_ZONES[currentZone];
-  const shipping = subtotal === 0 ? 0 : (count >= FREE_SHIP_QTY ? 0 : zone.flat);
+  const hasPartial = lines.some(l => leIsPartial(l.size));   // a partial's price already includes shipping
+  const shipping = subtotal === 0 ? 0 : ((count >= FREE_SHIP_QTY || hasPartial) ? 0 : zone.flat);
   const base = subtotal + shipping;
   const fee = currentMethod() === "card" ? Math.round(base * CARD_FEE_RATE) : 0;
   return { lines, count, subtotal, shipping, base, fee, total: base + fee, zone };
@@ -439,13 +440,13 @@ function renderSummary(){
         <div class="mini-info">
           <p class="mini-name">${line.fragrance.name}</p>
           <select class="mini-size" data-id="${line.id}" data-size="${line.size}" aria-label="Size for ${line.fragrance.name}">
-            ${Object.keys(line.fragrance.prices).map(sz => `<option value="${sz}"${sz === line.size ? " selected" : ""}>${sz} · ${currency(line.fragrance.prices[sz])}</option>`).join("")}
+            ${Object.keys(line.fragrance.prices).filter(sz => leIsPartial(line.size) ? sz === line.size : !leIsPartial(sz)).map(sz => `<option value="${sz}"${sz === line.size ? " selected" : ""}>${leSizeLabel(sz)} · ${currency(line.fragrance.prices[sz])}</option>`).join("")}
           </select>
           <div class="mini-qty" data-id="${line.id}" data-size="${line.size}">
-            <button type="button" data-act="dec" aria-label="Decrease quantity">−</button>
+            ${leIsPartial(line.size) ? "" : `<button type="button" data-act="dec" aria-label="Decrease quantity">−</button>`}
             <span class="mini-qty-n mono">${line.qty}</span>
-            <button type="button" data-act="inc" aria-label="Increase quantity">+</button>
-            <button type="button" class="mini-rm" data-act="rm" aria-label="Remove ${line.fragrance.name} ${line.size}">Remove</button>
+            ${leIsPartial(line.size) ? "" : `<button type="button" data-act="inc" aria-label="Increase quantity">+</button>`}
+            <button type="button" class="mini-rm" data-act="rm" aria-label="Remove ${line.fragrance.name} ${leSizeLabel(line.size)}">Remove</button>
           </div>
         </div>
         <div class="mini-price mono">${currency(line.lineTotal)}</div>
@@ -456,7 +457,7 @@ function renderSummary(){
   document.getElementById("miniActions").style.display = lines.length ? "flex" : "none";
   const left = FREE_SHIP_QTY - t.count;
   const nudge = document.getElementById("shipNudge");
-  nudge.textContent = t.count === 0 ? "" : (left > 0 ? `Add ${left} more for free shipping` : "✓ Free shipping unlocked");
+  nudge.textContent = t.count === 0 ? "" : (t.lines.some(l => leIsPartial(l.size)) ? "✓ Free shipping with your partial bottle" : left > 0 ? `Add ${left} more for free shipping` : "✓ Free shipping unlocked");
   nudge.classList.toggle("done", t.count > 0 && left <= 0);
 
   document.getElementById("miniCountLabel").textContent = t.count === 1 ? "1 item" : `${t.count} items`;
@@ -517,7 +518,7 @@ function buildWhatsAppMessage(id, s, pay){
     (a.house || "").localeCompare(b.house || "") ||
     a.name.localeCompare(b.name) ||
     parseInt(a.size, 10) - parseInt(b.size, 10));
-  const itemLines = sortedLines.map(l => `• ${l.name} (${l.size}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
+  const itemLines = sortedLines.map(l => `• ${l.name} (${leSizeLabel(l.size)}) x${l.qty} — ${currency(l.lineTotal)}`).join("\n");
   const rows = [
     pay.upi ? `New order: ${id} (UPI — PAYMENT NOT YET VERIFIED)` : `New order: ${id} (PAID ONLINE)`,
     ``,

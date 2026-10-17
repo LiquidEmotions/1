@@ -570,6 +570,9 @@
     color:#fff; background:#9C5644; padding:5px 11px; border-radius:100px; white-space:nowrap; margin-top:1px;
   }
   .card.sold-out .vial-slot, .card.sold-out .notes{opacity:.45; filter:grayscale(.6);}
+  .size-chip.partial{flex:0 0 100%; flex-direction:row; justify-content:center; align-items:baseline; gap:6px; border-style:dashed; border-color:var(--amber-bright); padding:8px 4px;}
+  .size-chip.partial .chip-tag{font-size:0.6rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-bright);}
+  .size-chip.partial.active .chip-tag{color:var(--ink);}
   .size-chip.sold{opacity:.5; cursor:not-allowed;}
   .size-chip.sold .chip-price{color:var(--parchment-dim); font-size:0.66rem; text-transform:uppercase; letter-spacing:.04em;}
   .le-qty-soldout{width:100%; background:transparent; border:1px solid var(--line); color:var(--parchment-dim); padding:9px 14px; font-size:0.8rem; font-weight:600; border-radius:6px; cursor:not-allowed; opacity:.8;}
@@ -1242,8 +1245,18 @@ function currency(n){
   return leFormatPrice(n);
 }
 
+function chipHTML(f, s){
+  const unavailable = leIsSoldOut(f.id, s);
+  const price = unavailable ? (leIsHeld(f.id, s) ? "Reserved" : "Sold out") : `<span class="cur">₹</span>${f.prices[s]}`;
+  if(leIsPartial(s)){
+    return `<button type="button" class="size-chip partial${unavailable ? " sold" : ""}" data-size="${s}"><span class="chip-tag">Partial</span><span class="chip-size">${parseInt(s, 10)}</span><span class="chip-unit">ml</span><span class="chip-price">${price}</span><i class="chip-dot"></i></button>`;
+  }
+  return `<button type="button" class="size-chip${unavailable ? " sold" : ""}" data-size="${s}"><span class="chip-size">${s.replace("ml","")}</span><span class="chip-unit">ml</span><span class="chip-price">${price}</span><i class="chip-dot"></i></button>`;
+}
+
 function cardHTML(f){
   const sizes = Object.keys(f.prices);
+  const decantCount = sizes.filter(s => !leIsPartial(s)).length;
   const wishlisted = leIsWishlisted(f.id);
   return `
   <div class="card${f.soldOut ? " sold-out" : ""}" data-id="${f.id}" data-house="${f.house}">
@@ -1269,8 +1282,8 @@ function cardHTML(f){
     </div>
     ${f.fragranticaUrl ? `<a class="card-fragrantica" href="${f.fragranticaUrl}" target="_blank" rel="noopener">Fragrantica ↗</a>` : ""}
     <div class="size-picker" data-selected="">
-      <div class="size-chips" role="group" aria-label="Choose size" style="--per:${sizes.length === 4 ? 2 : Math.min(sizes.length, 3)}">
-        ${sizes.map(s => `<button type="button" class="size-chip${leIsSoldOut(f.id, s) ? " sold" : ""}" data-size="${s}"><span class="chip-size">${s.replace("ml","")}</span><span class="chip-unit">ml</span><span class="chip-price">${leIsSoldOut(f.id, s) ? "Sold out" : `<span class="cur">₹</span>${f.prices[s]}`}</span><i class="chip-dot"></i></button>`).join("")}
+      <div class="size-chips" role="group" aria-label="Choose size" style="--per:${decantCount === 4 ? 2 : Math.min(decantCount, 3)}">
+        ${sizes.map(s => chipHTML(f, s)).join("")}
       </div>
       <div class="size-picker-row">
         <span class="le-card-qty-slot"></span>
@@ -1323,7 +1336,7 @@ function attachCardHandlers(container){
     function setLabel(){
       const size = picker.dataset.selected;
       const btn = slot.querySelector(".le-qty-add");
-      if(btn && size) btn.textContent = `Add ${size} · ${currency(f.prices[size])}`;
+      if(btn && size) btn.textContent = `Add ${leSizeLabel(size)} · ${currency(f.prices[size])}`;
     }
     function selectSize(size){
       picker.dataset.selected = size;
@@ -1337,7 +1350,7 @@ function attachCardHandlers(container){
       selectSize(c.dataset.size);
     }));
     /* Pre-select 10ml so "Add to cart" is ready on the first tap. */
-    const firstFree = Object.keys(f.prices).find(sz => !leIsSoldOut(f.id, sz));
+    const firstFree = Object.keys(f.prices).find(sz => !leIsSoldOut(f.id, sz) && !leIsPartial(sz)) || Object.keys(f.prices).find(sz => !leIsSoldOut(f.id, sz));
     if(f.prices["10ml"] !== undefined && !leIsSoldOut(f.id, "10ml")) selectSize("10ml");
     else if(firstFree) selectSize(firstFree);
     else if(f.soldOut) slot.innerHTML = `<button class="le-qty-soldout" disabled>Sold out</button>`;
@@ -1857,13 +1870,14 @@ function renderCartBar(){
   if(count > cartBarDismissedAt) cartBarDismissedAt = 0;
   if(cartBarDismissedAt && count <= cartBarDismissedAt){ bar.style.display = "none"; return; }
   bar.style.display = "flex";
-  const left = LE_FREE_SHIP_QTY - count;
+  const hasPartial = leCartHasPartial();
+  const left = hasPartial ? 0 : LE_FREE_SHIP_QTY - count;
   const total = leCartLines().reduce((sum, l) => sum + l.lineTotal, 0);
   document.getElementById("cartBarTitle").textContent = `🛒 ${count} in cart · ${leFormatPrice(total)}`;
   document.getElementById("cartBarNudge").textContent = left > 0
     ? `${left} more for free shipping`
     : "✓ Free shipping unlocked";
-  document.getElementById("cartBarFill").style.width = Math.min(count / LE_FREE_SHIP_QTY * 100, 100) + "%";
+  document.getElementById("cartBarFill").style.width = (hasPartial ? 100 : Math.min(count / LE_FREE_SHIP_QTY * 100, 100)) + "%";
   bar.classList.toggle("done", left <= 0);
 }
 /* The bar's markup comes after this script, so listen on the document. */

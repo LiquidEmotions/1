@@ -381,7 +381,7 @@ function render(){
       const open = addOpen.has(f.id) && others.length > 0;
       const sizeRow = (s, showEach) => `
               <div class="size-table-row" data-size="${s}">
-                <span class="size-table-size">${s}</span>
+                <span class="size-table-size">${leSizeLabel(s)}</span>
                 <div class="size-table-right">
                   <span class="size-table-price mono">${currency(f.prices[s])}${showEach ? "<small>each</small>" : ""}</span>
                   <span class="le-card-qty-slot" data-size="${s}"></span>
@@ -424,8 +424,8 @@ function render(){
     shipProgress.style.display = "none";
   }else{
     shipProgress.style.display = "block";
-    const pct = Math.min((count / FREE_SHIP_QTY) * 100, 100);
-    const unlocked = count >= FREE_SHIP_QTY;
+    const pct = leCartHasPartial() ? 100 : Math.min((count / FREE_SHIP_QTY) * 100, 100);
+    const unlocked = count >= FREE_SHIP_QTY || leCartHasPartial();
     shipProgressFill.style.width = pct + "%";
     shipProgressFill.classList.toggle("complete", unlocked);
     shipProgressLabel.classList.toggle("complete", unlocked);
@@ -436,13 +436,13 @@ function render(){
 
   const st = lines.reduce((s, l) => s + l.lineTotal, 0);
   const zone = SHIPPING_ZONES[currentZone];
-  const qualifiesFreeShip = count >= FREE_SHIP_QTY;
+  const qualifiesFreeShip = count >= FREE_SHIP_QTY || leCartHasPartial();
   const shipping = st === 0 ? 0 : (qualifiesFreeShip ? 0 : zone.flat);
 
   document.getElementById("subtotalVal").textContent = currency(st);
   document.getElementById("shippingVal").textContent = shipping === 0 ? "Free" : currency(shipping);
   document.getElementById("shipNote").textContent = qualifiesFreeShip
-    ? `Free shipping unlocked — ${FREE_SHIP_QTY}+ decants in your cart · dispatched within 48 hrs`
+    ? `${leCartHasPartial() ? "Free shipping — included with your partial bottle" : `Free shipping unlocked — ${FREE_SHIP_QTY}+ decants in your cart`} · dispatched within 48 hrs`
     : `Free shipping on orders of ${FREE_SHIP_QTY}+ decants · otherwise ${currency(zone.flat)} to ${zone.label} · dispatched within 48 hrs`;
 
   document.querySelectorAll(".zone-tab").forEach(tab => {
