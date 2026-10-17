@@ -1821,6 +1821,10 @@ sortSelect.addEventListener("change", renderBrandAccordion);
 newFilterToggle.addEventListener("click", () => {
   newFilterActive = !newFilterActive;
   newFilterToggle.classList.toggle("active", newFilterActive);
+  if(newFilterActive){            // New and Partials are mutually exclusive
+    partialFilterActive = false;
+    partialFilterToggle.classList.remove("active");
+  }
   renderBrandAccordion();
   scrollToResults();
 });
@@ -1828,6 +1832,10 @@ newFilterToggle.addEventListener("click", () => {
 partialFilterToggle.addEventListener("click", () => {
   partialFilterActive = !partialFilterActive;
   partialFilterToggle.classList.toggle("active", partialFilterActive);
+  if(partialFilterActive){        // New and Partials are mutually exclusive
+    newFilterActive = false;
+    newFilterToggle.classList.remove("active");
+  }
   renderBrandAccordion();
   scrollToResults();
 });
