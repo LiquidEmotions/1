@@ -1640,6 +1640,14 @@ function leSetCart(cart){
   leUpdateCartBadges();
 }
 
+/* Perfumes marked "Coming soon" in the sheet can't be ordered yet. They reuse the sold-out
+   blocking (cart, checkout) but are labelled Coming soon, with an optional arrival note. */
+function leIsComingSoon(id){ const f = leFragranceById(id); return !!(f && f.comingSoon); }
+function leUnavailableLabel(id, size, short){
+  if(leIsComingSoon(id)) return short ? "Soon" : "Coming soon";
+  return leIsHeld(id, size) ? "Reserved" : "Sold out";
+}
+function leArrivalText(f){ return f && f.comingSoon ? (f.arrival ? "Arriving " + f.arrival : "Arriving soon") : ""; }
 function leIsSoldOut(id, size){
   const f = leFragranceById(id);
   if(!f) return false;
@@ -1741,7 +1749,7 @@ function leRenderQtyControl(id, size, theme){
   const t = LE_QTY_THEMES[theme] || LE_QTY_THEMES.dark;
   const qty = leCartQtyFor(id, size);
   if(leIsSoldOut(id, size)){
-    return `<button class="le-qty-soldout" disabled style="background:transparent;border:1px solid ${t.stepBorder};color:${t.removeColor};padding:6px 14px;font-size:0.72rem;font-weight:600;border-radius:4px;cursor:not-allowed;white-space:nowrap;opacity:.8;">${leIsHeld(id, size) ? "Reserved" : "Sold out"}</button>`;
+    return `<button class="le-qty-soldout" disabled style="background:transparent;border:1px solid ${t.stepBorder};color:${t.removeColor};padding:6px 14px;font-size:0.72rem;font-weight:600;border-radius:4px;cursor:not-allowed;white-space:nowrap;opacity:.8;">${leUnavailableLabel(id, size)}</button>`;
   }
   if(qty === 0){
     return `<button class="le-qty-add" data-id="${id}" data-size="${size}" style="background:${t.addBg};border:1px solid ${t.addBorder};color:${t.addColor};padding:6px 14px;font-size:0.72rem;font-weight:600;border-radius:4px;cursor:pointer;white-space:nowrap;">Add to cart</button>`;
@@ -2167,7 +2175,8 @@ function leOpenProductModal(id){
         : `<div style="width:160px;height:160px;border-radius:10px;background:${f.color};border:1px solid rgba(70,54,47,0.15);flex-shrink:0;"></div>`}
       <div style="flex:1;min-width:200px;">
         <div style="font-size:12px;color:#6F5A4E;">${f.house}</div>
-        <h2 style="margin:2px 0 4px;">${f.name}${f.soldOut ? ` <span style="display:inline-block;vertical-align:middle;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:#9C5644;color:#fff;padding:3px 9px;border-radius:100px;">Sold out</span>` : ""}</h2>
+        <h2 style="margin:2px 0 4px;">${f.name}${f.soldOut ? ` <span style="display:inline-block;vertical-align:middle;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:${f.comingSoon ? "#8A6D3B" : "#9C5644"};color:#fff;padding:3px 9px;border-radius:100px;">${f.comingSoon ? "Coming soon" : "Sold out"}</span>` : ""}</h2>
+        ${f.comingSoon ? `<div style="font-size:13px;color:#8A6D3B;margin:0 0 6px;">${leArrivalText(f)}</div>` : ""}
         
         <!-- Fixed alignment gap discrepancy layout line -->
         <div style="font-size:12px;color:#9C5644;margin-bottom:6px;visibility:${f.inspiredBy ? 'visible' : 'hidden'};height:18px;line-height:18px;">
@@ -2381,9 +2390,17 @@ function leParseSheetRows(csvRows){
     const prices = {};
     const soldSizes = [];
     const isSold = (t) => /^sold\s*-?\s*out$/i.test(String(t || "").trim());
+    /* "Coming soon" (optionally followed by when, e.g. "Coming soon 25 Oct") in any cell after the
+       perfume name marks it as upcoming. "Arriving 25 Oct" and "Upcoming" work too. */
+    const soonRe = /^(coming\s*soon|arriving|upcoming)\b[\s:–—-]*(.*)$/i;
+    let comingSoon = false, arrival = "";
+    for(let c = 2; c < r.length; c++){
+      const m = soonRe.exec((r[c] || "").trim());
+      if(m){ comingSoon = true; if(m[2] && !arrival) arrival = m[2].trim(); }
+    }
     sizes.forEach(({ col, size }) => {
       const raw = (r[col] || "").trim();
-      if(isSold(raw)){ soldSizes.push(size); return; }
+      if(isSold(raw) || soonRe.test(raw)){ soldSizes.push(size); return; }
       const n = parseFloat(raw.replace(/[₹,\s]/g, ""));
       if(isFinite(n) && n > 0) prices[size] = n;
     });
@@ -2395,8 +2412,9 @@ function leParseSheetRows(csvRows){
       if(!sizeCols.includes(c) && isSold(r[c])) soldAll = true;
     }
     if(!Object.keys(prices).length && soldSizes.length) soldAll = true;
+    if(comingSoon) soldAll = true;
     if(!Object.keys(prices).length && !soldSizes.length && !soldAll) return;
-    out.push({ brand: a, name: b, prices, section, soldSizes, soldAll });
+    out.push({ brand: a, name: b, prices, section, soldSizes, soldAll, comingSoon, arrival });
   });
   return { rows: out };
 }
@@ -2642,6 +2660,8 @@ function leApplySheetData(data){
     /* Sold out: the size stays visible (with its last known price) but can't be ordered. */
     f.soldSizes = (row.soldAll ? Object.keys(merged) : (row.soldSizes || []).filter(sz => merged[sz] !== undefined));
     f.heldSizes = [];
+    f.comingSoon = !!row.comingSoon;
+    f.arrival = row.arrival || "";
     f.partials = {};
     /* Partial bottles for this perfume, from the "Partials" tab. Their own Status decides
        whether they can be bought, independent of the decant sizes. */
@@ -2655,6 +2675,7 @@ function leApplySheetData(data){
     f.soldOut = mergedKeys.length > 0
       ? mergedKeys.every(sz => f.soldSizes.includes(sz) || f.heldSizes.includes(sz))
       : !!row.soldAll;
+    if(f.comingSoon) f.soldOut = true;
     const sorted = {};
     mergedKeys.sort((x, y) => (leIsPartial(x) - leIsPartial(y)) || (parseInt(x, 10) - parseInt(y, 10))).forEach(sz => { sorted[sz] = merged[sz]; });
     f.prices = sorted;
@@ -2678,7 +2699,7 @@ function leApplySheetData(data){
 
 function leSheetSnapshot(){
   const o = {};
-  LE_ALL_FRAGRANCES.forEach(f => { o[f.id] = JSON.stringify(f.prices) + JSON.stringify(f.soldSizes || []) + JSON.stringify(f.heldSizes || []) + JSON.stringify(f.partials || {}) + (FRAGRANCES.includes(f) ? "|shown" : "|hidden"); });
+  LE_ALL_FRAGRANCES.forEach(f => { o[f.id] = JSON.stringify(f.prices) + JSON.stringify(f.soldSizes || []) + JSON.stringify(f.heldSizes || []) + JSON.stringify(f.partials || {}) + (f.comingSoon ? "|soon:" + (f.arrival || "") : "") + (FRAGRANCES.includes(f) ? "|shown" : "|hidden"); });
   return o;
 }
 

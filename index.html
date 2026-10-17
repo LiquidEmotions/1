@@ -570,6 +570,9 @@
     color:#fff; background:#9C5644; padding:5px 11px; border-radius:100px; white-space:nowrap; margin-top:1px;
   }
   .card.sold-out .vial-slot, .card.sold-out .notes{opacity:.45; filter:grayscale(.6);}
+  .card.coming-soon .vial-slot, .card.coming-soon .notes{opacity:.8; filter:none;}
+  .soldout-badge.soon{background:var(--amber-bright); color:var(--ink);}
+  .card-arrival{font-size:0.72rem; font-weight:600; color:var(--amber-bright); margin-top:4px;}
   .size-chip.partial{flex:0 0 100%; flex-direction:row; justify-content:center; align-items:baseline; gap:6px; border-style:dashed; border-color:var(--amber-bright); padding:8px 4px;}
   .size-chip.partial .chip-tag{font-size:0.6rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-bright);}
   .size-chip.partial.active .chip-tag{color:var(--ink);}
@@ -1248,7 +1251,7 @@ function currency(n){
 
 function chipHTML(f, s){
   const unavailable = leIsSoldOut(f.id, s);
-  const price = unavailable ? (leIsHeld(f.id, s) ? "Reserved" : "Sold out") : `<span class="cur">₹</span>${f.prices[s]}`;
+  const price = unavailable ? leUnavailableLabel(f.id, s, true) : `<span class="cur">₹</span>${f.prices[s]}`;
   if(leIsPartial(s)){
     return `<button type="button" class="size-chip partial${unavailable ? " sold" : ""}" data-size="${s}"><span class="chip-tag">${f.partials && f.partials[s] && f.partials[s].tester ? "Tester partial" : "Partial"}</span><span class="chip-size">${parseInt(s, 10)}</span><span class="chip-unit">ml</span><span class="chip-price">${price}</span><i class="chip-dot"></i></button>`;
   }
@@ -1260,14 +1263,15 @@ function cardHTML(f){
   const decantCount = sizes.filter(s => !leIsPartial(s)).length;
   const wishlisted = leIsWishlisted(f.id);
   return `
-  <div class="card${f.soldOut ? " sold-out" : ""}" data-id="${f.id}" data-house="${f.house}">
+  <div class="card${f.soldOut ? " sold-out" : ""}${f.comingSoon ? " coming-soon" : ""}" data-id="${f.id}" data-house="${f.house}">
     <div class="card-top">
       <div class="card-info">
         <div class="card-house">${f.house}</div>
         <h3 class="card-name">${f.name}</h3>
         <div class="card-dupe" style="visibility:${f.inspiredBy ? "visible" : "hidden"};">≈ ${f.inspiredBy || "placeholder"}</div>
+        ${f.comingSoon ? `<div class="card-arrival">${leArrivalText(f)}</div>` : ""}
       </div>
-      ${f.soldOut ? `<span class="soldout-badge">Sold out</span>` : f.isNew ? `<span class="new-badge">✨ New</span>` : ""}
+      ${f.soldOut ? `<span class="soldout-badge${f.comingSoon ? " soon" : ""}">${f.comingSoon ? "Coming soon" : "Sold out"}</span>` : f.isNew ? `<span class="new-badge">✨ New</span>` : ""}
       <button class="wish-btn${wishlisted ? " active" : ""}" aria-label="Toggle wishlist">${wishlisted ? "♥" : "♡"}</button>
     </div>
     <div class="card-body">
@@ -1354,7 +1358,7 @@ function attachCardHandlers(container){
     const firstFree = Object.keys(f.prices).find(sz => !leIsSoldOut(f.id, sz) && !leIsPartial(sz)) || Object.keys(f.prices).find(sz => !leIsSoldOut(f.id, sz));
     if(f.prices["10ml"] !== undefined && !leIsSoldOut(f.id, "10ml")) selectSize("10ml");
     else if(firstFree) selectSize(firstFree);
-    else if(f.soldOut) slot.innerHTML = `<button class="le-qty-soldout" disabled>Sold out</button>`;
+    else if(f.soldOut) slot.innerHTML = `<button class="le-qty-soldout" disabled>${f.comingSoon ? "Coming soon" : "Sold out"}</button>`;
     else slot.innerHTML = `<div class="size-hint">Select a size</div>`;
     markChips();
 
@@ -1496,7 +1500,7 @@ function renderBrandAccordion(){
     const matchesSearch = fragranceMatchesSearch(f);
     const matchesGender = activeGender === "All" || f.gender === activeGender;
     const matchesSeason = activeSeason === "All" || (f.season || []).includes(activeSeason);
-    const matchesNew = !newFilterActive || f.isNew;
+    const matchesNew = !newFilterActive || f.isNew || f.comingSoon;
     const matchesPartial = !partialFilterActive || hasAvailablePartial(f);
     return matchesSearch && matchesGender && matchesSeason && matchesNew && matchesPartial;
   });
@@ -1610,7 +1614,7 @@ function suggestPool(){
   return catItems.filter(f =>
     (activeGender === "All" || f.gender === activeGender) &&
     (activeSeason === "All" || (f.season || []).includes(activeSeason)) &&
-    (!newFilterActive || f.isNew) &&
+    (!newFilterActive || f.isNew || f.comingSoon) &&
     (!partialFilterActive || hasAvailablePartial(f))
   );
 }
