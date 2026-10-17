@@ -11,9 +11,10 @@ const vm = require("vm");
 const SHIPPING_ZONES = { ncr: 55, india: 75 };
 const FREE_SHIP_QTY = 4;
 const CARD_FEE_RATE = 0;          // Razorpay now charges its fee to the customer itself, so the order amount has no card fee
+const isPartial = (size) => /-P$/.test(String(size || ""));   // keep in step with leIsPartial in store.js
 const CACHE_MS = 60 * 1000;       // re-read the sheet at most once a minute
 
-let cache = { at: 0, prices: null, maxQty: 10 };
+let cache = { at: 0, prices: null, maxQty: 10, unavailable: {} };
 
 function readStoreJs(){
   const places = [path.join(process.cwd(), "store.js"), path.join(__dirname, "..", "store.js")];
@@ -55,7 +56,7 @@ async function loadPrices(){
   vm.runInContext(readStoreJs(), ctx, { filename: "store.js" });
   const run = (code) => vm.runInContext(code, ctx);
 
-  const urls = run("({ a: LE_SHEET_URL, b: LE_SHEET_URL_ALT, c: LE_CATALOGUE_URL, min: LE_SHEET_MIN_ROWS })");
+  const urls = run("({ a: LE_SHEET_URL, b: LE_SHEET_URL_ALT, c: LE_CATALOGUE_URL, p: LE_PARTIALS_URL, min: LE_SHEET_MIN_ROWS })");
   let data = null;
   for(const url of [urls.a, urls.b]){
     try{
@@ -69,6 +70,10 @@ async function loadPrices(){
       ctx.__csv = await getText(urls.c);
       data.catalogue = run("leParseCatalogueRows(leParseCsv(__csv))");
     }catch(e){ data.catalogue = null; }
+    try{
+      ctx.__csv = await getText(urls.p);
+      data.partials = run("leParsePartialRows(leParseCsv(__csv))") || [];
+    }catch(e){ data.partials = []; }
     ctx.__data = data;
     run("leApplySheetData(__data)");
   }
@@ -77,13 +82,15 @@ async function loadPrices(){
 
   const prices = run("Object.fromEntries(FRAGRANCES.map(f => [f.id, Object.assign({}, f.prices)]))");
   const maxQty = run("LE_MAX_QTY");
-  return { prices, maxQty };
+  /* sold or reserved sizes (partials are one-offs, so these must not be bought) */
+  const unavailable = run("Object.fromEntries(FRAGRANCES.map(f => [f.id, (f.soldSizes || []).concat(f.heldSizes || [])]))");
+  return { prices, maxQty, unavailable };
 }
 
 async function getPrices(){
   if(cache.prices && Date.now() - cache.at < CACHE_MS) return cache;
-  const { prices, maxQty } = await loadPrices();
-  cache = { at: Date.now(), prices, maxQty };
+  const { prices, maxQty, unavailable } = await loadPrices();
+  cache = { at: Date.now(), prices, maxQty, unavailable };
   return cache;
 }
 
@@ -91,25 +98,28 @@ async function getPrices(){
 async function priceOrder(items, zone, method){
   if(!Array.isArray(items) || items.length === 0 || items.length > 60) throw new Error("Your cart is empty.");
   if(!(zone in SHIPPING_ZONES)) throw new Error("Unknown delivery area.");
-  const { prices, maxQty } = await getPrices();
+  const { prices, maxQty, unavailable } = await getPrices();
 
-  let subtotal = 0, count = 0;
+  let subtotal = 0, count = 0, hasPartial = false;
   const lines = [];
   for(const it of items){
     const table = prices[it && it.id];
     const unit = table && table[it.size];
     const qty = Math.floor(Number(it && it.qty));
-    if(!unit || !(qty >= 1) || qty > maxQty){
+    const partial = isPartial(it && it.size);
+    if(!unit || !(qty >= 1) || qty > maxQty || (partial && (qty !== 1 || ((unavailable && unavailable[it.id]) || []).includes(it.size)))){
       const err = new Error("An item in your cart is no longer available. Please review your cart.");
       err.code = "stale_cart";
       throw err;
     }
     subtotal += unit * qty;
     count += qty;
+    if(partial) hasPartial = true;
     lines.push({ id: it.id, size: it.size, qty, unit });
   }
 
-  const shipping = count >= FREE_SHIP_QTY ? 0 : SHIPPING_ZONES[zone];
+  /* a partial's price already includes packaging and shipping, so any cart with one ships free */
+  const shipping = (count >= FREE_SHIP_QTY || hasPartial) ? 0 : SHIPPING_ZONES[zone];
   const base = subtotal + shipping;
   const fee = method === "card" ? Math.round(base * CARD_FEE_RATE) : 0;
   return { lines, count, subtotal, shipping, base, fee, total: base + fee };
