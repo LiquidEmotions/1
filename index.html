@@ -582,7 +582,7 @@
   .size-chip.sold .chip-price{color:var(--parchment-dim); font-size:0.66rem; text-transform:uppercase; letter-spacing:.04em;}
   .le-qty-soldout{width:100%; background:transparent; border:1px solid var(--line); color:var(--parchment-dim); padding:9px 14px; font-size:0.8rem; font-weight:600; border-radius:6px; cursor:not-allowed; opacity:.8;}
   .size-hint{width:100%; box-sizing:border-box; text-align:center; padding:12px 10px; font-size:0.92rem; font-weight:600; color:var(--parchment); background:rgba(201,140,122,0.18); border:1px solid var(--taupe); border-radius:4px;}
-  .size-picker .le-card-qty-slot .le-qty-add{padding:11px 12px !important; font-size:0.92rem !important; width:100% !important; display:block !important; text-align:center !important; white-space:nowrap;}
+  .size-picker .le-card-qty-slot .le-qty-add{padding:11px 12px !important; font-size:0.92rem !important; width:100% !important; box-sizing:border-box !important; display:block !important; text-align:center !important; white-space:normal !important; line-height:1.25; overflow-wrap:anywhere;}
   .size-picker .le-qty-stepper{justify-content:center; width:100%;}
   .size-picker-row .le-card-qty-slot{display:block;}
   .le-card-qty-slot .le-qty-add{padding:13px 24px !important; font-size:1rem !important;}
@@ -724,6 +724,7 @@
   }
   @media (max-width: 480px){
     .brand-acc-grid{grid-template-columns:repeat(2, 1fr); gap:8px; padding:8px;}
+    .size-picker .le-card-qty-slot .le-qty-add{padding:10px 6px !important; font-size:0.8rem !important;}
     .card{padding:12px 8px 8px;}
     .card-top{
       display:grid;
@@ -1344,7 +1345,13 @@ function attachCardHandlers(container){
     function setLabel(){
       const size = picker.dataset.selected;
       const btn = slot.querySelector(".le-qty-add");
-      if(btn && size) btn.textContent = `Add ${leSizeLabel(size, f.id)} · ${currency(f.prices[size])}`;
+      if(btn && size){
+        /* Short label so the price fits on narrow cards: "Add Tester 108ml · ₹6,425" */
+        const short = leIsPartial(size)
+          ? (leIsTesterPartial(f.id, size) ? "Tester " : "Partial ") + parseInt(size, 10) + "ml"
+          : leSizeLabel(size, f.id);
+        btn.textContent = `Add ${short} · ${currency(f.prices[size])}`;
+      }
     }
     function selectSize(size){
       picker.dataset.selected = size;
