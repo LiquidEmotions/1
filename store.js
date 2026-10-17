@@ -2554,8 +2554,8 @@ function leCreateFromCatalogue(row, catalogue){
 /* ============================================================
    Partial bottles from the sheet
    A "Partials" tab with the headers: Brand, Perfume, Bottle size (ml),
-   ML left, SP (full-bottle price), Suggested price, Final price, Box, Status.
-   Price shown = Final price; if that is empty it is worked out as
+   ML left, SP (full-bottle price), Price, Box, Status.
+   Price shown = the Price column; if that is empty it is worked out as
    ((SP - 100) / bottle size) * ml left + 125.
    Status: empty = on sale, "Hold" = Reserved, "Sold out" = sold.
    ============================================================ */
@@ -2579,7 +2579,7 @@ function leParsePartialRows(csvRows){
                  size: find("bottle size", "original size"),
                  left: find("left", "remaining"),
                  sp: low.findIndex(c => c === "sp" || /^sp\b/.test(c) || c.includes("selling price") || c.includes("full-bottle") || c.includes("full bottle")),
-                 final: find("final"), box: find("box"), status: find("status") };
+                 final: low.findIndex(c => c.includes("final") || c === "price"), box: find("box"), status: find("status") };
       }
       return;
     }
