@@ -572,6 +572,8 @@
   .card.sold-out .vial-slot, .card.sold-out .notes{opacity:.45; filter:grayscale(.6);}
   .card.coming-soon .vial-slot, .card.coming-soon .notes{opacity:.8; filter:none;}
   .soldout-badge.soon{background:var(--amber-bright); color:var(--ink);}
+  .soon-from{text-align:center; font-size:0.8rem; color:var(--parchment-dim); padding:4px 0 2px;}
+  .soon-from b{color:var(--parchment); font-weight:600;}
   .card-arrival{font-size:0.72rem; font-weight:600; color:var(--amber-bright); margin-top:4px;}
   .size-chip.partial{flex:0 0 100%; flex-direction:row; justify-content:center; align-items:baseline; gap:6px; border-style:dashed; border-color:var(--amber-bright); padding:8px 4px;}
   .size-chip.partial .chip-tag{font-size:0.6rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-bright);}
@@ -1269,7 +1271,6 @@ function cardHTML(f){
         <div class="card-house">${f.house}</div>
         <h3 class="card-name">${f.name}</h3>
         <div class="card-dupe" style="visibility:${f.inspiredBy ? "visible" : "hidden"};">≈ ${f.inspiredBy || "placeholder"}</div>
-        ${f.comingSoon ? `<div class="card-arrival">${leArrivalText(f)}</div>` : ""}
       </div>
       ${f.soldOut ? `<span class="soldout-badge${f.comingSoon ? " soon" : ""}">${f.comingSoon ? "Coming soon" : "Sold out"}</span>` : f.isNew ? `<span class="new-badge">✨ New</span>` : ""}
       <button class="wish-btn${wishlisted ? " active" : ""}" aria-label="Toggle wishlist">${wishlisted ? "♥" : "♡"}</button>
@@ -1287,9 +1288,11 @@ function cardHTML(f){
     </div>
     ${f.fragranticaUrl ? `<a class="card-fragrantica" href="${f.fragranticaUrl}" target="_blank" rel="noopener">Fragrantica ↗</a>` : ""}
     <div class="size-picker" data-selected="">
-      <div class="size-chips" role="group" aria-label="Choose size" style="--per:${decantCount === 4 ? 2 : Math.min(decantCount, 3)}">
+      ${f.comingSoon
+        ? ``
+        : `<div class="size-chips" role="group" aria-label="Choose size" style="--per:${decantCount === 4 ? 2 : Math.min(decantCount, 3)}">
         ${sizes.map(s => chipHTML(f, s)).join("")}
-      </div>
+      </div>`}
       <div class="size-picker-row">
         <span class="le-card-qty-slot"></span>
       </div>
@@ -1358,7 +1361,7 @@ function attachCardHandlers(container){
     const firstFree = Object.keys(f.prices).find(sz => !leIsSoldOut(f.id, sz) && !leIsPartial(sz)) || Object.keys(f.prices).find(sz => !leIsSoldOut(f.id, sz));
     if(f.prices["10ml"] !== undefined && !leIsSoldOut(f.id, "10ml")) selectSize("10ml");
     else if(firstFree) selectSize(firstFree);
-    else if(f.soldOut) slot.innerHTML = `<button class="le-qty-soldout" disabled>${f.comingSoon ? "Coming soon" : "Sold out"}</button>`;
+    else if(f.soldOut) slot.innerHTML = `<button class="le-qty-soldout" disabled>${f.comingSoon ? leComingLabel(f) : "Sold out"}</button>`;
     else slot.innerHTML = `<div class="size-hint">Select a size</div>`;
     markChips();
 

@@ -1647,6 +1647,7 @@ function leUnavailableLabel(id, size, short){
   if(leIsComingSoon(id)) return short ? "Soon" : "Coming soon";
   return leIsHeld(id, size) ? "Reserved" : "Sold out";
 }
+function leComingLabel(f){ return f && f.arrival ? "Coming on " + f.arrival : "Coming soon"; }
 function leArrivalText(f){ return f && f.comingSoon ? (f.arrival ? "Arriving " + f.arrival : "Arriving soon") : ""; }
 function leIsSoldOut(id, size){
   const f = leFragranceById(id);
@@ -1746,6 +1747,7 @@ const LE_QTY_THEMES = {
 };
 
 function leRenderQtyControl(id, size, theme){
+  if(leIsComingSoon(id)) return "";   // coming soon: one clear message instead of a button on every size
   const t = LE_QTY_THEMES[theme] || LE_QTY_THEMES.dark;
   const qty = leCartQtyFor(id, size);
   if(leIsSoldOut(id, size)){
@@ -2176,7 +2178,6 @@ function leOpenProductModal(id){
       <div style="flex:1;min-width:200px;">
         <div style="font-size:12px;color:#6F5A4E;">${f.house}</div>
         <h2 style="margin:2px 0 4px;">${f.name}${f.soldOut ? ` <span style="display:inline-block;vertical-align:middle;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:${f.comingSoon ? "#8A6D3B" : "#9C5644"};color:#fff;padding:3px 9px;border-radius:100px;">${f.comingSoon ? "Coming soon" : "Sold out"}</span>` : ""}</h2>
-        ${f.comingSoon ? `<div style="font-size:13px;color:#8A6D3B;margin:0 0 6px;">${leArrivalText(f)}</div>` : ""}
         
         <!-- Fixed alignment gap discrepancy layout line -->
         <div style="font-size:12px;color:#9C5644;margin-bottom:6px;visibility:${f.inspiredBy ? 'visible' : 'hidden'};height:18px;line-height:18px;">
@@ -2201,19 +2202,19 @@ function leOpenProductModal(id){
     </div>
 
     <div style="margin-top:20px;">
-      <div style="font-weight:600;font-size:13px;margin-bottom:8px;">Sizes &amp; prices</div>
+      ${f.comingSoon ? `<div style="padding:14px 16px;border:1px solid #E6CFCB;border-radius:8px;font-size:14px;color:#46362F;background:#FAF6F2;"><b>${leComingLabel(f)}</b><div style="font-size:12px;color:#6F5A4E;margin-top:4px;">Sizes and prices will be shown on arrival.</div></div>` : `<div style="font-weight:600;font-size:13px;margin-bottom:8px;">Sizes &amp; prices</div>
       <div style="border:1px solid #E6CFCB;border-radius:8px;overflow:hidden;">
         ${sizeKeys.map((sz, i) => `
           <div style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 16px;${i > 0 ? "border-top:1px solid #E6CFCB;" : ""}font-size:14px;color:#46362F;">
             <span style="display:flex;gap:10px;align-items:center;">
               <span>${leSizeLabel(sz, f.id)}</span>
-              <span style="font-weight:600;${leIsSoldOut(f.id, sz) ? "text-decoration:line-through;opacity:.55;" : ""}">${leFormatPrice(f.prices[sz])}</span>
+              <span style="font-weight:600;${leIsSoldOut(f.id, sz) && !f.comingSoon ? "text-decoration:line-through;opacity:.55;" : ""}">${leFormatPrice(f.prices[sz])}</span>
               ${leIsPartial(sz) ? `<span style="font-size:11px;color:#6F5A4E;">${f.partials && f.partials[sz] && f.partials[sz].tester ? `<span style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1px solid #A48D84;border-radius:4px;padding:1px 5px;">Tester</span> ` : ""}one bottle · packaging &amp; shipping included${f.partials && f.partials[sz] && f.partials[sz].box ? " · with box" : ""}</span>` : ""}
             </span>
             <span class="le-modal-qty-slot" data-size="${sz}"></span>
           </div>
         `).join("")}
-      </div>
+      </div>`}
     </div>
 
     ${related.length ? `
