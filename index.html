@@ -458,8 +458,8 @@
   }
   .pill-tab:hover:not(.active){border-color:var(--amber-bright); color:var(--parchment);}
   .new-filter-toggle{align-self:center; white-space:nowrap;}
-  .sort-new-row{display:flex; gap:12px; align-items:stretch;}
-  .sort-new-row .sort-select{flex:1; min-width:0;}
+  .sort-new-row{display:flex; gap:8px; align-items:stretch; flex-wrap:wrap;}
+  .sort-new-row .sort-select{flex:1 1 140px; min-width:0;}
   @media (max-width:620px){
     .sort-new-row{width:100%;}
   }
@@ -1105,6 +1105,7 @@
       </div>
       <div class="sort-new-row">
         <button class="pill-tab new-filter-toggle" id="newFilterToggle" type="button">✨ New</button>
+        <button class="pill-tab new-filter-toggle" id="partialFilterToggle" type="button">◐ Partials</button>
         <select class="sort-select" id="sortSelect">
           <option value="default">Sort: A to Z</option>
           <option value="price-asc">Price: Low to High</option>
@@ -1470,6 +1471,12 @@ const SORTERS = {
 
 const newFilterToggle = document.getElementById("newFilterToggle");
 let newFilterActive = false;
+const partialFilterToggle = document.getElementById("partialFilterToggle");
+let partialFilterActive = false;
+/* A perfume has a partial bottle you can still buy (not sold out or reserved). */
+function hasAvailablePartial(f){
+  return Object.keys(f.prices || {}).some(sz => leIsPartial(sz) && !leIsSoldOut(f.id, sz));
+}
 
 /* ---------- Brand accordion: every brand is its own collapsible row ---------- */
 const openBrands = new Set();
@@ -1490,7 +1497,8 @@ function renderBrandAccordion(){
     const matchesGender = activeGender === "All" || f.gender === activeGender;
     const matchesSeason = activeSeason === "All" || (f.season || []).includes(activeSeason);
     const matchesNew = !newFilterActive || f.isNew;
-    return matchesSearch && matchesGender && matchesSeason && matchesNew;
+    const matchesPartial = !partialFilterActive || hasAvailablePartial(f);
+    return matchesSearch && matchesGender && matchesSeason && matchesNew && matchesPartial;
   });
 
   const houses = [...new Set(filtered.map(f => f.house))].sort((a, b) => a.localeCompare(b));
@@ -1498,7 +1506,7 @@ function renderBrandAccordion(){
 
   /* Auto-expand every matching brand whenever a filter or search is active. */
   const filtersOn = activeCategory !== "All" || activeGender !== "All" ||
-    activeSeason !== "All" || newFilterActive || !!searchTerm || !!pinnedId;
+    activeSeason !== "All" || newFilterActive || partialFilterActive || !!searchTerm || !!pinnedId;
   const autoOpen = filtersOn;
 
   updateResetBtn();
@@ -1602,7 +1610,8 @@ function suggestPool(){
   return catItems.filter(f =>
     (activeGender === "All" || f.gender === activeGender) &&
     (activeSeason === "All" || (f.season || []).includes(activeSeason)) &&
-    (!newFilterActive || f.isNew)
+    (!newFilterActive || f.isNew) &&
+    (!partialFilterActive || hasAvailablePartial(f))
   );
 }
 
@@ -1802,12 +1811,19 @@ newFilterToggle.addEventListener("click", () => {
   scrollToResults();
 });
 
+partialFilterToggle.addEventListener("click", () => {
+  partialFilterActive = !partialFilterActive;
+  partialFilterToggle.classList.toggle("active", partialFilterActive);
+  renderBrandAccordion();
+  scrollToResults();
+});
+
 /* ---------- Reset: back to the full catalogue ---------- */
 function updateResetBtn(){
   const btn = document.getElementById("resetFiltersBtn");
   if(!btn) return;
   const anyActive = activeCategory !== "All" || activeGender !== "All" || activeSeason !== "All" ||
-    newFilterActive || !!searchTerm || !!pinnedId || sortSelect.value !== "default";
+    newFilterActive || partialFilterActive || !!searchTerm || !!pinnedId || sortSelect.value !== "default";
   btn.hidden = !anyActive;
 }
 
@@ -1817,6 +1833,8 @@ document.getElementById("resetFiltersBtn").addEventListener("click", () => {
   activeSeason = "All";
   newFilterActive = false;
   newFilterToggle.classList.remove("active");
+  partialFilterActive = false;
+  partialFilterToggle.classList.remove("active");
   searchInput.value = "";
   searchTerm = "";
   pinnedId = null;
