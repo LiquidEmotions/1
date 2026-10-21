@@ -275,7 +275,7 @@
             <label class="pay-option">
               <input type="radio" name="payMethod" value="card">
               <span class="pay-text">
-                <span class="pay-title">Credit or debit card</span>
+                <span class="pay-title">Credit or debit card, EMI</span>
                 <span class="pay-sub">Razorpay adds a small payment fee at the payment step.</span>
               </span>
               <span class="pay-tag">+ gateway fee</span>
@@ -816,7 +816,7 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
     description: "Perfume decants",
     prefill: { name: snap.customer.name, email: snap.customer.email, contact: snap.customer.phone },
     theme: { color: "#9C5644" },
-    method: { card: true, netbanking: false, upi: false, wallet: false, emi: false, paylater: false },
+    method: { card: true, netbanking: false, upi: false, wallet: false, emi: true, paylater: false },
     modal: { ondismiss: () => { if(!confirming) setBusy(false); } },
     handler: (resp) => onPaid(resp, snap)
   });
