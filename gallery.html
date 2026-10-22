@@ -185,6 +185,38 @@
   .btn:hover{background:var(--ink-deep); border-color:var(--ink-deep);}
   .form-note{font-size:0.78rem; color:var(--parchment-dim); margin:10px 0 0;}
   .form-err{font-size:0.82rem; color:#9B2C2C; min-height:1.2em; margin:0 0 10px;}
+  .form-ok{font-size:0.9rem; color:#3F6B3A; margin:12px 0 0; display:none;}
+  .btn[disabled]{opacity:.6; cursor:default;}
+  .btn-ghost{
+    align-self:flex-start; font-size:0.85rem; padding:10px 16px; border-radius:var(--radius);
+    background:transparent; color:var(--parchment); border:1px dashed var(--parchment-dim);
+  }
+  .btn-ghost:hover{border-color:var(--amber-bright); color:var(--amber-bright);}
+  .btn-ghost[disabled]{opacity:.5;}
+  .rv-thumbs{display:flex; gap:10px; flex-wrap:wrap;}
+  .rv-thumbs:empty{display:none;}
+  .rv-thumb{position:relative; width:78px; height:78px;}
+  .rv-thumb img{width:100%; height:100%; object-fit:cover; border-radius:var(--radius); border:1px solid var(--line);}
+  .rv-thumb button{
+    position:absolute; top:-7px; right:-7px; width:24px; height:24px; border-radius:50%;
+    border:none; background:var(--ink-deep); color:#fff; font-size:15px; line-height:1; padding:0;
+  }
+
+  /* ---------- Customer review cards ---------- */
+  .rv-cards{display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:16px; margin-bottom:28px; align-items:start;}
+  .rv-card{padding:16px; border:1px solid var(--line); border-radius:var(--radius); background:rgba(255,255,255,0.6);}
+  .rv-stars{color:var(--amber-bright); letter-spacing:2px; font-size:1rem;}
+  .rv-stars .off{color:rgba(164,141,132,0.45);}
+  .rv-text{margin:8px 0 12px; font-size:0.95rem; white-space:pre-line; overflow-wrap:anywhere;}
+  .rv-meta{font-size:0.82rem; color:var(--parchment-dim);}
+  .rv-meta strong{color:var(--parchment); font-weight:600;}
+  .rv-photos{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+  .rv-photo{
+    width:78px; height:78px; padding:0; overflow:hidden; background:var(--blush);
+    border:1px solid var(--line); border-radius:var(--radius);
+  }
+  .rv-photo:hover{border-color:var(--amber-bright);}
+  .rv-photo img{width:100%; height:100%; object-fit:cover; display:block;}
 
   
 /* ---------- Footer ---------- */
@@ -313,11 +345,12 @@
     <div class="wrap">
       <div class="block-head"><h2>Customer reviews</h2></div>
       <p class="hint">Messages our customers sent us about their decants.</p>
+      <div class="rv-cards" id="reviewCards" aria-live="polite"></div>
       <div class="grid" id="reviewGrid" aria-live="polite"></div>
 
       <div class="write" id="writeReview">
         <h3>Write a review</h3>
-        <p>Tried one of our decants? Tell us about it. Your review opens in WhatsApp.</p>
+        <p id="writeIntro">Tried one of our decants? Tell us about it. Your review opens in WhatsApp.</p>
         <div class="form-err" id="formErr" role="alert"></div>
         <div class="row2">
           <div class="field">
@@ -342,7 +375,15 @@
           <label for="rvText">Your review</label>
           <textarea id="rvText" maxlength="600"></textarea>
         </div>
+        <div class="field" id="rvPhotoField">
+          <span class="lbl">Photos (optional, up to 3)</span>
+          <input id="rvPhotoInput" type="file" accept="image/*" multiple hidden>
+          <button class="btn-ghost" id="rvPhotoBtn" type="button">+ Add photos</button>
+          <div class="rv-thumbs" id="rvThumbs"></div>
+        </div>
+        <input id="rvWebsite" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
         <button class="btn" id="sendReview" type="button">Send review on WhatsApp</button>
+        <p class="form-ok" id="formOk" role="status"></p>
       </div>
     </div>
   </section>
@@ -414,6 +455,10 @@
 const PHOTO_FOLDER  = "image";
 const REVIEW_FOLDER = "reviews";
 const WHATSAPP_NUMBER = "917982410620";
+/* Customer reviews + photos: paste the web app URL from reviews-backend.gs here.
+   While it is empty, reviews still open in WhatsApp as before and the photo option is hidden. */
+const REVIEWS_API_URL = "https://script.google.com/macros/s/AKfycby4W1SPWGbOBP00EepOxyIkabw8G0m0E1lPYjXuDYqjLp27KHd9eTrtWlB_lRCbHVopuQ/exec";
+const MAX_REVIEW_PHOTOS = 3;
 const EXTS = ["jpg", "jpeg", "png", "webp"];
 
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -497,8 +542,9 @@ async function fillWall(gridEl, folder, label, emptyText, newestFirst){
   let srcs = await discover(folder);
   if(newestFirst) srcs = srcs.reverse();
   if(!srcs.length){
-    gridEl.innerHTML = `<div class="empty">${emptyText}</div>`;
-    return;
+    if(emptyText === null){ gridEl.style.display = "none"; }
+    else { gridEl.innerHTML = `<div class="empty">${emptyText}</div>`; }
+    return 0;
   }
   gridEl.style.columnCount = "";
   const list = srcs.map((src, i) => ({ src, alt: `${label} ${i + 1}` }));
@@ -510,13 +556,59 @@ async function fillWall(gridEl, folder, label, emptyText, newestFirst){
     const t = e.target.closest(".tile");
     if(t) openLightbox(list, parseInt(t.dataset.i, 10));
   });
+  return list.length;
 }
 fillWall(document.getElementById("galleryGrid"), PHOTO_FOLDER, "photo",
          "Photos are on the way. Check back soon.", false);
-fillWall(document.getElementById("reviewGrid"), REVIEW_FOLDER, "review",
-         "No reviews yet. Be the first to write one below.", true);
 
-/* ----- Review form → WhatsApp ----- */
+/* ----- Customer reviews (text + photos) from the site backend ----- */
+const photoUrl = (id, w) => `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w${w}`;
+const cardsEl = document.getElementById("reviewCards");
+let customerReviews = [];
+
+async function loadCustomerReviews(){
+  if(!REVIEWS_API_URL) return 0;
+  try {
+    const res = await fetch(REVIEWS_API_URL, { cache: "no-store" });
+    const data = await res.json();
+    customerReviews = (data && data.reviews) || [];
+  } catch(e){ return 0; }
+  if(!customerReviews.length) return 0;
+  cardsEl.innerHTML = customerReviews.map((r, ri) => {
+    const n = Math.max(1, Math.min(5, parseInt(r.rating, 10) || 5));
+    const photos = (r.photos || []).map((id, pi) => `
+      <button type="button" class="rv-photo" data-r="${ri}" data-p="${pi}" aria-label="Open photo ${pi + 1} from ${esc(r.name)}">
+        <img src="${photoUrl(id, 300)}" alt="" loading="lazy">
+      </button>`).join("");
+    return `
+    <article class="rv-card">
+      <div class="rv-stars" role="img" aria-label="${n} out of 5 stars">${"★".repeat(n)}<span class="off">${"★".repeat(5 - n)}</span></div>
+      <p class="rv-text">${esc(r.text)}</p>
+      <div class="rv-meta"><strong>${esc(r.name)}</strong>${r.city ? ", " + esc(r.city) : ""}${r.perfume ? " · " + esc(r.perfume) : ""}</div>
+      ${photos ? `<div class="rv-photos">${photos}</div>` : ""}
+    </article>`;
+  }).join("");
+  return customerReviews.length;
+}
+cardsEl.addEventListener("click", (e) => {
+  const b = e.target.closest(".rv-photo");
+  if(!b) return;
+  const r = customerReviews[parseInt(b.dataset.r, 10)];
+  if(!r) return;
+  openLightbox(r.photos.map(id => ({ src: photoUrl(id, 1600), alt: "Photo from " + r.name })), parseInt(b.dataset.p, 10));
+});
+
+Promise.all([
+  loadCustomerReviews(),
+  fillWall(document.getElementById("reviewGrid"), REVIEW_FOLDER, "review", null, true)
+]).then(([cards, shots]) => {
+  if(!cards && !shots){
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = '<div class="empty">No reviews yet. Be the first to write one below.</div>';
+  }
+});
+
+/* ----- Review form ----- */
 let chosenRating = 0;
 const starInput = document.getElementById("starInput");
 starInput.innerHTML = [1,2,3,4,5].map(n =>
@@ -537,22 +629,118 @@ if(typeof FRAGRANCES !== "undefined"){
     FRAGRANCES.map(f => `<option value="${esc(f.name)}">${esc(f.house)}</option>`).join("");
 }
 
-document.getElementById("sendReview").addEventListener("click", () => {
+/* ----- Review photos: pick, shrink on the phone, preview ----- */
+let rvPhotos = [];   // { data: base64 jpeg (no prefix), preview: data URL }
+const rvPhotoInput = document.getElementById("rvPhotoInput");
+const rvPhotoBtn = document.getElementById("rvPhotoBtn");
+const rvThumbs = document.getElementById("rvThumbs");
+const sendBtn = document.getElementById("sendReview");
+if(REVIEWS_API_URL){
+  document.getElementById("writeIntro").textContent =
+    "Tried one of our decants? Tell us about it. Your review will appear here once we approve it.";
+  sendBtn.textContent = "Submit review";
+} else {
+  document.getElementById("rvPhotoField").style.display = "none";
+}
+
+function shrinkImage(file){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = () => {
+      const MAXD = 1280;
+      const k = Math.min(1, MAXD / Math.max(im.naturalWidth, im.naturalHeight));
+      const c = document.createElement("canvas");
+      c.width = Math.round(im.naturalWidth * k);
+      c.height = Math.round(im.naturalHeight * k);
+      c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      const preview = c.toDataURL("image/jpeg", 0.8);
+      resolve({ preview, data: preview.split(",")[1] });
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); reject(new Error("unreadable")); };
+    im.src = url;
+  });
+}
+function renderThumbs(){
+  rvThumbs.innerHTML = rvPhotos.map((p, i) => `
+    <div class="rv-thumb">
+      <img src="${p.preview}" alt="Photo ${i + 1} to upload">
+      <button type="button" data-i="${i}" aria-label="Remove photo ${i + 1}">×</button>
+    </div>`).join("");
+  rvPhotoBtn.disabled = rvPhotos.length >= MAX_REVIEW_PHOTOS;
+}
+rvPhotoBtn.addEventListener("click", () => rvPhotoInput.click());
+rvPhotoInput.addEventListener("change", async () => {
+  const err = document.getElementById("formErr");
+  const files = Array.from(rvPhotoInput.files || []);
+  rvPhotoInput.value = "";
+  err.textContent = "";
+  for(const f of files){
+    if(rvPhotos.length >= MAX_REVIEW_PHOTOS){ err.textContent = "You can add up to " + MAX_REVIEW_PHOTOS + " photos."; break; }
+    if(!f.type.startsWith("image/")){ err.textContent = "Only image files can be added."; continue; }
+    try { rvPhotos.push(await shrinkImage(f)); }
+    catch(e){ err.textContent = "One photo couldn't be read. Try a JPG or PNG."; }
+  }
+  renderThumbs();
+});
+rvThumbs.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if(!b) return;
+  rvPhotos.splice(parseInt(b.dataset.i, 10), 1);
+  renderThumbs();
+});
+
+sendBtn.addEventListener("click", async () => {
   const name = document.getElementById("rvName").value.trim();
   const city = document.getElementById("rvCity").value.trim();
   const perfume = document.getElementById("rvPerfume").value.trim();
   const text = document.getElementById("rvText").value.trim();
   const err = document.getElementById("formErr");
+  const ok = document.getElementById("formOk");
+  ok.style.display = "none";
   if(!name){ err.textContent = "Add your name."; document.getElementById("rvName").focus(); return; }
   if(!chosenRating){ err.textContent = "Pick a star rating."; return; }
   if(!text){ err.textContent = "Write a few words about your experience."; document.getElementById("rvText").focus(); return; }
   err.textContent = "";
-  const msg =
+
+  /* Backend not set up yet: keep the old behaviour and open WhatsApp */
+  if(!REVIEWS_API_URL){
+    const msg =
 `Review for Liquid Emotions
 Name: ${name}${city ? "\nCity: " + city : ""}${perfume ? "\nPerfume: " + perfume : ""}
 Rating: ${chosenRating}/5
 Review: ${text}`;
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
+    return;
+  }
+
+  const idle = sendBtn.textContent;
+  sendBtn.disabled = true;
+  sendBtn.textContent = rvPhotos.length ? "Uploading photos…" : "Sending…";
+  try {
+    const res = await fetch(REVIEWS_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },   // avoids a CORS preflight
+      body: JSON.stringify({
+        name, city, perfume, text, rating: chosenRating,
+        website: document.getElementById("rvWebsite").value,      // spam trap, must stay empty
+        photos: rvPhotos.map(p => ({ type: "image/jpeg", data: p.data }))
+      })
+    });
+    const out = await res.json();
+    if(!out.ok) throw new Error(out.error || "failed");
+    ["rvName","rvCity","rvPerfume","rvText"].forEach(id => document.getElementById(id).value = "");
+    chosenRating = 0;
+    starInput.querySelectorAll("button").forEach(x => { x.classList.remove("on"); x.setAttribute("aria-pressed", "false"); });
+    rvPhotos = []; renderThumbs();
+    ok.textContent = "Thank you! Your review has been received and will appear here once we approve it.";
+    ok.style.display = "block";
+  } catch(e){
+    err.textContent = "Couldn't send your review just now. Please try again in a moment.";
+  }
+  sendBtn.disabled = false;
+  sendBtn.textContent = idle;
 });
 </script>
 
