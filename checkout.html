@@ -322,23 +322,15 @@
 
 <div class="upi-panel" id="upiPanel">
   <h1>Pay by UPI</h1>
-  <p class="upi-sub">Your order is saved. Tap your UPI app below and pay the exact amount shown. Add your order number in the note.</p>
+  <p class="upi-sub">Your order is saved. Pay by scanning the QR below, or copy the UPI ID and amount into any UPI app. Add your order number in the note.</p>
   <div class="upi-amount mono" id="upiAmount"></div>
   <div class="upi-order mono" id="upiOrder"></div>
   <div class="upi-warn" id="upiInAppWarn" style="display:none;">This page is open inside another app's browser (Instagram, Facebook etc.), which blocks UPI apps. Tap ⋮ or ⋯ and choose "Open in Chrome" or "Open in Safari", or pay using the QR or UPI ID below.</div>
-  <div class="upi-apps">
-    <div class="upi-app-grid">
-      <a class="upi-app" id="upiGpay" href="#">Google Pay</a>
-      <a class="upi-app" id="upiPhonepe" href="#">PhonePe</a>
-      <a class="upi-app" id="upiPaytm" href="#">Paytm</a>
-    </div>
-    <a class="btn-primary" id="upiAppBtn" href="#" style="margin-top:0;">Other UPI app</a>
-    <p class="upi-sub">Tap your app. The amount is filled in and can be edited. It is also copied, so if your app leaves it blank, just paste it. If nothing opens, use "Other UPI app" or the QR below.</p>
-    <div class="upi-warn" id="upiNoOpenHint" style="display:none;">No UPI app opened? Copy the UPI ID and amount below, paste them into any UPI app, and put the order number in the note. Or scan the QR from another phone.</div>
-  </div>
   <div class="upi-qr-wrap">
     <div class="upi-qr-box"><div id="upiQr"></div></div>
     <p class="upi-sub" style="margin:10px 0 0;">Scan with any UPI app. The amount is filled in; check it matches the amount above.</p>
+    <p class="upi-sub" style="margin:8px 0 0;">Paying from this phone? Tap Save QR, then in GPay or PhonePe choose scan from gallery or photos.</p>
+    <button type="button" class="btn-primary" id="upiSaveQrBtn" style="max-width:260px; margin:12px auto 0;">Save QR</button>
   </div>
   <div class="upi-id-row">
     <span>UPI ID: <b class="mono" id="upiIdText"></b></span>
@@ -347,6 +339,17 @@
   <div class="upi-id-row">
     <span>Amount: <b class="mono" id="upiAmtText"></b></span>
     <button type="button" id="upiCopyAmtBtn">Copy</button>
+  </div>
+  <div class="upi-apps" style="margin-top:22px;">
+    <p class="upi-sub" style="margin:0 0 10px;">Or try opening your UPI app directly.</p>
+    <div class="upi-app-grid">
+      <a class="upi-app" id="upiGpay" href="#">Google Pay</a>
+      <a class="upi-app" id="upiPhonepe" href="#">PhonePe</a>
+      <a class="upi-app" id="upiPaytm" href="#">Paytm</a>
+    </div>
+    <a class="btn-primary" id="upiAppBtn" href="#" style="margin-top:0;">Other UPI app</a>
+    <p class="upi-sub">Some apps block payments started from a website ("risk policy"). If yours does, use the QR or the copy buttons above.</p>
+    <div class="upi-warn" id="upiNoOpenHint" style="display:none;">No UPI app opened? Copy the UPI ID and amount above, paste them into any UPI app, and put the order number in the note. Or scan the QR from another phone.</div>
   </div>
   <div class="upi-step">
     <h2>After you've paid</h2>
@@ -793,6 +796,33 @@ document.getElementById("upiCopyAmtBtn").addEventListener("click", async (e) => 
   setTimeout(() => { e.target.textContent = "Copy"; }, 1800);
 });
 document.getElementById("upiBackBtn").addEventListener("click", hideUpiPanel);
+/* Save the QR as an image (white border added so it scans), via the phone's share sheet when available. */
+document.getElementById("upiSaveQrBtn").addEventListener("click", async (e) => {
+  const btn = e.currentTarget;
+  const src = document.querySelector("#upiQr canvas") || document.querySelector("#upiQr img");
+  if(!src) return;
+  const size = 600, pad = 40;
+  const c = document.createElement("canvas");
+  c.width = c.height = size + pad * 2;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(src, pad, pad, size, size);
+  const blob = await new Promise(r => c.toBlob(r, "image/png"));
+  if(!blob) return;
+  const name = "liquid-emotions-upi-" + (upiOrder ? upiOrder.id : "qr") + ".png";
+  const file = new File([blob], name, { type: "image/png" });
+  if(navigator.canShare && navigator.canShare({ files: [file] })){
+    try{ await navigator.share({ files: [file] }); return; }
+    catch(err){ if(err && err.name === "AbortError") return; }
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  btn.textContent = "Saved";
+  setTimeout(() => { btn.textContent = "Save QR"; }, 1800);
+});
 document.getElementById("upiCopyBtn").addEventListener("click", async (e) => {
   try{ await navigator.clipboard.writeText(UPI_ID); e.target.textContent = "Copied"; }
   catch(err){ e.target.textContent = UPI_ID; }
