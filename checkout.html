@@ -322,7 +322,7 @@
 
 <div class="upi-panel" id="upiPanel">
   <h1>Pay by UPI</h1>
-  <p class="upi-sub">Pay the exact amount below, then tap the button at the bottom to send your order on WhatsApp.</p>
+  <p class="upi-sub">Your order is saved. Pay the exact amount below and we dispatch as soon as the payment shows in our account.</p>
   <div class="upi-amount mono" id="upiAmount"></div>
   <div class="upi-order mono" id="upiOrder"></div>
   <div class="upi-warn" id="upiInAppWarn" style="display:none;">This page is open inside another app's browser (Instagram, Facebook etc.), which blocks UPI apps. Tap ⋮ or ⋯ and choose "Open in Chrome" or "Open in Safari", or pay using the QR or UPI ID below.</div>
@@ -350,8 +350,8 @@
   </div>
   <div class="upi-step">
     <h2>After you've paid</h2>
-    <p>Tap the button once your payment is done. Your order opens in WhatsApp, ready to send. We dispatch only after the payment shows in our account.</p>
-    <button type="button" class="btn-primary" id="upiDoneBtn">I've paid — send order on WhatsApp</button>
+    <p>Your order is already with us, so there's nothing else you must do. If you like, send the details on WhatsApp too; it helps us match your payment faster.</p>
+    <button type="button" class="btn-primary" id="upiDoneBtn">Send order on WhatsApp (optional)</button>
   </div>
   <button type="button" class="upi-back" id="upiBackBtn">← Back to checkout</button>
 </div>
@@ -496,6 +496,44 @@ const UPI_NAME = "Liquid Emotions";
 const UPI_KEY = "le_pending_upi";
 const PENDING_KEY = "le_pending_payment";
 
+/* ---------- Save every order to the Orders sheet (Apps Script web app) ---------- */
+const ORDERS_API_URL = "https://script.google.com/macros/s/AKfycbzaK9CqhCTMso6s2KR8L3VzzTjEWLEUvnaT3wLito0_-4jDl_qN4Tx9pmadaJZCOmoV/exec";
+
+function orderItemsText(s){
+  return s.lines.slice().sort((a, b) =>
+    (a.house || "").localeCompare(b.house || "") ||
+    a.name.localeCompare(b.name) ||
+    parseInt(a.size, 10) - parseInt(b.size, 10))
+    .map(l => `${l.name} (${leSizeLabel(l.size, l.id)}) x${l.qty}`).join("; ");
+}
+
+/* Fire and forget: a slow or failed save never blocks the customer, and a network failure is retried. */
+async function sendOrderToSheet(payload, tries){
+  if(!ORDERS_API_URL || ORDERS_API_URL.indexOf("PASTE_") === 0) return;
+  tries = tries || 1;
+  try{
+    await fetch(ORDERS_API_URL, {
+      method: "POST", mode: "no-cors", keepalive: true,
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+  }catch(e){
+    if(tries < 3) setTimeout(() => sendOrderToSheet(payload, tries + 1), 3000 * tries);
+  }
+}
+
+function orderPayload(snap, extra){
+  const c = snap.customer;
+  return Object.assign({
+    action: "save",
+    method: snap.method === "card" ? "Card" : "UPI",
+    name: c.name, phone: c.phone, email: c.email,
+    addr: c.addr, city: c.city, state: c.state, pin: c.pin, country: c.country,
+    items: orderItemsText(snap),
+    subtotal: snap.subtotal, shipping: snap.shipping, total: snap.total
+  }, extra);
+}
+
 /* Everything the WhatsApp message needs, captured at the moment of paying
    (so it still works if the page reloads while the customer is in a UPI app). */
 function snapshotOrder(t, method){
@@ -555,9 +593,10 @@ function showConfirm(o){
 }
 
 /* Payment is confirmed by the server — now give the order its number and hand it to WhatsApp. */
-function finishPaid(snap, v){
+function finishPaid(snap, v, rzpOrderId){
   const id = v.orderNumber || leFallbackOrderNumber();
   const paid = v.paidPaise / 100;
+  if(rzpOrderId) sendOrderToSheet({ action: "attachNumber", razorpayOrderId: rzpOrderId, orderNo: id });
   /* Razorpay adds its own gateway fee on top of the order total; show it if the customer paid more. */
   const feeKept = snap.method === "card" ? Math.max(0, Math.round(paid - snap.total)) : 0;
   const message = buildWhatsAppMessage(id, snap, { paymentId: v.paymentId, paid, feeKept });
@@ -607,7 +646,7 @@ async function onPaid(resp, snap){
     showPaidUnconfirmed(resp.razorpay_payment_id);
     return;
   }
-  finishPaid(snap, v);
+  finishPaid(snap, v, resp.razorpay_order_id);
 }
 
 /* If the customer paid in another app and the page reloaded, pick the order back up. */
@@ -618,7 +657,7 @@ async function recoverPendingPayment(){
   if(Date.now() - p.at > 2 * 3600 * 1000){ try{ localStorage.removeItem(PENDING_KEY); }catch(e){} return; }
   try{
     const r = await postJson("/api/verify-payment", { recover: true, razorpay_order_id: p.orderId });
-    if(r.ok && r.data.ok) finishPaid(p.snap, r.data);
+    if(r.ok && r.data.ok) finishPaid(p.snap, r.data, p.orderId);
   }catch(e){ /* try again next visit */ }
 }
 
@@ -686,6 +725,7 @@ async function startUpiPayment(t, method){
   if(!id) id = leFallbackOrderNumber();
   const o = { id, snap, amount: t.total, at: Date.now() };
   try{ localStorage.setItem(UPI_KEY, JSON.stringify(o)); }catch(e){}
+  sendOrderToSheet(orderPayload(snap, { orderNo: id }));   // saved before the UPI app even opens
   showUpiPanel(o);
 }
 
@@ -806,6 +846,7 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
   }
 
   try{ localStorage.setItem(PENDING_KEY, JSON.stringify({ orderId: order.orderId, snap, at: Date.now() })); }catch(err){}
+  sendOrderToSheet(orderPayload(snap, { razorpayOrderId: order.orderId }));   // saved as "Card - pending"; the webhook marks it Paid
 
   const rzp = new Razorpay({
     key: order.keyId,
@@ -829,8 +870,8 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
 
 function updateLockNote(){
   document.getElementById("lockNote").textContent = currentMethod() === "card"
-    ? "Secure card payment by Razorpay. After you pay, your order details open in WhatsApp."
-    : "Pay by UPI to our UPI ID. After you pay, send your order on WhatsApp.";
+    ? "Secure card payment by Razorpay. Your order is confirmed automatically once the payment goes through."
+    : "Your order is saved when you tap Pay. We dispatch once the UPI payment shows in our account.";
 }
 document.getElementById("payOptions").addEventListener("change", () => { renderSummary(); updateLockNote(); });
 
