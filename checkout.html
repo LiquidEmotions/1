@@ -322,7 +322,7 @@
 
 <div class="upi-panel" id="upiPanel">
   <h1>Pay by UPI</h1>
-  <p class="upi-sub">Your order is saved. Pay the exact amount below and we dispatch as soon as the payment shows in our account.</p>
+  <p class="upi-sub">Your order is saved. Tap your UPI app below and pay the exact amount shown. Add your order number in the note.</p>
   <div class="upi-amount mono" id="upiAmount"></div>
   <div class="upi-order mono" id="upiOrder"></div>
   <div class="upi-warn" id="upiInAppWarn" style="display:none;">This page is open inside another app's browser (Instagram, Facebook etc.), which blocks UPI apps. Tap ⋮ or ⋯ and choose "Open in Chrome" or "Open in Safari", or pay using the QR or UPI ID below.</div>
@@ -333,12 +333,12 @@
       <a class="upi-app" id="upiPaytm" href="#">Paytm</a>
     </div>
     <a class="btn-primary" id="upiAppBtn" href="#" style="margin-top:0;">Other UPI app</a>
-    <p class="upi-sub">Tap your app to pay. If nothing opens, use "Other UPI app" or the QR below.</p>
+    <p class="upi-sub">Tap your app. The amount is filled in and can be edited. It is also copied, so if your app leaves it blank, just paste it. If nothing opens, use "Other UPI app" or the QR below.</p>
     <div class="upi-warn" id="upiNoOpenHint" style="display:none;">No UPI app opened? Copy the UPI ID and amount below, paste them into any UPI app, and put the order number in the note. Or scan the QR from another phone.</div>
   </div>
   <div class="upi-qr-wrap">
     <div class="upi-qr-box"><div id="upiQr"></div></div>
-    <p class="upi-sub" style="margin:10px 0 0;">Scan with any UPI app. The amount is filled in for you.</p>
+    <p class="upi-sub" style="margin:10px 0 0;">Scan with any UPI app. The amount is filled in; check it matches the amount above.</p>
   </div>
   <div class="upi-id-row">
     <span>UPI ID: <b class="mono" id="upiIdText"></b></span>
@@ -665,11 +665,15 @@ async function recoverPendingPayment(){
 const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 let upiOrder = null;   // { id, snap, amount, at }
 
+/* Prefilled amount, marked editable: "mam" (minimum amount) equal to the order total asks the
+   UPI app to let the customer edit the amount upward but not pay less. Support varies by app,
+   and apps may apply stricter limits to prefilled payments to a personal UPI ID, so the amount
+   is also copied to the clipboard. No note ("tn") is sent. */
 function upiQuery(amount, orderId){
+  const a = amount.toFixed(2);
   return "pa=" + UPI_ID +
     "&pn=" + encodeURIComponent(UPI_NAME) +
-    "&am=" + amount.toFixed(2) +
-    "&cu=INR&tn=" + encodeURIComponent(orderId);
+    "&am=" + a + "&mam=" + a + "&cu=INR";
 }
 function upiLink(amount, orderId){ return "upi://pay?" + upiQuery(amount, orderId); }
 const IS_IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -725,7 +729,7 @@ async function startUpiPayment(t, method){
   if(!id) id = leFallbackOrderNumber();
   const o = { id, snap, amount: t.total, at: Date.now() };
   try{ localStorage.setItem(UPI_KEY, JSON.stringify(o)); }catch(e){}
-  sendOrderToSheet(orderPayload(snap, { orderNo: id }));   // saved before the UPI app even opens
+  try{ sendOrderToSheet(orderPayload(snap, { orderNo: id })); }catch(e){}   // saved before the UPI app even opens; can never block payment
   showUpiPanel(o);
 }
 
@@ -763,9 +767,20 @@ function finishUpi(){
 }
 
 document.getElementById("upiDoneBtn").addEventListener("click", finishUpi);
+function copyUpiAmount(){
+  if(!upiOrder) return;
+  const btn = document.getElementById("upiCopyAmtBtn");
+  try{
+    navigator.clipboard.writeText(upiOrder.amount.toFixed(2)).then(() => {
+      btn.textContent = "Copied";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1800);
+    }).catch(() => {});
+  }catch(e){}
+}
 /* If tapping a UPI app link doesn't take the customer out of the browser, show the manual-pay hint. */
 ["upiGpay","upiPhonepe","upiPaytm","upiAppBtn"].forEach(id => {
   document.getElementById(id).addEventListener("click", () => {
+    copyUpiAmount();
     const hint = document.getElementById("upiNoOpenHint");
     hint.style.display = "none";
     setTimeout(() => { if(!document.hidden) hint.style.display = "block"; }, 2200);
@@ -846,7 +861,7 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
   }
 
   try{ localStorage.setItem(PENDING_KEY, JSON.stringify({ orderId: order.orderId, snap, at: Date.now() })); }catch(err){}
-  sendOrderToSheet(orderPayload(snap, { razorpayOrderId: order.orderId }));   // saved as "Card - pending"; the webhook marks it Paid
+  try{ sendOrderToSheet(orderPayload(snap, { razorpayOrderId: order.orderId })); }catch(e){}   // saved as "Card - pending"; the webhook marks it Paid; can never block payment
 
   const rzp = new Razorpay({
     key: order.keyId,
