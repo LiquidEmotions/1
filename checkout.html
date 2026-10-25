@@ -341,15 +341,14 @@
     <button type="button" id="upiCopyAmtBtn">Copy</button>
   </div>
   <div class="upi-apps" style="margin-top:22px;">
-    <p class="upi-sub" style="margin:0 0 10px;">Or open your UPI app directly. The amount is copied for you; paste it there.</p>
+    <p class="upi-sub" style="margin:0 0 10px;">Or open your UPI app. Your UPI ID is copied for you.</p>
     <div class="upi-app-grid">
       <a class="upi-app" id="upiGpay" href="#">Google Pay</a>
       <a class="upi-app" id="upiPhonepe" href="#">PhonePe</a>
       <a class="upi-app" id="upiPaytm" href="#">Paytm</a>
     </div>
-    <a class="btn-primary" id="upiAppBtn" href="#" style="margin-top:0;">Other UPI app</a>
-    <p class="upi-sub">If your app blocks it or asks for the amount, paste the copied amount. If it still fails, use the QR or the copy buttons above.</p>
-    <div class="upi-warn" id="upiNoOpenHint" style="display:none;">No UPI app opened? Copy the UPI ID and amount above, paste them into any UPI app, and put the order number in the note. Or scan the QR from another phone.</div>
+    <p class="upi-sub">In the app, choose "Pay UPI ID" (or "To mobile number or UPI ID"), paste the ID, enter the amount shown above, and add your order number in the note.</p>
+    <div class="upi-warn" id="upiNoOpenHint" style="display:none;">App not opening? Open your UPI app yourself, paste the copied UPI ID, enter the amount shown above, and put the order number in the note. Or use the QR.</div>
   </div>
   <div class="upi-step">
     <h2>After you've paid</h2>
@@ -686,13 +685,12 @@ function upiAppQuery(){
 }
 const IS_IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const IN_APP_BROWSER = /Instagram|FBAN|FBAV|FB_IAB|Snapchat|Line\/|Twitter|LinkedInApp|GSA\//i.test(navigator.userAgent);
-function upiAppLinks(amount, orderId){
-  const q = upiAppQuery();
+function upiAppLinks(){
+  /* Open-app links only: no payment request, so nothing for the "risk policy" check to block. */
   return {
-    upiGpay:    (IS_IOS ? "gpay://upi/pay?" : "tez://upi/pay?") + q,
-    upiPhonepe: "phonepe://pay?" + q,
-    upiPaytm:   "paytmmp://pay?" + q,
-    upiAppBtn:  "upi://pay?" + q
+    upiGpay:    IS_IOS ? "gpay://" : "intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.google.android.apps.nbu.paisa.user;end",
+    upiPhonepe: "phonepe://",
+    upiPaytm:   "paytmmp://"
   };
 }
 
@@ -702,7 +700,7 @@ function showUpiPanel(o){
   document.getElementById("upiAmount").textContent = currency(o.amount);
   document.getElementById("upiOrder").textContent = "Order " + o.id;
   document.getElementById("upiIdText").textContent = UPI_ID;
-  const apps = upiAppLinks(o.amount, o.id);
+  const apps = upiAppLinks();
   Object.keys(apps).forEach(id => { document.getElementById(id).href = apps[id]; });
   const qr = document.getElementById("upiQr");
   qr.innerHTML = "";
@@ -775,20 +773,19 @@ function finishUpi(){
 }
 
 document.getElementById("upiDoneBtn").addEventListener("click", finishUpi);
-function copyUpiAmount(){
-  if(!upiOrder) return;
-  const btn = document.getElementById("upiCopyAmtBtn");
+function copyUpiId(){
+  const btn = document.getElementById("upiCopyBtn");
   try{
-    navigator.clipboard.writeText(upiOrder.amount.toFixed(2)).then(() => {
+    navigator.clipboard.writeText(UPI_ID).then(() => {
       btn.textContent = "Copied";
       setTimeout(() => { btn.textContent = "Copy"; }, 1800);
     }).catch(() => {});
   }catch(e){}
 }
 /* If tapping a UPI app link doesn't take the customer out of the browser, show the manual-pay hint. */
-["upiGpay","upiPhonepe","upiPaytm","upiAppBtn"].forEach(id => {
+["upiGpay","upiPhonepe","upiPaytm"].forEach(id => {
   document.getElementById(id).addEventListener("click", () => {
-    copyUpiAmount();
+    copyUpiId();
     const hint = document.getElementById("upiNoOpenHint");
     hint.style.display = "none";
     setTimeout(() => { if(!document.hidden) hint.style.display = "block"; }, 2200);
