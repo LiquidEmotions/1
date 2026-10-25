@@ -341,14 +341,14 @@
     <button type="button" id="upiCopyAmtBtn">Copy</button>
   </div>
   <div class="upi-apps" style="margin-top:22px;">
-    <p class="upi-sub" style="margin:0 0 10px;">Or try opening your UPI app directly.</p>
+    <p class="upi-sub" style="margin:0 0 10px;">Or open your UPI app directly. The amount is copied for you; paste it there.</p>
     <div class="upi-app-grid">
       <a class="upi-app" id="upiGpay" href="#">Google Pay</a>
       <a class="upi-app" id="upiPhonepe" href="#">PhonePe</a>
       <a class="upi-app" id="upiPaytm" href="#">Paytm</a>
     </div>
     <a class="btn-primary" id="upiAppBtn" href="#" style="margin-top:0;">Other UPI app</a>
-    <p class="upi-sub">Some apps block payments started from a website ("risk policy"). If yours does, use the QR or the copy buttons above.</p>
+    <p class="upi-sub">If your app blocks it or asks for the amount, paste the copied amount. If it still fails, use the QR or the copy buttons above.</p>
     <div class="upi-warn" id="upiNoOpenHint" style="display:none;">No UPI app opened? Copy the UPI ID and amount above, paste them into any UPI app, and put the order number in the note. Or scan the QR from another phone.</div>
   </div>
   <div class="upi-step">
@@ -679,10 +679,15 @@ function upiQuery(amount, orderId){
     "&am=" + a + "&mam=" + a + "&cu=INR";
 }
 function upiLink(amount, orderId){ return "upi://pay?" + upiQuery(amount, orderId); }
+/* App buttons: payee only, no prefilled amount (the QR keeps its prefilled amount). The amount is
+   copied to the clipboard when a button is tapped, for the customer to paste. */
+function upiAppQuery(){
+  return "pa=" + UPI_ID + "&pn=" + encodeURIComponent(UPI_NAME);
+}
 const IS_IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const IN_APP_BROWSER = /Instagram|FBAN|FBAV|FB_IAB|Snapchat|Line\/|Twitter|LinkedInApp|GSA\//i.test(navigator.userAgent);
 function upiAppLinks(amount, orderId){
-  const q = upiQuery(amount, orderId);
+  const q = upiAppQuery();
   return {
     upiGpay:    (IS_IOS ? "gpay://upi/pay?" : "tez://upi/pay?") + q,
     upiPhonepe: "phonepe://pay?" + q,
