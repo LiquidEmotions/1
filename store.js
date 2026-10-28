@@ -1296,14 +1296,14 @@ const LE_ALL_FRAGRANCES = [
   {
     id: "tam-dao",
     newSince: "2026-09-27",
-    name: "Tam Dao",
-    house: "Dyptique",
+    name: "Tam Dao EDP",
+    house: "Diptyque",
     notes: { top: "Italian Cypress,Myrtyle,Rose", heart: "Sandalwood,Cedar", base: "Brazillian Rosewood,Spices,Amber,White Musk" },
     color: "#3E2E5C",
-    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.3956.2x.avif",
+    image: "https://fimgs.net/mdimg/perfume-thumbs/dark-375x500.49104.2x.avif",
     gender: "Unisex",
     season: ["Winter","Autumn"],
-    fragranticaUrl: "https://www.fragrantica.com/perfume/Diptyque/Tam-Dao-Eau-de-Toilette-3956.html",
+    fragranticaUrl: "https://www.fragrantica.com/perfume/Diptyque/Tam-Dao-Eau-de-Parfum-49104.html",
     prices: { "3ml": 780, "5ml": 1260, "10ml": 2460, "20ml": 4880, "30ml": 7280 }
   },
   {
@@ -1571,7 +1571,7 @@ const HOUSE_CATEGORY = {
   "Dior":"Designer",
 
   "Creed": "Niche",
-  "Dyptique": "Niche",
+  "Diptyque": "Niche",
   "Nishane": "Niche",
   "Sospiro": "Niche",
   "Amouage": "Niche",
@@ -2433,7 +2433,11 @@ const LE_SHEET_ALIASES = {
   "lalique — encre noir edt": "encre-noire-edt",
   "d&g — light blue eau intense": "light-blue-eau-intense",
   "narciso rodriguez — for him edp": "narciso-for-him-edp",
-  "rasasi — shuhrah": "shuhrah"
+  "rasasi — shuhrah": "shuhrah",
+  "dyptique — tam dao": "tam-dao",
+  "dyptique — tam dao edp": "tam-dao",
+  "diptyque — tam dao": "tam-dao",
+  "diptyque — tam dao edp": "tam-dao"
 };
 
 function leSheetMatches(f, row){
