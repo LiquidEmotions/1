@@ -246,7 +246,7 @@
             </div>
             <div class="field">
               <label for="pin">PIN code</label>
-              <input type="text" id="pin" name="pin" placeholder="110001" autocomplete="postal-code" inputmode="numeric" required>
+              <input type="text" id="pin" name="pin" placeholder="110001" autocomplete="postal-code" inputmode="numeric" maxlength="6" pattern="[1-9][0-9]{5}" title="Enter the 6-digit PIN code" required>
             </div>
             <div class="field">
               <label for="country">Country</label>
@@ -287,10 +287,6 @@
 
       <aside class="summary">
         <h2>Order summary</h2>
-        <div class="zone-tabs" id="zoneTabs">
-          <button class="zone-tab" data-zone="ncr">Delhi NCR</button>
-          <button class="zone-tab" data-zone="india">Rest of India</button>
-        </div>
         <div id="miniItems"></div>
         <div class="mini-actions" id="miniActions">
           <a class="add-more" href="index.html">＋ Add more perfumes</a>
@@ -301,7 +297,7 @@
           <span class="mono" id="miniSubtotal">₹0</span>
         </div>
         <div class="summary-row">
-          <span>Shipping</span>
+          <span id="miniShippingLabel">Shipping</span>
           <span class="mono" id="miniShipping">₹0</span>
         </div>
         <div class="summary-row" id="feeRow" style="display:none;">
@@ -395,16 +391,28 @@ function miniVial(fragrance){
 
 function currency(n){ return leFormatPrice(n); }
 
-/* Shipping — mirrors the zone the customer picked on the cart page,
-   so the total here matches what they already saw there. */
+/* Shipping — worked out automatically from the PIN code the customer types.
+   To change what counts as Delhi NCR, edit NCR_PIN_RANGES below (from, to, inclusive). */
 const SHIPPING_ZONES = {
   ncr:   { label: "Delhi NCR", flat: 55 },
   india: { label: "Rest of India",      flat: 75 }
 };
+const NCR_PIN_RANGES = [
+  [110001, 110099],   // Delhi
+  [121001, 121107],   // Faridabad
+  [122001, 122105],   // Gurugram
+  [201001, 201017],   // Ghaziabad
+  [201301, 201318]    // Noida / Greater Noida
+];
 const FREE_SHIP_QTY = 4;
-const ZONE_KEY = "le_ship_zone";
-let currentZone = localStorage.getItem(ZONE_KEY) || "ncr";
-if(!SHIPPING_ZONES[currentZone]) currentZone = "ncr";
+
+function isIndia(){ return document.getElementById("country").value === "India"; }
+function zoneFromPin(pin){
+  const n = (isIndia() && /^[1-9][0-9]{5}$/.test(pin)) ? Number(pin) : 0;
+  return NCR_PIN_RANGES.some(([a, b]) => n >= a && n <= b) ? "ncr" : "india";
+}
+function pinIsComplete(){ return !isIndia() || /^[1-9][0-9]{5}$/.test(document.getElementById("pin").value.trim()); }
+let currentZone = "india";   // until a full PIN is typed, shipping shows the higher rate; set from the PIN field below
 
 const CARD_FEE_RATE = 0;   // Razorpay now adds its fee itself (customer fee bearer); keep in step with api/_pricing.js
 let busy = false;
@@ -465,6 +473,7 @@ function renderSummary(){
   document.getElementById("miniCountLabel").textContent = t.count === 1 ? "1 item" : `${t.count} items`;
   document.getElementById("miniSubtotal").textContent = currency(t.subtotal);
   document.getElementById("miniShipping").textContent = t.shipping === 0 ? "Free" : currency(t.shipping);
+  document.getElementById("miniShippingLabel").textContent = !pinIsComplete() ? "Shipping (enter PIN for exact)" : `Shipping (${t.zone.label})`;
   document.getElementById("feeRow").style.display = t.fee > 0 ? "flex" : "none";
   document.getElementById("miniFee").textContent = currency(t.fee);
   document.getElementById("miniTotal").textContent = currency(t.total);
@@ -473,10 +482,6 @@ function renderSummary(){
     placeOrderBtn.disabled = lines.length === 0;
     placeOrderBtn.textContent = lines.length ? "Pay " + currency(t.total) : "Pay now";
   }
-
-  document.querySelectorAll(".zone-tab").forEach(tab => {
-    tab.classList.toggle("active", tab.dataset.zone === currentZone);
-  });
 }
 
 function setBusy(on, label){
@@ -851,6 +856,7 @@ function saveAddress(){
 }
 
 loadSavedAddress();
+try{ const cp = localStorage.getItem("le_cart_pin"); if(cp && document.getElementById("country").value === "India") document.getElementById("pin").value = cp; }catch(e){}   // PIN already typed on the cart page
 
 document.getElementById("checkoutForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -942,23 +948,21 @@ document.getElementById("miniItems").addEventListener("change", (e) => {
 });
 window.leOnCartChanged = renderSummary;
 
-document.getElementById("zoneTabs").addEventListener("click", (e) => {
-  const btn = e.target.closest(".zone-tab");
-  if(!btn) return;
-  currentZone = btn.dataset.zone;
-  localStorage.setItem(ZONE_KEY, currentZone);
+/* Shipping zone follows the PIN code (and country) automatically. */
+function updateZoneFromPin(){
+  const pinEl = document.getElementById("pin");
+  if(isIndia()){ pinEl.setAttribute("pattern", "[1-9][0-9]{5}"); pinEl.maxLength = 6; pinEl.inputMode = "numeric"; }
+  else { pinEl.removeAttribute("pattern"); pinEl.removeAttribute("maxlength"); pinEl.inputMode = "text"; }
+  currentZone = zoneFromPin(document.getElementById("pin").value.trim());
   renderSummary();
+}
+document.getElementById("pin").addEventListener("input", () => {
+  try{ localStorage.setItem("le_cart_pin", document.getElementById("pin").value.trim()); }catch(e){}
+  updateZoneFromPin();
 });
+document.getElementById("country").addEventListener("change", updateZoneFromPin);
 
-window.addEventListener("storage", (e) => {
-  if(e.key === ZONE_KEY){
-    currentZone = localStorage.getItem(ZONE_KEY) || "ncr";
-    if(!SHIPPING_ZONES[currentZone]) currentZone = "ncr";
-    renderSummary();
-  }
-});
-
-renderSummary();
+updateZoneFromPin();   // also picks up a PIN restored from the saved address
 updateLockNote();
 recoverPendingPayment();
 recoverPendingUpi();

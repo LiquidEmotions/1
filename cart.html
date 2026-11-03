@@ -145,6 +145,12 @@
   footer{border-top:1px solid var(--line); padding:44px 28px 36px;}
   .footer-grid{display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px; font-size:0.8rem; color:var(--parchment-dim);}
   .summary-row.zone-row{padding-bottom:0;}
+  .pin-input{
+    width:100%; box-sizing:border-box; margin:8px 0 14px; padding:11px 14px;
+    background:transparent; border:1px solid var(--line); border-radius:8px;
+    color:var(--parchment); font:inherit; font-size:0.95rem; letter-spacing:0.08em;
+  }
+  .pin-input:focus{outline:none; border-color:var(--amber-bright);}
   .zone-tabs{display:flex; gap:6px; margin-bottom:14px;}
   .zone-tab{
     flex:1;
@@ -259,12 +265,9 @@
         <span class="mono" id="subtotalVal">₹0</span>
       </div>
       <div class="summary-row zone-row">
-        <span>Shipping to</span>
+        <span id="shipToLabel">Shipping to</span>
       </div>
-      <div class="zone-tabs" id="zoneTabs">
-        <button class="zone-tab" data-zone="ncr">Delhi NCR</button>
-        <button class="zone-tab" data-zone="india">Rest of India</button>
-      </div>
+      <input type="text" id="cartPin" class="pin-input" placeholder="Enter PIN code" inputmode="numeric" maxlength="6" autocomplete="postal-code" aria-label="Delivery PIN code">
       <div class="summary-row">
         <span>Shipping</span>
         <span class="mono" id="shippingVal">₹0</span>
@@ -302,9 +305,28 @@ const SHIPPING_ZONES = {
   india: { label: "Rest of India",      flat: 75 }
 };
 const FREE_SHIP_QTY = 4;
-const ZONE_KEY = "le_ship_zone";
-let currentZone = localStorage.getItem(ZONE_KEY) || "ncr";
-if(!SHIPPING_ZONES[currentZone]) currentZone = "ncr";
+/* Delhi NCR PIN ranges (from, to, inclusive) — keep identical to checkout.html */
+const NCR_PIN_RANGES = [
+  [110001, 110099],   // Delhi
+  [121001, 121107],   // Faridabad
+  [122001, 122105],   // Gurugram
+  [201001, 201017],   // Ghaziabad
+  [201301, 201318]    // Noida / Greater Noida
+];
+const CART_PIN_KEY = "le_cart_pin";   // shared with checkout.html so the PIN only has to be typed once
+function readSavedPin(){
+  try{
+    const direct = localStorage.getItem(CART_PIN_KEY);
+    if(direct) return direct;
+    return (JSON.parse(localStorage.getItem("le_last_address") || "{}").pin) || "";
+  }catch(e){ return ""; }
+}
+function zoneFromPin(pin){
+  const n = /^[1-9][0-9]{5}$/.test(pin) ? Number(pin) : 0;
+  return NCR_PIN_RANGES.some(([a, b]) => n >= a && n <= b) ? "ncr" : "india";
+}
+let currentPin = readSavedPin();
+let currentZone = zoneFromPin(currentPin);   // until a full PIN is typed, shows the higher (rest of India) rate
 
 function vialSVG(id, color, size){
   const fill = FILL_LEVEL[size] || FILL_LEVEL["10ml"];
@@ -445,9 +467,8 @@ function render(){
     ? `${leCartHasPartial() ? "Free shipping — included with your partial bottle" : `Free shipping unlocked — ${FREE_SHIP_QTY}+ decants in your cart`} · dispatched within 48 hrs`
     : `Free shipping on orders of ${FREE_SHIP_QTY}+ decants · otherwise ${currency(zone.flat)} to ${zone.label} · dispatched within 48 hrs`;
 
-  document.querySelectorAll(".zone-tab").forEach(tab => {
-    tab.classList.toggle("active", tab.dataset.zone === currentZone);
-  });
+  const pinDone = /^[1-9][0-9]{5}$/.test(currentPin);
+  document.getElementById("shipToLabel").textContent = pinDone ? `Shipping to · ${zone.label}` : "Shipping to · enter PIN for exact";
 
   document.getElementById("totalVal").textContent = currency(Math.max(st + shipping, 0));
 
@@ -500,11 +521,13 @@ render();
 renderRecentlyViewed();
 window.addEventListener("le-data-updated", () => { leValidateCart(); render(); });
 
-document.getElementById("zoneTabs").addEventListener("click", (e) => {
-  const btn = e.target.closest(".zone-tab");
-  if(!btn) return;
-  currentZone = btn.dataset.zone;
-  localStorage.setItem(ZONE_KEY, currentZone);
+const cartPinEl = document.getElementById("cartPin");
+cartPinEl.value = currentPin;
+cartPinEl.addEventListener("input", () => {
+  cartPinEl.value = cartPinEl.value.replace(/\D/g, "").slice(0, 6);
+  currentPin = cartPinEl.value;
+  currentZone = zoneFromPin(currentPin);
+  try{ localStorage.setItem(CART_PIN_KEY, currentPin); }catch(e){}
   render();
 });
 </script>
