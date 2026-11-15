@@ -2833,3 +2833,36 @@ function leSyncSheet(){
   }catch(e){}
   leSyncSheet();
 })();
+
+/* ---------- Shipping-pause banner (auto-hides after the resume date) ---------- */
+(function leShipBanner(){
+  const LE_SHIP_RESUME_TEXT = "25th Nov";
+  const LE_SHIP_BANNER_END  = new Date("2026-11-26T00:00:00+05:30"); // banner disappears after 25 Nov
+  if(new Date() >= LE_SHIP_BANNER_END) return;
+  function mount(){
+    if(document.getElementById("leShipBanner")) return;
+    const bar = document.createElement("div");
+    bar.id = "leShipBanner";
+    bar.className = "mono";
+    bar.setAttribute("role", "status");
+    bar.style.cssText = "background:#2E221D;color:#FAF6F2;text-align:center;font-size:12px;line-height:1.45;" +
+      "letter-spacing:.03em;padding:9px 16px;padding-top:calc(9px + env(safe-area-inset-top,0px));";
+    bar.textContent = "📦 Shipping resumes on " + LE_SHIP_RESUME_TEXT + ". Orders placed now will be dispatched from then.";
+    const header = document.querySelector("header");
+    if(header && header.parentNode) header.parentNode.insertBefore(bar, header);
+    else document.body.insertBefore(bar, document.body.firstChild);
+
+    // Reminder right above the Pay button on checkout
+    const pay = document.getElementById("placeOrderBtn");
+    if(pay && !document.getElementById("leShipPayNote")){
+      const n = document.createElement("p");
+      n.id = "leShipPayNote";
+      n.className = "mono";
+      n.style.cssText = "margin:14px 0 0;font-size:12px;line-height:1.45;text-align:center;color:#9C5644;";
+      n.textContent = "Note: shipping resumes on " + LE_SHIP_RESUME_TEXT + ". Your order will be dispatched from then.";
+      pay.parentNode.insertBefore(n, pay);
+    }
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
+  else mount();
+})();
