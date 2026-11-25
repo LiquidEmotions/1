@@ -2840,6 +2840,8 @@ function leSyncSheet(){
   const LE_SHIP_BANNER_END  = new Date("2026-11-26T00:00:00+05:30"); // banner disappears after 25 Nov
   if(new Date() >= LE_SHIP_BANNER_END) return;
   function mount(){
+    /* api/_pricing.js runs this file on the server with a stub document; only build the banner in a real browser */
+    if(!document.body || typeof document.body.insertBefore !== "function") return;
     if(document.getElementById("leShipBanner")) return;
     const bar = document.createElement("div");
     bar.id = "leShipBanner";
